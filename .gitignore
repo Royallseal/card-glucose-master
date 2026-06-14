@@ -1,0 +1,66 @@
+# Unity 生成的本地缓存
+/Library/
+/Temp/
+/Obj/
+
+# 构建输出
+/Build/
+/Builds/
+
+# 日志文件
+/Logs/
+*.log
+
+# 用户编辑器设置
+/UserSettings/
+*.suo
+*.user
+*.userprefs
+
+# Unity 升级日志
+UpgradeLog.htm
+
+# VS 配置
+.vsconfig
+
+# 自动生成的 C# 工程和解决方案（可选，建议忽略让 Unity 重新生成）
+*.csproj
+*.sln
+*.pidb
+*.pidb.meta
+*.pdb
+*.pdb.meta
+*.mdb
+*.mdb.meta
+*.booproj
+*.svd
+*.opendb
+*.VC.db
+
+# 临时文件
+*.tmp
+*.pid
+
+# 构建产物（不应提交）
+*.apk
+*.aab
+*.unitypackage
+*.app
+
+# 录制和内存快照（可能非常大）
+/[Mm]emoryCaptures/
+/[Rr]ecordings/
+
+# 操作系统文件
+.DS_Store
+Thumbs.db
+
+# IDE 配置
+.vscode/
+.vs/
+.idea/
+
+# AI 工具
+.claude/
+.gemini/
+/.agent/

@@ -1,0 +1,137 @@
+# ========== 行尾符统一 ==========
+# 所有文本文件默认使用 LF（Unity 内部统一使用 LF）
+* text=auto eol=lf
+
+# ========== Unity 文本文件（强制 LF）==========
+# Unity 场景和预制体
+*.unity text eol=lf
+*.prefab text eol=lf
+
+# Unity 资源文件（YAML 格式）
+*.asset text eol=lf
+*.mat text eol=lf
+*.meta text eol=lf
+*.controller text eol=lf
+*.anim text eol=lf
+*.overrideController text eol=lf
+*.physicMaterial text eol=lf
+*.physicsMaterial2D text eol=lf
+*.playable text eol=lf
+*.mask text eol=lf
+*.brush text eol=lf
+*.flare text eol=lf
+*.fontsettings text eol=lf
+*.guiskin text eol=lf
+*.preset text eol=lf
+*.spriteatlas text eol=lf
+*.spritelib text eol=lf
+*.mixer text eol=lf
+
+# C# 脚本
+*.cs text eol=lf diff=csharp
+
+# Shader 文件
+*.shader text eol=lf
+*.cginc text eol=lf
+*.hlsl text eol=lf
+*.glslinc text eol=lf
+
+# 计算着色器
+*.compute text eol=lf
+
+# 2D 工具链文本文件
+*.svg text eol=lf
+*.tps text eol=lf
+*.tpsheet text eol=lf
+
+# 配置文件
+*.json text eol=lf
+*.txt text eol=lf
+*.xml text eol=lf
+*.csv text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+*.md text eol=lf
+
+# Web 相关
+*.html text eol=lf
+*.css text eol=lf
+*.js text eol=lf
+*.ts text eol=lf
+
+# ========== 二进制文件（不转换）==========
+# 图片
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.bmp binary
+*.tga binary
+*.psd binary
+*.exr binary
+*.hdr binary
+*.tif binary
+*.tiff binary
+*.ico binary
+*.webp binary
+
+# 2D 动画和美术工具（Spine / Aseprite）
+*.spine binary
+*.skel binary
+*.ase binary
+*.aseprite binary
+
+# 模型
+*.fbx binary
+*.obj binary
+*.blend binary
+*.3ds binary
+*.dae binary
+*.mb binary
+*.ma binary
+*.max binary
+*.c4d binary
+*.skp binary
+
+# 音频
+*.wav binary
+*.mp3 binary
+*.ogg binary
+*.aiff binary
+*.aif binary
+*.mod binary
+*.it binary
+*.s3m binary
+*.xm binary
+
+# 视频
+*.mp4 binary
+*.mov binary
+*.avi binary
+*.webm binary
+*.wmv binary
+
+# 字体
+*.ttf binary
+*.otf binary
+*.woff binary
+*.woff2 binary
+
+# 压缩包和资源包
+*.zip binary
+*.rar binary
+*.7z binary
+*.unitypackage binary
+*.assetbundle binary
+*.bundle binary
+
+# DLL 和库文件
+*.dll binary
+*.pdb binary
+*.so binary
+*.bundle binary
+*.dylib binary
+
+# 其他二进制
+*.exe binary
+*.Cubemap binary
