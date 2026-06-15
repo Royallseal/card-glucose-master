@@ -1,0 +1,14 @@
+cardId,effectType,value1,value2
+diet_apple,hit,2,
+diet_lettuce,apply_buff,slow_release,1
+diet_soda,draw,2,
+diet_soda,apply_buff,slow_release,1
+exe_jogging,apply_buff,vitality,1
+exe_sprinting,apply_debuff,fragility,1
+exe_rope_skipping,apply_debuff,lethargy,2
+exe_extreme,self_damage,6,
+exe_extreme,hit,3,
+med_acarbose,glucose_cap,7.0,
+med_insulin_fast,draw,2,
+med_insulin_fast,apply_buff,sensitivity,1
+med_insulin_long,apply_buff,sensitivity,1
