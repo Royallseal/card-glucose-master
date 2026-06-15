@@ -1,0 +1,319 @@
+﻿{
+    "cards": [
+        {
+            "id": "starter_rice",
+            "name": "米饭",
+            "type": "Starter",
+            "rarity": "Common",
+            "energyCost": 1,
+            "glucoseChange": 0.1,
+            "finalDamage": 6,
+            "finalBlock": 0,
+            "description": "造成 {D} 点伤害，{G} 血糖。",
+            "effects": []
+        },
+        {
+            "id": "starter_walk",
+            "name": "散步",
+            "type": "Starter",
+            "rarity": "Common",
+            "energyCost": 1,
+            "glucoseChange": -0.1,
+            "finalDamage": 0,
+            "finalBlock": 5,
+            "description": "获得 {B} 点格挡，{G} 血糖。",
+            "effects": []
+        },
+        {
+            "id": "diet_feast",
+            "name": "丰盛大餐",
+            "type": "Diet",
+            "rarity": "Common",
+            "energyCost": 2,
+            "glucoseChange": 0.6,
+            "finalDamage": 18,
+            "finalBlock": 0,
+            "description": "造成 {D} 点伤害，{G} 血糖。",
+            "effects": []
+        },
+        {
+            "id": "diet_oat_bread",
+            "name": "燕麦面包",
+            "type": "Diet",
+            "rarity": "Common",
+            "energyCost": 1,
+            "glucoseChange": 0.2,
+            "finalDamage": 0,
+            "finalBlock": 7,
+            "description": "获得 {B} 点格挡，{G} 血糖。",
+            "effects": []
+        },
+        {
+            "id": "diet_lettuce",
+            "name": "爽脆生菜",
+            "type": "Diet",
+            "rarity": "Common",
+            "energyCost": 1,
+            "glucoseChange": 0.0,
+            "finalDamage": 0,
+            "finalBlock": 3,
+            "description": "获得 {B} 点格挡。获得 {E0_V2} 层「缓释」。",
+            "effects": [
+                {
+                    "effectType": "apply_buff",
+                    "value1": "slow_release",
+                    "value2": "1"
+                }
+            ]
+        },
+        {
+            "id": "diet_apple",
+            "name": "新鲜苹果",
+            "type": "Diet",
+            "rarity": "Common",
+            "energyCost": 0,
+            "glucoseChange": 0.8,
+            "finalDamage": 4,
+            "finalBlock": 0,
+            "description": "造成 {D} 点伤害 {E0_V1} 次，{G} 血糖。",
+            "effects": [
+                {
+                    "effectType": "hit",
+                    "value1": "2",
+                    "value2": ""
+                }
+            ]
+        },
+        {
+            "id": "diet_soda",
+            "name": "无糖气泡水",
+            "type": "Diet",
+            "rarity": "Uncommon",
+            "energyCost": 1,
+            "glucoseChange": 0.0,
+            "finalDamage": 0,
+            "finalBlock": 0,
+            "description": "抽 {E0_V1} 张牌。获得 {E1_V2} 层「缓释」。",
+            "effects": [
+                {
+                    "effectType": "draw",
+                    "value1": "2",
+                    "value2": ""
+                },
+                {
+                    "effectType": "apply_buff",
+                    "value1": "slow_release",
+                    "value2": "1"
+                }
+            ]
+        },
+        {
+            "id": "diet_milk",
+            "name": "低脂纯牛奶",
+            "type": "Diet",
+            "rarity": "Rare",
+            "energyCost": 1,
+            "glucoseChange": 0.6,
+            "finalDamage": 0,
+            "finalBlock": 13,
+            "description": "获得 {B} 点格挡，{G} 血糖。",
+            "effects": []
+        },
+        {
+            "id": "exe_yoga",
+            "name": "瑜伽吐纳",
+            "type": "Exercise",
+            "rarity": "Common",
+            "energyCost": 0,
+            "glucoseChange": -0.5,
+            "finalDamage": 0,
+            "finalBlock": 4,
+            "description": "获得 {B} 点格挡，{G} 血糖。",
+            "effects": []
+        },
+        {
+            "id": "exe_jogging",
+            "name": "匀速长跑",
+            "type": "Exercise",
+            "rarity": "Common",
+            "energyCost": 0,
+            "glucoseChange": -0.6,
+            "finalDamage": 0,
+            "finalBlock": 0,
+            "description": "{G} 血糖。获得 {E0_V2} 层「活力」。",
+            "effects": [
+                {
+                    "effectType": "apply_buff",
+                    "value1": "vitality",
+                    "value2": "1"
+                }
+            ]
+        },
+        {
+            "id": "exe_sprinting",
+            "name": "冲刺短跑",
+            "type": "Exercise",
+            "rarity": "Uncommon",
+            "energyCost": 1,
+            "glucoseChange": -0.4,
+            "finalDamage": 9,
+            "finalBlock": 0,
+            "description": "造成 {D} 点伤害，{G} 血糖。使目标获得 {E0_V2} 层「脆弱」。",
+            "effects": [
+                {
+                    "effectType": "apply_debuff",
+                    "value1": "fragility",
+                    "value2": "1"
+                }
+            ]
+        },
+        {
+            "id": "exe_rope_skipping",
+            "name": "花式跳绳",
+            "type": "Exercise",
+            "rarity": "Uncommon",
+            "energyCost": 1,
+            "glucoseChange": -0.4,
+            "finalDamage": 0,
+            "finalBlock": 7,
+            "description": "获得 {B} 点格挡，{G} 血糖。使目标获得 {E0_V2} 层「乏力」。",
+            "effects": [
+                {
+                    "effectType": "apply_debuff",
+                    "value1": "lethargy",
+                    "value2": "2"
+                }
+            ]
+        },
+        {
+            "id": "exe_cycling",
+            "name": "破风骑行",
+            "type": "Exercise",
+            "rarity": "Uncommon",
+            "energyCost": 1,
+            "glucoseChange": -0.6,
+            "finalDamage": 14,
+            "finalBlock": 0,
+            "description": "造成 {D} 点伤害，{G} 血糖。",
+            "effects": []
+        },
+        {
+            "id": "exe_extreme",
+            "name": "极限运动",
+            "type": "Exercise",
+            "rarity": "Rare",
+            "energyCost": 2,
+            "glucoseChange": -0.5,
+            "finalDamage": 11,
+            "finalBlock": 0,
+            "description": "失去 {E0_V1} 生命值。造成 {D} 点伤害 {E1_V1} 次，{G} 血糖。",
+            "effects": [
+                {
+                    "effectType": "self_damage",
+                    "value1": "6",
+                    "value2": ""
+                },
+                {
+                    "effectType": "hit",
+                    "value1": "3",
+                    "value2": ""
+                }
+            ]
+        },
+        {
+            "id": "med_metformin",
+            "name": "基础降糖药",
+            "type": "Medicine",
+            "rarity": "Common",
+            "energyCost": 1,
+            "glucoseChange": -2.0,
+            "finalDamage": 0,
+            "finalBlock": 0,
+            "description": "{G} 血糖。",
+            "effects": []
+        },
+        {
+            "id": "med_insulin_rapid",
+            "name": "速效降糖针",
+            "type": "Medicine",
+            "rarity": "Uncommon",
+            "energyCost": 1,
+            "glucoseChange": -3.0,
+            "finalDamage": 0,
+            "finalBlock": 0,
+            "description": "{G} 血糖。",
+            "effects": []
+        },
+        {
+            "id": "med_acarbose",
+            "name": "限糖药片",
+            "type": "Medicine",
+            "rarity": "Uncommon",
+            "energyCost": 1,
+            "glucoseChange": 0.0,
+            "finalDamage": 0,
+            "finalBlock": 0,
+            "description": "若当前血糖高于 {E0_V1}，将其复原至 {E0_V1}。",
+            "effects": [
+                {
+                    "effectType": "glucose_cap",
+                    "value1": "7.0",
+                    "value2": ""
+                }
+            ]
+        },
+        {
+            "id": "med_glucagon",
+            "name": "控糖胶囊",
+            "type": "Medicine",
+            "rarity": "Common",
+            "energyCost": 1,
+            "glucoseChange": 2.0,
+            "finalDamage": 0,
+            "finalBlock": 0,
+            "description": "{G} 血糖。",
+            "effects": []
+        },
+        {
+            "id": "med_insulin_fast",
+            "name": "快速胰岛素",
+            "type": "Medicine",
+            "rarity": "Rare",
+            "energyCost": 1,
+            "glucoseChange": 0.0,
+            "finalDamage": 0,
+            "finalBlock": 0,
+            "description": "抽 {E0_V1} 张牌。获得 {E1_V2} 层「敏化」。",
+            "effects": [
+                {
+                    "effectType": "draw",
+                    "value1": "2",
+                    "value2": ""
+                },
+                {
+                    "effectType": "apply_buff",
+                    "value1": "sensitivity",
+                    "value2": "1"
+                }
+            ]
+        },
+        {
+            "id": "med_insulin_long",
+            "name": "长效胰岛素",
+            "type": "Medicine",
+            "rarity": "Rare",
+            "energyCost": 2,
+            "glucoseChange": -4.0,
+            "finalDamage": 0,
+            "finalBlock": 0,
+            "description": "{G} 血糖。获得 {E0_V2} 层「敏化」。",
+            "effects": [
+                {
+                    "effectType": "apply_buff",
+                    "value1": "sensitivity",
+                    "value2": "1"
+                }
+            ]
+        }
+    ]
+}
