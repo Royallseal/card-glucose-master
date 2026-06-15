@@ -64,3 +64,6 @@ Thumbs.db
 .claude/
 .gemini/
 /.agent/
+
+# Python 虚拟环境
+.venv/
