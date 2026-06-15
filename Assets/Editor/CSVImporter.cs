@@ -20,7 +20,8 @@ namespace CGM.Editor
     public static class CSVImporter
     {
         private const string MainCsvRelativePath = "data/initial_cards_data.csv";
-        private const string EffectsCsvRelativePath = "data/card_effects.csv";
+        private const string EffectsCsvRelativePath = "data/initial_card_effects.csv";
+        private const string ColorsCsvRelativePath = "data/initial_card_colors.csv";
         private const string OutputDirectory = "Assets/Resources/Configs";
         private const string OutputFilePath = "Assets/Resources/Configs/cards.json";
 
@@ -35,6 +36,7 @@ namespace CGM.Editor
 
             string mainCsvPath = Path.Combine(projectRoot, MainCsvRelativePath);
             string effectsCsvPath = Path.Combine(projectRoot, EffectsCsvRelativePath);
+            string colorsCsvPath = Path.Combine(projectRoot, ColorsCsvRelativePath);
 
             // 校验文件存在性
             if (!File.Exists(mainCsvPath))
@@ -47,14 +49,22 @@ namespace CGM.Editor
                 Debug.LogError($"[CSVImporter] 效果表文件未找到：{effectsCsvPath}");
                 return;
             }
+            if (!File.Exists(colorsCsvPath))
+            {
+                Debug.LogError($"[CSVImporter] 颜色表文件未找到：{colorsCsvPath}");
+                return;
+            }
 
-            // 第一步：解析效果表，按 cardId 分组
+            // 第一步：解析颜色表，按 cardId 映射
+            Dictionary<string, string> colorsMap = ParseColorsCSV(colorsCsvPath);
+
+            // 第二步：解析效果表，按 cardId 分组
             Dictionary<string, List<CardEffect>> effectsMap = ParseEffectsCSV(effectsCsvPath);
 
-            // 第二步：解析主表
+            // 第三步：解析主表
             List<CardInfo> cards = ParseMainCSV(mainCsvPath);
 
-            // 第三步：将效果挂载到对应卡牌
+            // 第四步：将效果和颜色挂载到对应卡牌
             int totalEffects = 0;
             foreach (var card in cards)
             {
@@ -63,9 +73,18 @@ namespace CGM.Editor
                     card.effects = effects;
                     totalEffects += effects.Count;
                 }
+                
+                if (colorsMap.TryGetValue(card.id, out var iconColor))
+                {
+                    card.iconColor = iconColor;
+                }
+                else
+                {
+                    card.iconColor = "#FFFFFF"; // 默认白色
+                }
             }
 
-            // 第四步：序列化为 JSON
+            // 第五步：序列化为 JSON
             CardDataWrapper wrapper = new CardDataWrapper { cards = cards };
             string json = JsonUtility.ToJson(wrapper, true);
 
@@ -95,6 +114,31 @@ namespace CGM.Editor
             AssetDatabase.Refresh();
 
             Debug.Log($"<color=#4EC9B0>[CSVImporter]</color> 卡牌数据编译完成：共 <b>{cards.Count}</b> 张卡牌，<b>{totalEffects}</b> 条效果。输出至 {OutputFilePath}");
+        }
+
+        /// <summary>
+        /// 解析颜色表 CSV 文件，按 cardId 映射。
+        /// </summary>
+        private static Dictionary<string, string> ParseColorsCSV(string path)
+        {
+            var map = new Dictionary<string, string>();
+            string content = File.ReadAllText(path, Encoding.UTF8);
+            string[] lines = content.Split('\n');
+
+            for (int i = 1; i < lines.Length; i++)
+            {
+                string line = lines[i].Trim();
+                if (string.IsNullOrEmpty(line)) continue;
+
+                string[] fields = line.Split(',');
+                if (fields.Length < 2) continue;
+
+                string cardId = fields[0].Trim();
+                string color = fields[1].Trim();
+                map[cardId] = color;
+            }
+
+            return map;
         }
 
         // =====================================================================

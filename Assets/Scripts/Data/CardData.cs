@@ -224,6 +224,7 @@ namespace CGM.Data
         public int finalDamage;
         public int finalBlock;
         public string description;
+        public string iconColor;
         public List<CardEffect> effects = new List<CardEffect>();
 
         /// <summary>

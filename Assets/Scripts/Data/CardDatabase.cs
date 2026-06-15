@@ -76,6 +76,23 @@ namespace CGM.Data
             Debug.Log($"<color=#4EC9B0>[CardDatabase]</color> 卡牌数据库加载完成，共 <b>{_allCards.Count}</b> 张卡牌。");
         }
 
+        /// <summary>
+        /// 获取指定卡牌的卡面颜色。未找到时返回白色。
+        /// </summary>
+        /// <param name="cardId">卡牌 ID</param>
+        /// <returns>卡面着色颜色</returns>
+        public Color GetCardIconColor(string cardId)
+        {
+            if (_cardMap.TryGetValue(cardId, out var card))
+            {
+                if (!string.IsNullOrEmpty(card.iconColor) && ColorUtility.TryParseHtmlString(card.iconColor, out Color color))
+                {
+                    return color;
+                }
+            }
+            return Color.white;
+        }
+
         // =====================================================================
         // 公共查询接口
         // =====================================================================

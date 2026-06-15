@@ -62,6 +62,11 @@ namespace CGM.UI
             }
 
 
+            // 3. 设置卡面背景颜色（从 card_colors.csv 读取）
+            if (iconBgImage != null && CardDatabase.Instance != null)
+            {
+                iconBgImage.color = CardDatabase.Instance.GetCardIconColor(card.id);
+            }
 
             // 4. 设置文字内容
             costText.text = card.energyCost.ToString();
