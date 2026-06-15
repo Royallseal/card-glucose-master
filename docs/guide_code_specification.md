@@ -1,0 +1,88 @@
+# 《卡牌控糖师》Unity C# 开发与编码规范
+
+本规范定义了《卡牌控糖师》项目的 C# 代码编写格式、注释习惯、资源命名以及 Unity 开发最佳实践，旨在提高代码可读性，确保各模块之间的低耦合度。
+
+---
+
+## 一、 命名规范
+
+各代码元素的命名应具备清晰的语义，严禁使用无意义的单字符（循环变量除外）。
+
+### 1. 大驼峰命名法 (PascalCase)
+适用于类名、结构体名、接口名、枚举名、方法名、属性名及公共常量：
+* **类与结构体**：`CardManager`、`GlucoseSystem`
+* **接口**：以 `I` 开头，如 `ICardEffect`、`IDamageable`
+* **方法**：`ModifyGlucose()`、`DrawCards()`
+* **属性**：`CurrentGlucose`、`ActiveBuffs`
+* **常量/公共只读字段**：`MaxGlucoseValue`、`BaseEnergyCost`
+
+### 2. 小驼峰命名法 (camelCase)
+适用于局部变量、方法参数：
+* **局部变量**：`cardCount`、`targetEnemy`
+* **方法参数**：`glucoseDelta`、`cardId`
+
+### 3. 带下划线的小驼峰命名法 (_camelCase)
+适用于类的私有（`private`）及保护（`protected`）成员变量：
+* **私有成员**：`_currentGlucose`、`_handCards`
+* **序列化私有成员**（面板显示）：`_cardPrefab`、`_glucoseSlider`
+
+---
+
+## 二、 代码结构与排版
+
+### 1. 命名空间 (Namespace)
+所有代码必须包裹在以 `CGM`（Card Glucose Master）开头的命名空间中：
+* **核心业务逻辑**：`namespace CGM.Core`
+* **配置与数据结构**：`namespace CGM.Data`
+* **界面表现与交互**：`namespace CGM.UI`
+* **编辑器扩展工具**：`namespace CGM.Editor`
+
+### 2. 类内部成员排列顺序
+为了保持类文件的整洁，成员声明须按以下顺序排列：
+1. **序列化私有字段**：`[SerializeField] private`
+2. **普通私有字段**：`private`
+3. **公共属性与字段**：`public`
+4. **Unity 生命周期方法**：`Awake()` -> `Start()` -> `OnEnable()` -> `Update()` -> `OnDisable()` -> `OnDestroy()`
+5. **公共方法 (Public Methods)**
+6. **私有方法 (Private Methods)**
+
+---
+
+## 三、 注释规范
+
+代码注释必须全部使用准确、简洁的**中文**。
+
+### 1. XML 文档注释 (///)
+所有公共类、接口、属性及公共方法，**必须**编写 XML 格式的三斜杠注释：
+```csharp
+/// <summary>
+/// 修改玩家当前血糖值，并触发状态变更回调。
+/// </summary>
+/// <param name="delta">血糖变化量</param>
+/// <param name="isCardEffect">是否由卡牌打出引起</param>
+public void ModifyGlucose(float delta, bool isCardEffect)
+{
+    // 逻辑实现
+}
+```
+
+### 2. 单行与行尾注释 (//)
+用于解释代码的“设计意图”（为什么这么做），而不是描述代码的“执行动作”（在做什么）：
+* **推荐**：`// 触发重合散点算法，防止多张同能耗同血糖卡牌在图标中重合`
+* **避免**：`// 循环遍历 group 列表`
+
+---
+
+## 四、 Unity 开发最佳实践
+
+### 1. 引用与序列化
+* 尽量减少使用 `GameObject.Find` 或 `FindObjectOfType`。所有的预制体和跨组件引用，须使用 `[SerializeField] private` 并在 Unity 编辑器中拖拽指定，或者在 `Awake()` / `Start()` 中通过 `GetComponent` 进行缓存。
+* 严禁在 `Update()` 内部调用 `GetComponent` 或进行高开销的垃圾回收操作（如频繁的字符串拼接）。
+
+### 2. 逻辑与表现分离 (Decoupling)
+* 核心逻辑组件（如 `GlucoseSystem`、`BattleManager`）**不应**直接持有 UI 控件的引用。
+* 核心逻辑组件在状态变更时，须通过 C# 事件（`System.Action` 或 `delegate`）向外播报；UI 控件通过监听对应事件来更新显示。
+
+### 3. 内存与性能
+* 重复生成的 UI 节点（如手牌卡牌、Buff 图标）须建立对象池或在删除时显式销毁，防止内存泄漏。
+* UI 文本显示数值时，若无必要，避免每帧执行 `ToString()`。仅在数值实际发生变化时，再行触发 UI 刷新。
