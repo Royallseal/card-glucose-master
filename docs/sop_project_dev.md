@@ -10,7 +10,7 @@
 graph TD
     A[策划: 电子表数值配平] -->|导出 CSV| B[data/initial_cards_data.csv]
     B -->|激活虚拟环境运行校验| H[scripts/audit_and_visualize.py]
-    H -->|生成看板| I[docs/assets/card_balance_dashboard.png]
+    H -->|生成分析图表| I[docs/assets/ 7张配平分析图表]
     B -->|Unity Editor 导入器| C[Assets/Configs/cards.json]
     C -->|运行时反序列化| D[C# Card 实体加载]
     D -->|Editor 战斗测试| E{是否失衡?}
@@ -31,7 +31,7 @@ graph TD
 * 严禁直接在 Unity 中或代码中硬编码卡牌战斗数值（伤害、格挡、血糖变化等）。
 * 数值调整完成后，必须在 Excel 中另存为 **CSV 逗号分隔格式**，字符集采用 **UTF-8**。
 * 覆盖保存路径为：`data/initial_cards_data.csv`。
-* **提交流程前置**：在提交 Git 仓库前，**必须激活虚拟环境并运行一次** `scripts/audit_and_visualize.py` 脚本，确保数值符合天平规范，并将生成的 `docs/assets/card_balance_dashboard.png` 看板图表与 CSV 文件一并暂存提交。
+* **提交流程前置**：在提交 Git 仓库前，**必须激活虚拟环境并运行一次** `scripts/audit_and_visualize.py` 脚本，确保数值符合天平规范，并将生成的 7 张配平审计分析图表与 CSV 文件一并暂存提交。
 
 ---
 

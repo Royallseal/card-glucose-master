@@ -3,7 +3,7 @@ import csv
 import sys
 import math
 
-# Try importing matplotlib, otherwise guide the user
+# 尝试导入 matplotlib 绘图库，若未安装则输出引导提示
 try:
     import matplotlib.pyplot as plt
     import matplotlib.patches as mpatches
@@ -15,25 +15,25 @@ except ImportError:
     print("\n然后重新运行本脚本。")
     sys.exit(1)
 
-# Configure fonts for Chinese character support on Windows
+# 配置字体支持，以确保在 Windows 环境下中文字体能正常显示
 plt.rcParams['font.sans-serif'] = ['Microsoft YaHei', 'SimHei', 'Arial']
 plt.rcParams['axes.unicode_minus'] = False
 
-# Resolve paths dynamically based on script location
+# 根据脚本文件的位置动态解析项目相对路径
 script_dir = os.path.dirname(os.path.abspath(__file__))
 root_dir = os.path.dirname(script_dir)
 csv_path = os.path.join(root_dir, 'data', 'initial_cards_data.csv')
 output_dir = os.path.join(root_dir, 'docs', 'assets')
 
-# Ensure assets directory exists
+# 确保图表输出目录已创建
 os.makedirs(output_dir, exist_ok=True)
 
-# Color palette definition (Premium flat-UI colors)
+# 颜色配置板定义（选用美观的扁平化 UI 配色）
 rarity_colors = {
-    'Starter': '#7F8C8D',   # Gray
-    'Common': '#3498DB',    # Soft Blue
-    'Uncommon': '#E67E22',  # Orange
-    'Rare': '#9B59B6'       # Purple
+    'Starter': '#7F8C8D',   # 灰色 (初始)
+    'Common': '#3498DB',    # 柔和蓝 (普通)
+    'Uncommon': '#E67E22',  # 橙色 (良好)
+    'Rare': '#9B59B6'       # 紫色 (优秀/稀有)
 }
 
 type_colors = {
@@ -56,14 +56,14 @@ def calculate_card_vp(row):
     final_dmg = int(row['finalDamage'])
     final_blk = int(row['finalBlock'])
     
-    # 1. Calculate Target Budget (VP)
+    # 1. 计算理论价值点数预算 (Target VP)
     base_vp = cost * 6
     bg_compensation = 0.0 if ctype == "Medicine" else abs(bg_change) * 10
     rarity_bonus = 2 if rarity == "Uncommon" else (4 if rarity == "Rare" else 0)
     
     target_vp = base_vp + bg_compensation + rarity_bonus - effect_vp
     
-    # 2. Calculate Allocated VP from actual stats (including multi-hit logic)
+    # 2. 计算卡牌实际分配的价值点数 (Allocated VP，包含多段攻击逻辑)
     hits = 1
     if card_id == 'diet_apple':
         hits = 2
@@ -72,7 +72,7 @@ def calculate_card_vp(row):
     
     allocated_vp = (final_dmg * hits * 1.0) + (final_blk * 1.2)
     
-    # 3. Calculate deviation
+    # 3. 计算实际分配与理论预算的偏差值 (Deviation)
     deviation = allocated_vp - target_vp
     
     return {
@@ -126,7 +126,7 @@ def main():
         print(f"{name_id:<22} | {c['cost']:<4} | {c['bg_change']:<5} | {c['target_vp']:<6.1f} | {c['allocated_vp']:<6.1f} | {dev_str:<5}")
     print("="*70)
     
-    # Calculate averages by combat attribute
+    # 分品类计算各战斗属性（伤害、格挡、功能）的平均能耗
     attrs = ['伤害卡', '格挡卡', '功能卡']
     avg_costs_attr = {}
     for a in attrs:
@@ -142,7 +142,7 @@ def main():
     print("="*70)
     
     # ==========================================
-    # CHART 1: Energy vs. Glucose Change Scatter Plot (Radial Jitter Label Placement)
+    # 图表 1：能量消耗 vs 血糖变化 散点图
     # ==========================================
     plt.figure(figsize=(7.5, 6))
     plt.title('能量消耗 vs 血糖变化 散点图', fontsize=13, fontweight='bold', pad=12)
@@ -150,7 +150,7 @@ def main():
     plt.ylabel('能量消耗 (点)', fontsize=10)
     plt.axvline(0, color='#BDC3C7', linestyle='--', linewidth=1)
     
-    # Group coordinates to apply radial offset
+    # 对相同的坐标进行分组，以便应用径向散开算法
     coord_groups = {}
     for c in cards:
         key = (c['bg_change'], c['cost'])
@@ -162,7 +162,7 @@ def main():
             if N == 1:
                 x_dot, y_dot = x, y
             else:
-                # Distribute dots in a small circle around the center coordinate
+                # 将完全重叠的卡牌散点以小半径圆形分布在中心周围，确保散点数量可视
                 angle = (2 * math.pi * i) / N
                 x_dot = x + 0.05 * math.cos(angle)
                 y_dot = y + 0.08 * math.sin(angle)
@@ -181,15 +181,15 @@ def main():
     plt.close()
 
     # ==========================================
-    # CHART 2: Average Cost by Combat Attribute Bar Chart
+    # 图表 2：不同战斗属性的平均能耗柱状图
     # ==========================================
     plt.figure(figsize=(6, 5))
     plt.title('战斗属性平均能耗', fontsize=13, fontweight='bold', pad=12)
     
     attr_colors = {
-        '伤害卡': '#E74C3C', # Red
-        '格挡卡': '#2ECC71', # Green
-        '功能卡': '#3498DB'  # Blue
+        '伤害卡': '#E74C3C', # 红色
+        '格挡卡': '#2ECC71', # 绿色
+        '功能卡': '#3498DB'  # 蓝色
     }
     
     bars = plt.bar(attrs, [avg_costs_attr[a] for a in attrs], color=[attr_colors[a] for a in attrs], edgecolor='black', width=0.45, alpha=0.8)
@@ -204,7 +204,7 @@ def main():
     plt.close()
 
     # ==========================================
-    # CHART 3: Deviation Bar Chart
+    # 图表 3：卡牌价值偏差条形图
     # ==========================================
     plt.figure(figsize=(9, 6.5))
     plt.title('卡牌价值 (VP) 偏差审计', fontsize=13, fontweight='bold', pad=12)
@@ -213,11 +213,11 @@ def main():
     dev_colors = []
     for d in deviations:
         if d > 0.3:
-            dev_colors.append('#E74C3C') # Red
+            dev_colors.append('#E74C3C') # 红色 (超模)
         elif d < -0.3:
-            dev_colors.append('#3498DB') # Blue
+            dev_colors.append('#3498DB') # 蓝色 (保守/削弱)
         else:
-            dev_colors.append('#2ECC71') # Green
+            dev_colors.append('#2ECC71') # 绿色 (完美配平)
             
     y_pos = range(len(card_names))
     plt.barh(y_pos, deviations, color=dev_colors, edgecolor='black', height=0.65, alpha=0.8)
@@ -231,7 +231,7 @@ def main():
     plt.close()
 
     # ==========================================
-    # CHART 4: Card Damage Distribution Bar Chart
+    # 图表 4：卡牌伤害输出分布柱状图（折算总伤害）
     # ==========================================
     plt.figure(figsize=(8, 5))
     plt.title('卡牌伤害输出分布（含多段）', fontsize=13, fontweight='bold', pad=12)
@@ -253,7 +253,7 @@ def main():
     plt.close()
 
     # ==========================================
-    # CHART 5: Card Block Distribution Bar Chart
+    # 图表 5：卡牌格挡值分布柱状图
     # ==========================================
     plt.figure(figsize=(8, 5))
     plt.title('卡牌格挡值分布', fontsize=13, fontweight='bold', pad=12)
@@ -275,7 +275,7 @@ def main():
     plt.close()
 
     # ==========================================
-    # CHART 6: Card Attribute Composition Pie Chart
+    # 图表 6：卡牌战斗属性纯化占比饼图
     # ==========================================
     plt.figure(figsize=(6.5, 6.5))
     plt.title('卡牌战斗属性纯化占比', fontsize=13, fontweight='bold', pad=12)
@@ -296,12 +296,12 @@ def main():
     plt.close()
 
     # ==========================================
-    # CHART 7: Glycemic Impact Bar Chart
+    # 图表 7：各卡牌血糖变化波动影响柱状图
     # ==========================================
     plt.figure(figsize=(10.5, 5.5))
     plt.title('各卡牌血糖升降波动影响', fontsize=13, fontweight='bold', pad=12)
     
-    # Sort cards by bg change descending
+    # 按血糖变化降序排列卡牌数据
     sorted_cards = sorted(cards, key=lambda x: x['bg_change'], reverse=True)
     card_names_bg = [c['name'] for c in sorted_cards]
     bg_changes = [c['bg_change'] for c in sorted_cards]
