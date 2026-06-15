@@ -16,7 +16,6 @@ namespace CGM.UI
         [Header("UI 核心引用")]
         [SerializeField] private Image frameImage;        // 卡牌外框
         [SerializeField] private Image iconImage;         // 卡牌中央插画
-        [SerializeField] private Image iconBgImage;       // 插画背景圆圈（用于着色）
         [SerializeField] private TextMeshProUGUI costText;// 费用
         [SerializeField] private TextMeshProUGUI nameText;// 名称
         [SerializeField] private TextMeshProUGUI descText;// 动态描述
@@ -54,18 +53,20 @@ namespace CGM.UI
             {
                 iconImage.sprite = iconSprite;
                 iconImage.gameObject.SetActive(true);
+                // 设置卡面本身颜色
+                if (CardDatabase.Instance != null)
+                {
+                    iconImage.color = CardDatabase.Instance.GetCardIconColor(card.id);
+                }
+                else
+                {
+                    iconImage.color = Color.white;
+                }
             }
             else
             {
                 iconImage.gameObject.SetActive(false);
                 Debug.LogWarning($"[CardUI] 未能加载插画：{iconPath}");
-            }
-
-
-            // 3. 设置卡面背景颜色（从 card_colors.csv 读取）
-            if (iconBgImage != null && CardDatabase.Instance != null)
-            {
-                iconBgImage.color = CardDatabase.Instance.GetCardIconColor(card.id);
             }
 
             // 4. 设置文字内容
