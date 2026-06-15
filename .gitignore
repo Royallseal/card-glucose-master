@@ -67,3 +67,6 @@ Thumbs.db
 
 # Python 虚拟环境
 .venv/
+
+# 原始素材文件夹
+/Pack/

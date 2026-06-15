@@ -1,9 +1,9 @@
 id,name,type,rarity,energyCost,glucoseChange,damageWeight,blockWeight,effectVPCost,finalDamage,finalBlock,description
 starter_rice,米饭,Starter,Common,1,0.1,1.0,0.0,0,6,0,"造成 6 点伤害，增加 0.1 血糖。"
 starter_walk,散步,Starter,Common,1,-0.1,0.0,1.0,0,0,5,"获得 5 点格挡，降低 0.1 血糖。"
-diet_rice_large,大碗米饭,Diet,Common,2,0.6,1.0,0.0,0,18,0,"造成 18 点伤害，增加 0.6 血糖。"
+diet_feast,丰盛大餐,Diet,Common,2,0.6,1.0,0.0,0,18,0,"造成 18 点伤害，增加 0.6 血糖。"
 diet_oat_bread,燕麦面包,Diet,Common,1,0.2,0.0,1.0,0,0,7,"获得 7 点格挡，增加 0.2 血糖。"
-diet_cucumber,凉拌黄瓜,Diet,Common,1,0.0,0.0,1.0,3,0,3,"获得 3 点格挡。获得 1 层「缓释」（下张膳食卡不升糖）。"
+diet_lettuce,爽脆生菜,Diet,Common,1,0.0,0.0,1.0,3,0,3,"获得 3 点格挡。获得 1 层「缓释」（下张膳食卡不升糖）。"
 diet_apple,新鲜苹果,Diet,Common,0,0.8,1.0,0.0,0,4,0,"造成 4 点伤害 2 次，增加 0.8 血糖。"
 diet_soda,无糖气泡水,Diet,Uncommon,1,0.0,0.0,0.0,8,0,0,"抽 2 张牌。获得 1 层「缓释」。"
 diet_milk,低脂纯牛奶,Diet,Rare,1,0.6,0.0,1.0,0,0,13,"获得 13 点格挡，增加 0.6 血糖。"
