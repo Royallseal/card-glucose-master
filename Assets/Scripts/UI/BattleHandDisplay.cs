@@ -168,6 +168,7 @@ namespace CGM.UI
                 if (dh != null && dh.DraggedAndPlayed)
                 {
                     handObjects.RemoveAt(i);
+                    go.transform.SetParent(null); // 立即脱离父物体，避免影响随后的 Layout 排版计算导致闪烁
                     Destroy(go);
                     // 出牌立刻使弃牌堆视觉计数+1（不超过目标数）
                     if (visualDiscardCount < targetDiscardCount)
