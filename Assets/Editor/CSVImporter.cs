@@ -22,8 +22,10 @@ namespace CGM.Editor
         private const string MainCsvRelativePath = "data/initial_cards_data.csv";
         private const string EffectsCsvRelativePath = "data/initial_card_effects.csv";
         private const string ColorsCsvRelativePath = "data/initial_card_colors.csv";
+        private const string EnemiesCsvRelativePath = "data/enemies_data.csv";
         private const string OutputDirectory = "Assets/Resources/Configs";
         private const string OutputFilePath = "Assets/Resources/Configs/cards.json";
+        private const string EnemiesOutputFilePath = "Assets/Resources/Configs/enemies.json";
 
         /// <summary>
         /// 编译卡牌数据的菜单入口。
@@ -292,6 +294,79 @@ namespace CGM.Editor
             // 添加最后一个字段
             fields.Add(current.ToString());
             return fields;
+        }
+
+        /// <summary>
+        /// 编译敌人数据的菜单入口。
+        /// </summary>
+        [MenuItem("Tools/CGM/编译敌人数据")]
+        public static void ImportEnemyData()
+        {
+            string projectRoot = Path.GetDirectoryName(Application.dataPath);
+            string enemiesCsvPath = Path.Combine(projectRoot, EnemiesCsvRelativePath);
+
+            if (!File.Exists(enemiesCsvPath))
+            {
+                Debug.LogError($"[CSVImporter] 敌人表文件未找到：{enemiesCsvPath}");
+                return;
+            }
+
+            List<EnemyInfo> enemies = ParseEnemiesCSV(enemiesCsvPath);
+
+            EnemyDataWrapper wrapper = new EnemyDataWrapper { enemies = enemies };
+            string json = JsonUtility.ToJson(wrapper, true);
+
+            string outputFullPath = Path.Combine(projectRoot, EnemiesOutputFilePath);
+            string outputDirFullPath = Path.Combine(projectRoot, OutputDirectory);
+
+            if (!Directory.Exists(outputDirFullPath))
+            {
+                Directory.CreateDirectory(outputDirFullPath);
+            }
+
+            File.WriteAllText(outputFullPath, json, Encoding.UTF8);
+            AssetDatabase.Refresh();
+
+            Debug.Log($"<color=#4EC9B0>[CSVImporter]</color> 敌人数据编译完成：共 <b>{enemies.Count}</b> 种敌人。输出至 {EnemiesOutputFilePath}");
+        }
+
+        private static List<EnemyInfo> ParseEnemiesCSV(string path)
+        {
+            List<EnemyInfo> enemies = new List<EnemyInfo>();
+            string content = File.ReadAllText(path, Encoding.UTF8);
+            string[] lines = content.Split('\n');
+
+            for (int i = 1; i < lines.Length; i++)
+            {
+                string line = lines[i].Trim();
+                if (string.IsNullOrEmpty(line)) continue;
+
+                List<string> fields = ParseCSVLine(line);
+                if (fields.Count < 4)
+                {
+                    Debug.LogWarning($"[CSVImporter] 敌人表第 {i + 1} 行字段不足（期望 4，实际 {fields.Count}），已跳过：{line}");
+                    continue;
+                }
+
+                try
+                {
+                    EnemyInfo enemy = new EnemyInfo
+                    {
+                        id = fields[0].Trim(),
+                        name = fields[1].Trim(),
+                        maxHp = int.Parse(fields[2].Trim()),
+                        intentPattern = fields[3].Trim()
+                    };
+
+                    enemies.Add(enemy);
+                }
+                catch (System.Exception e)
+                {
+                    Debug.LogError($"[CSVImporter] 敌人表第 {i + 1} 行解析失败：{e.Message}\n原始行：{line}");
+                }
+            }
+
+            return enemies;
         }
     }
 }
