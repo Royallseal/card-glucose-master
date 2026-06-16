@@ -30,12 +30,14 @@ namespace CGM.UI
         [SerializeField] private GameObject cardPrefab;
 
         [Header("状态文本")]
-        [Tooltip("显示当前回合阶段（你的回合/敌人回合/胜利/失败）")]
+        [Tooltip("显示当前回合阶段")]
         [SerializeField] private TextMeshProUGUI phaseText;
         [Tooltip("显示当前能量（如 3/3）")]
         [SerializeField] private TextMeshProUGUI energyText;
-        [Tooltip("显示抽牌堆/弃牌堆计数")]
-        [SerializeField] private TextMeshProUGUI pileCountText;
+        [Tooltip("抽牌堆计数（DrawPile_UI 的子 Text）")]
+        [SerializeField] private TextMeshProUGUI drawPileCountText;
+        [Tooltip("弃牌堆计数（DiscardPile_UI 的子 Text）")]
+        [SerializeField] private TextMeshProUGUI discardPileCountText;
 
         [Header("按钮")]
         [Tooltip("结束回合按钮")]
@@ -216,11 +218,13 @@ namespace CGM.UI
         // =========================================================================
         private void OnPilesChanged(IReadOnlyList<CardInfo> hand, IReadOnlyList<CardInfo> draw, IReadOnlyList<CardInfo> discard)
         {
-            if (pileCountText != null)
+            if (drawPileCountText != null)
             {
-                int drawCount = draw?.Count ?? 0;
-                int discardCount = discard?.Count ?? 0;
-                pileCountText.text = $"牌库 {drawCount} | 弃牌 {discardCount}";
+                drawPileCountText.text = (draw?.Count ?? 0).ToString();
+            }
+            if (discardPileCountText != null)
+            {
+                discardPileCountText.text = (discard?.Count ?? 0).ToString();
             }
         }
 

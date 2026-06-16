@@ -47,7 +47,7 @@ namespace CGM.UI
             }
 
             // 2. 设置卡牌中央插画（Icon）
-            string iconPath = $"Sprites/Icons/{card.id}";
+            string iconPath = $"Sprites/Cards/Icons/{card.id}";
             Sprite iconSprite = Resources.Load<Sprite>(iconPath);
             if (iconSprite != null)
             {
@@ -85,7 +85,7 @@ namespace CGM.UI
             CardType cardType = card.GetCardType();
             CardRarity cardRarity = card.GetCardRarity();
 
-            if (cardType == CardType.Starter) return "Sprites/UI/frame_blue_starter";
+            if (cardType == CardType.Starter) return "Sprites/Cards/frames/frame_blue_starter";
 
             string color = "red";
             switch (cardType)
@@ -94,7 +94,7 @@ namespace CGM.UI
                 case CardType.Exercise: color = "green"; break;
                 case CardType.Medicine: color = "purple"; break;
             }
-            return $"Sprites/UI/frame_{color}_{cardRarity.ToString().ToLower()}";
+            return $"Sprites/Cards/frames/frame_{color}_{cardRarity.ToString().ToLower()}";
         }
 
 

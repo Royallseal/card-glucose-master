@@ -168,7 +168,7 @@ namespace CGM.Data
             // 初始卡使用统一的蓝色卡框
             if (cardType == CardType.Starter)
             {
-                return "Sprites/UI/frame_blue_starter";
+                return "Sprites/Cards/frames/frame_blue_starter";
             }
 
             // 其他类型根据颜色 + 稀有度拼接路径
@@ -182,7 +182,7 @@ namespace CGM.Data
             }
 
             string rarity = cardRarity.ToString().ToLower();
-            return $"Sprites/UI/frame_{color}_{rarity}";
+            return $"Sprites/Cards/frames/frame_{color}_{rarity}";
         }
     }
 }
