@@ -101,15 +101,15 @@ namespace CGM.Core
         // =========================================================================
 
         /// <summary>
-        /// 计算卡牌作用于目标实体时的最终伤害数值。
-        /// 优先级：1. 基础值 + 活力加成 -> 2. 乏力与脆弱乘数修正 -> 3. 血糖乘数修正 -> 4. 向上取整与零值保底。
+        /// 计算通用基础伤害作用于目标实体时的最终伤害数值（支持卡牌与敌方动作意图计算）。
+        /// 优先级：1. 基础值 + 活力加成 -> 2. 乏力与脆弱乘数修正 -> 3. 自身血糖区间修正 -> 4. 向上取整与零值保底。
         /// </summary>
-        public static int CalculateDamage(CardInfo card, EntityStats source, EntityStats target)
+        public static int CalculateDamage(int baseDamageValue, EntityStats source, EntityStats target)
         {
-            if (card.finalDamage <= 0) return 0;
+            if (baseDamageValue <= 0) return 0;
 
             // 1. 基础值与活力加成
-            int baseDamage = card.finalDamage + GetVitalityDamageBonus(source);
+            int baseDamage = baseDamageValue + GetVitalityDamageBonus(source);
             baseDamage = Mathf.Max(0, baseDamage);
 
             // 2. 状态比例修正 (乏力 x 脆弱)
@@ -124,15 +124,23 @@ namespace CGM.Core
         }
 
         /// <summary>
-        /// 计算卡牌打出时的最终格挡数值。
+        /// 计算卡牌作用于目标实体时的最终伤害数值。
+        /// </summary>
+        public static int CalculateDamage(CardInfo card, EntityStats source, EntityStats target)
+        {
+            return CalculateDamage(card.finalDamage, source, target);
+        }
+
+        /// <summary>
+        /// 计算通用基础值防御时的最终格挡数值（支持卡牌与敌方动作意图计算）。
         /// 优先级：1. 基础值 + 耐力加成 -> 2. 僵硬乘数修正 -> 3. 自身血糖乘数修正 -> 4. 向上取整与零值保底。
         /// </summary>
-        public static int CalculateBlock(CardInfo card, EntityStats source)
+        public static int CalculateBlock(int baseBlockValue, EntityStats source)
         {
-            if (card.finalBlock <= 0) return 0;
+            if (baseBlockValue <= 0) return 0;
 
             // 1. 基础值与耐力加成
-            int baseBlock = card.finalBlock + GetEnduranceBlockBonus(source);
+            int baseBlock = baseBlockValue + GetEnduranceBlockBonus(source);
             baseBlock = Mathf.Max(0, baseBlock);
 
             // 2. 状态比例修正 (僵硬)
@@ -144,6 +152,14 @@ namespace CGM.Core
             // 4. 最终结算（向上取整与最低 0 保底）
             int finalBlock = Mathf.CeilToInt(baseBlock * multiplier);
             return Mathf.Max(0, finalBlock);
+        }
+
+        /// <summary>
+        /// 计算卡牌打出时的最终格挡数值。
+        /// </summary>
+        public static int CalculateBlock(CardInfo card, EntityStats source)
+        {
+            return CalculateBlock(card.finalBlock, source);
         }
 
         /// <summary>

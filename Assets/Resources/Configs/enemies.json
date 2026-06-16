@@ -1,76 +1,76 @@
 ﻿{
     "enemies": [
         {
-            "id": "couch_potato",
-            "name": "久坐沙发怪",
-            "maxHp": 50,
-            "intentPattern": "attack:5;block:5;debuff:stiffness:1;attack:8"
-        },
-        {
             "id": "fried_chicken",
-            "name": "炸鸡巨兽",
-            "maxHp": 80,
-            "intentPattern": "attack:8;attack:10;block:8;buff:vitality:1"
-        },
-        {
-            "id": "overtime_ghost",
-            "name": "熬夜加班怪",
+            "name": "炸鸡怪兽",
             "maxHp": 45,
-            "intentPattern": "debuff:lethargy:1;attack:6;block:6;attack:8"
+            "intentPattern": "block:4;attack:5;attack:7"
         },
         {
-            "id": "stress_mountain",
-            "name": "压力山大",
-            "maxHp": 70,
-            "intentPattern": "attack:6;buff:endurance:1;attack:8;block:8"
-        },
-        {
-            "id": "cola_slime",
-            "name": "快乐肥宅水",
+            "id": "milk_tea_ghost",
+            "name": "奶茶幽灵",
             "maxHp": 40,
-            "intentPattern": "attack:4;debuff:fragility:1;attack:6;block:4"
+            "intentPattern": "debuff:lethargy:1;attack:5;block:5;attack:6"
         },
         {
-            "id": "boba_cultist",
-            "name": "奶茶狂热者",
+            "id": "couch_potato",
+            "name": "久坐沙发",
             "maxHp": 60,
-            "intentPattern": "attack:5;debuff:lethargy:1;attack:8;block:6"
+            "intentPattern": "block:6;attack:6;debuff:stiffness:1;attack:8"
         },
         {
-            "id": "insomnia_specter",
-            "name": "失眠怨灵",
-            "maxHp": 55,
-            "intentPattern": "debuff:stiffness:1;attack:5;block:5;attack:7"
+            "id": "stay_up_bat",
+            "name": "熬夜蝙蝠",
+            "maxHp": 58,
+            "intentPattern": "debuff:lethargy:1;attack:7;block:8;attack:10"
         },
         {
-            "id": "bbq_golem",
-            "name": "高油烧烤",
-            "maxHp": 90,
-            "intentPattern": "block:8;attack:8;buff:endurance:1;attack:12"
+            "id": "snack_demon",
+            "name": "零食恶魔",
+            "maxHp": 64,
+            "intentPattern": "debuff:fragility:1;attack:6;block:6;attack:10"
         },
         {
-            "id": "binge_glutton",
-            "name": "暴饮暴食",
-            "maxHp": 75,
-            "intentPattern": "attack:6;attack:8;buff:vitality:1;block:6"
+            "id": "fat_lord",
+            "name": "肥胖领主",
+            "maxHp": 130,
+            "intentPattern": "block:10;debuff:lethargy:1;attack:8;buff:vitality:1;attack:12"
         },
         {
-            "id": "sedentary_clock",
-            "name": "久坐不动",
+            "id": "numb_assassin",
+            "name": "麻木刺客",
+            "maxHp": 70,
+            "intentPattern": "debuff:stiffness:1;attack:8;block:8;attack:12"
+        },
+        {
+            "id": "floater_phantom",
+            "name": "飞蚊幻影",
             "maxHp": 65,
-            "intentPattern": "attack:5;block:6;debuff:stiffness:1;attack:8"
+            "intentPattern": "debuff:lethargy:1;attack:9;block:10;attack:11"
         },
         {
-            "id": "sugar_free_trap",
-            "name": "无糖陷阱",
-            "maxHp": 48,
-            "intentPattern": "block:6;attack:6;debuff:fragility:1;attack:7"
+            "id": "acid_storm",
+            "name": "酸性风暴",
+            "maxHp": 110,
+            "intentPattern": "debuff:fragility:2;attack:10;block:10;attack:16"
         },
         {
-            "id": "dessert_sprite",
-            "name": "甜品精灵",
-            "maxHp": 35,
-            "intentPattern": "attack:4;debuff:lethargy:1;attack:5;block:5"
+            "id": "hardened_giant",
+            "name": "硬化巨人",
+            "maxHp": 135,
+            "intentPattern": "block:15;buff:endurance:2;attack:10;block:12;attack:15"
+        },
+        {
+            "id": "high_sugar_golem",
+            "name": "高糖傀儡",
+            "maxHp": 120,
+            "intentPattern": "block:10;buff:vitality:2;attack:11;debuff:stiffness:1;attack:16"
+        },
+        {
+            "id": "general_complication",
+            "name": "并发将军",
+            "maxHp": 160,
+            "intentPattern": "debuff:fragility:2;attack:12;debuff:stiffness:2;block:15;attack:18;buff:vitality:2;attack:22"
         }
     ]
 }

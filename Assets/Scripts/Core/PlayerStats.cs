@@ -12,7 +12,7 @@ namespace CGM.Core
     {
         [Header("玩家特有配置")]
         [Range(0f, 15f)]
-        [SerializeField] private float currentGlucose = 5.5f;
+        [SerializeField] private float currentGlucose = 5.7f;
 
         /// <summary>
         /// 当血糖值发生任何改变时触发，通知血糖仪 UI 刷新。

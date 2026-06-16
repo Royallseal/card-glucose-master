@@ -105,3 +105,84 @@ public void ModifyGlucose(float delta, bool isCardEffect)
 * 所有的百分比倍率加成（如脆弱 +50%、健康血糖 +25%）必须先以 `float` 乘数进行合并演算，在最终结算时再进行向上取整（`Mathf.CeilToInt`），避免多次取整引入的累积误差。
 * 任何战斗数值在经过所有增减益计算后，最终必须使用零值夹逼保底判定（`Mathf.Max(0, ...)`），确保最终结算值绝不为负数。
 
+### 4. 规范代码架构骨架示例
+
+为了确保各逻辑模块一致遵循此规范，以下列出核心计算逻辑与常数定义类的标准参考实现骨架。
+
+#### (1) 常量集中管理类 (`BattleConstants.cs`)
+```csharp
+namespace CGM.Core
+{
+    /// <summary>
+    /// 全局战斗与数值计算常量类。
+    /// 集中管理数值缩减率、血糖区间阈值及 UI 高亮颜色代码，严禁硬编码。
+    /// </summary>
+    public static class BattleConstants
+    {
+        // 状态影响因子
+        public const float FragilityDamageIncrease = 0.50f;   // 脆弱状态增加受击伤害比率 (50%)
+        public const float LethargyDamageReduction = 0.25f;    // 乏力状态降低输出伤害比率 (25%)
+        public const float StiffnessBlockReduction = 0.25f;    // 僵硬状态降低获得格挡比率 (25%)
+
+        // 血糖控制阈值
+        public const float GlucoseMin = 1.0f;
+        public const float GlucoseMax = 15.0f;
+        public const float HealthyGlucoseMin = 4.4f;
+        public const float HealthyGlucoseMax = 7.0f;
+        public const float HyperGlucoseThreshold = 7.1f;
+
+        // 血糖修正乘数
+        public const float HealthyModifierMultiplier = 1.25f;       // 健康区间卡牌效果加成 (1.25)
+        public const float HyperModifierMultiplier = 0.75f;         // 高血糖区间卡牌效果削减 (0.75)
+        public const float HyperGlucoseFluctuationMultiplier = 2.0f; // 高血糖区间血糖波动倍数 (2.0)
+
+        // UI 文本富文本高亮颜色代码
+        public const string ColorGreen = "#4EC9B0";   // 属性增益/提升高亮色
+        public const string ColorRed = "#FF6B6B";     // 属性减益/警告高亮色
+        public const string ColorDefault = "#FFFFFF"; // 默认白/基础色
+    }
+}
+```
+
+#### (2) 数值结算计算器 (`BattleCalculator.cs`)
+```csharp
+using UnityEngine;
+using CGM.Data;
+
+namespace CGM.Core
+{
+    /// <summary>
+    /// 核心战斗数值结算与血糖修正计算器。
+    /// 统一承载卡牌与敌方动作意图计算，防止多头维护。
+    /// </summary>
+    public static class BattleCalculator
+    {
+        // 独立状态比率封装
+        public static float GetLethargyDamageMultiplier(EntityStats source)
+        {
+            if (source == null) return 1.0f;
+            return source.GetBuffCount(BuffId.Lethargy) > 0 
+                ? (1.0f - BattleConstants.LethargyDamageReduction) 
+                : 1.0f;
+        }
+
+        // 通用受击计算（复用逻辑）
+        public static int CalculateDamage(int baseDamageValue, EntityStats source, EntityStats target)
+        {
+            if (baseDamageValue <= 0) return 0;
+
+            // 1. 基础伤害与攻击者活力叠加
+            int baseDamage = baseDamageValue + source.GetBuffCount(BuffId.Vitality);
+            baseDamage = Mathf.Max(0, baseDamage);
+
+            // 2. 乘法叠加百分比状态 (乏力、脆弱、自身血糖区间)
+            float multiplier = GetLethargyDamageMultiplier(source) * GetFragilityDamageMultiplier(target);
+            multiplier *= GetGlucoseMultiplier(source);
+
+            // 3. 向上取整与最低零值保底
+            int finalDamage = Mathf.CeilToInt(baseDamage * multiplier);
+            return Mathf.Max(0, finalDamage);
+        }
+    }
+}
+```
