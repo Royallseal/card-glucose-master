@@ -38,6 +38,15 @@ namespace CGM.Core
         }
 
         /// <summary>
+        /// 直接设置当前血糖值，不触发缓释/敏化次数盾逻辑。
+        /// </summary>
+        public void SetGlucose(float value)
+        {
+            currentGlucose = Mathf.Clamp(value, BattleConstants.GlucoseMin, BattleConstants.GlucoseMax);
+            NotifyGlucoseChange();
+        }
+
+        /// <summary>
         /// 修改当前血糖值，并处理“缓释”与“敏化”被动次数盾的效果。
         /// </summary>
         /// <param name="changeAmount">血糖变化量（正数为升糖，负数为降糖）</param>
@@ -75,8 +84,7 @@ namespace CGM.Core
             // 3. 应用血糖变化，并限制在设计区间
             if (changeAmount != 0f)
             {
-                currentGlucose = Mathf.Clamp(currentGlucose + changeAmount, BattleConstants.GlucoseMin, BattleConstants.GlucoseMax);
-                NotifyGlucoseChange();
+                SetGlucose(currentGlucose + changeAmount);
             }
         }
 

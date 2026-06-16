@@ -31,6 +31,7 @@ namespace CGM.Core
         public int MaxHp => maxHp;
         public int CurrentHp => currentHp;
         public int Block => block;
+        public bool IsDead => currentHp <= 0;
 
         protected virtual void Start()
         {
@@ -81,6 +82,17 @@ namespace CGM.Core
                 currentHp = Mathf.Max(0, currentHp - damageAmount);
             }
 
+            NotifyChange();
+        }
+
+        /// <summary>
+        /// 直接扣除生命值，不受格挡影响。
+        /// </summary>
+        public virtual void LoseHp(int amount)
+        {
+            if (amount <= 0) return;
+
+            currentHp = Mathf.Max(0, currentHp - amount);
             NotifyChange();
         }
 
