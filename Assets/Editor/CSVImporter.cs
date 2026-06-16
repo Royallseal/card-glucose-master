@@ -1,8 +1,8 @@
 // =============================================================================
-// CSVImporter.cs — 卡牌数据 CSV 编译器（Unity 编辑器扩展）
+// CSVImporter.cs — 卡牌与敌人数据 CSV 编译器（Unity 编辑器扩展）
 // 命名空间：CGM.Editor
-// 职责：读取 data/ 目录下的两张 CSV 表，合并编译为 JSON 输出至 Resources。
-// 触发方式：Unity 菜单栏 Tools -> CGM -> 编译卡牌数据
+// 职责：读取 data/ 目录下的卡牌主表、效果表、颜色表以及初始敌人配置表，编译为 JSON 输出至 Resources。
+// 触发方式：Unity 菜单栏 Tools -> CGM -> 编译卡牌数据 或 编译敌人数据
 // =============================================================================
 
 using System.Collections.Generic;
@@ -15,14 +15,14 @@ using CGM.Data;
 namespace CGM.Editor
 {
     /// <summary>
-    /// 卡牌数据 CSV 编译器，将主表与效果表合并编译为 JSON 文件。
+    /// 卡牌与敌人数据 CSV 编译器，将卡牌配置和初始敌人配置表分别编译为 JSON 文件。
     /// </summary>
     public static class CSVImporter
     {
         private const string MainCsvRelativePath = "data/initial_cards_data.csv";
         private const string EffectsCsvRelativePath = "data/initial_card_effects.csv";
         private const string ColorsCsvRelativePath = "data/initial_card_colors.csv";
-        private const string EnemiesCsvRelativePath = "data/enemies_data.csv";
+        private const string EnemiesCsvRelativePath = "data/initial_enemies_data.csv";
         private const string OutputDirectory = "Assets/Resources/Configs";
         private const string OutputFilePath = "Assets/Resources/Configs/cards.json";
         private const string EnemiesOutputFilePath = "Assets/Resources/Configs/enemies.json";
@@ -297,7 +297,7 @@ namespace CGM.Editor
         }
 
         /// <summary>
-        /// 编译敌人数据的菜单入口。
+        /// 编译初始敌人数据的菜单入口。
         /// </summary>
         [MenuItem("Tools/CGM/编译敌人数据")]
         public static void ImportEnemyData()
@@ -307,7 +307,7 @@ namespace CGM.Editor
 
             if (!File.Exists(enemiesCsvPath))
             {
-                Debug.LogError($"[CSVImporter] 敌人表文件未找到：{enemiesCsvPath}");
+                Debug.LogError($"[CSVImporter] 初始敌人表文件未找到：{enemiesCsvPath}");
                 return;
             }
 
@@ -327,7 +327,7 @@ namespace CGM.Editor
             File.WriteAllText(outputFullPath, json, Encoding.UTF8);
             AssetDatabase.Refresh();
 
-            Debug.Log($"<color=#4EC9B0>[CSVImporter]</color> 敌人数据编译完成：共 <b>{enemies.Count}</b> 种敌人。输出至 {EnemiesOutputFilePath}");
+            Debug.Log($"<color=#4EC9B0>[CSVImporter]</color> 初始敌人数据编译完成：共 <b>{enemies.Count}</b> 种敌人。输出至 {EnemiesOutputFilePath}");
         }
 
         private static List<EnemyInfo> ParseEnemiesCSV(string path)
@@ -344,7 +344,7 @@ namespace CGM.Editor
                 List<string> fields = ParseCSVLine(line);
                 if (fields.Count < 4)
                 {
-                    Debug.LogWarning($"[CSVImporter] 敌人表第 {i + 1} 行字段不足（期望 4，实际 {fields.Count}），已跳过：{line}");
+                    Debug.LogWarning($"[CSVImporter] 初始敌人表第 {i + 1} 行字段不足（期望 4，实际 {fields.Count}），已跳过：{line}");
                     continue;
                 }
 
@@ -362,7 +362,7 @@ namespace CGM.Editor
                 }
                 catch (System.Exception e)
                 {
-                    Debug.LogError($"[CSVImporter] 敌人表第 {i + 1} 行解析失败：{e.Message}\n原始行：{line}");
+                    Debug.LogError($"[CSVImporter] 初始敌人表第 {i + 1} 行解析失败：{e.Message}\n原始行：{line}");
                 }
             }
 

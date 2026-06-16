@@ -27,7 +27,7 @@ namespace CGM.Data
     }
 
     /// <summary>
-    /// 单个敌人的基础配置属性，对应 enemies_data.csv 中的一行。
+    /// 单个敌人的基础配置属性，对应 initial_enemies_data.csv 中的一行。
     /// </summary>
     [Serializable]
     public class EnemyInfo

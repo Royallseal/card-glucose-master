@@ -16,13 +16,13 @@
             "id": "couch_potato",
             "name": "久坐沙发",
             "maxHp": 60,
-            "intentPattern": "block:6;attack:6;debuff:stiffness:1;attack:8"
+            "intentPattern": "block:6;attack:8;debuff:stiffness:1;attack:8"
         },
         {
             "id": "stay_up_bat",
             "name": "熬夜蝙蝠",
             "maxHp": 58,
-            "intentPattern": "debuff:lethargy:1;attack:7;block:8;attack:10"
+            "intentPattern": "debuff:lethargy:1;attack:7;block:6;attack:9"
         },
         {
             "id": "snack_demon",
@@ -34,25 +34,25 @@
             "id": "fat_lord",
             "name": "肥胖领主",
             "maxHp": 130,
-            "intentPattern": "block:10;debuff:lethargy:1;attack:8;buff:vitality:1;attack:12"
+            "intentPattern": "block:10;debuff:lethargy:1;attack:10;buff:vitality:2;attack:12"
         },
         {
             "id": "numb_assassin",
             "name": "麻木刺客",
             "maxHp": 70,
-            "intentPattern": "debuff:stiffness:1;attack:8;block:8;attack:12"
+            "intentPattern": "debuff:stiffness:1;attack:8;block:9;attack:12"
         },
         {
             "id": "floater_phantom",
             "name": "飞蚊幻影",
             "maxHp": 65,
-            "intentPattern": "debuff:lethargy:1;attack:9;block:10;attack:11"
+            "intentPattern": "debuff:lethargy:1;attack:9;block:9;attack:11"
         },
         {
             "id": "acid_storm",
             "name": "酸性风暴",
             "maxHp": 110,
-            "intentPattern": "debuff:fragility:2;attack:10;block:10;attack:16"
+            "intentPattern": "debuff:fragility:2;attack:11;block:10;attack:16"
         },
         {
             "id": "hardened_giant",
@@ -64,13 +64,13 @@
             "id": "high_sugar_golem",
             "name": "高糖傀儡",
             "maxHp": 120,
-            "intentPattern": "block:10;buff:vitality:2;attack:11;debuff:stiffness:1;attack:16"
+            "intentPattern": "block:10;buff:vitality:2;attack:13;debuff:stiffness:2;attack:17"
         },
         {
             "id": "general_complication",
             "name": "并发将军",
             "maxHp": 160,
-            "intentPattern": "debuff:fragility:2;attack:12;debuff:stiffness:2;block:15;attack:18;buff:vitality:2;attack:22"
+            "intentPattern": "debuff:fragility:2;attack:16;debuff:stiffness:2;block:20;attack:23;buff:vitality:2;attack:26"
         }
     ]
 }
