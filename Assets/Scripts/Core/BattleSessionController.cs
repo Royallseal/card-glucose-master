@@ -52,6 +52,8 @@ namespace CGM.Core
             "starter_rice",
             "starter_rice",
             "starter_rice",
+            "starter_rice",
+            "starter_walk",
             "starter_walk",
             "starter_walk",
             "starter_walk",
@@ -83,6 +85,7 @@ namespace CGM.Core
 
         public BattleTurnPhase Phase { get; private set; } = BattleTurnPhase.NotStarted;
         public int CurrentEnergy { get; private set; }
+        public int MaxEnergy => startingEnergy;
         public int TurnNumber { get; private set; }
         public IReadOnlyList<CardInfo> Hand => cardPile.Hand;
         public IReadOnlyList<CardInfo> DrawPile => cardPile.DrawPile;

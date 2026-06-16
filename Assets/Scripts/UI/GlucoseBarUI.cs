@@ -1,0 +1,53 @@
+// =============================================================================
+// GlucoseBarUI.cs — 血糖条 UI 控制器
+// 命名空间：CGM.UI
+// 职责：配合 PlayerStats，实时渲染血糖条滑块位置和数值文本。
+//       挂载在 CGM_Bar 上。
+// =============================================================================
+
+using UnityEngine;
+using UnityEngine.UI;
+using TMPro;
+using CGM.Core;
+
+namespace CGM.UI
+{
+    public class GlucoseBarUI : MonoBehaviour
+    {
+        [Header("血糖条")]
+        [SerializeField] private Slider glucoseSlider;
+        [SerializeField] private TextMeshProUGUI glucoseValueText;
+
+        private PlayerStats _playerStats;
+
+        private void Start()
+        {
+            _playerStats = FindObjectOfType<PlayerStats>();
+            if (_playerStats != null)
+            {
+                _playerStats.OnGlucoseChanged += RefreshUI;
+                RefreshUI(_playerStats.CurrentGlucose);
+            }
+        }
+
+        private void OnDestroy()
+        {
+            if (_playerStats != null)
+            {
+                _playerStats.OnGlucoseChanged -= RefreshUI;
+            }
+        }
+
+        private void RefreshUI(float glucose)
+        {
+            if (glucoseSlider != null)
+            {
+                glucoseSlider.value = Mathf.Clamp(glucose, glucoseSlider.minValue, glucoseSlider.maxValue);
+            }
+            if (glucoseValueText != null)
+            {
+                glucoseValueText.text = $"{glucose:F1} mmol/L";
+            }
+        }
+    }
+}

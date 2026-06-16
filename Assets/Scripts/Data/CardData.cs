@@ -123,6 +123,24 @@ namespace CGM.Data
         {
             return Registry.Values;
         }
+
+        /// <summary>
+        /// 根据 BuffId 返回对应的精灵资源路径。
+        /// </summary>
+        public static string GetSpritePath(BuffId id)
+        {
+            switch (id)
+            {
+                case BuffId.Vitality:    return "Sprites/UI/Icons/buff_vitality";
+                case BuffId.Endurance:   return "Sprites/UI/Icons/buff_endurance";
+                case BuffId.Fragility:   return "Sprites/UI/Icons/debuff_fragility";
+                case BuffId.Lethargy:    return "Sprites/UI/Icons/debuff_lethargy";
+                case BuffId.Stiffness:   return "Sprites/UI/Icons/debuff_stiffness";
+                case BuffId.SlowRelease: return "Sprites/UI/Icons/buff_slow_release";
+                case BuffId.Sensitivity: return "Sprites/UI/Icons/buff_sensitivity";
+                default:                 return "Sprites/UI/Icons/intent_status";
+            }
+        }
     }
 
     // =========================================================================

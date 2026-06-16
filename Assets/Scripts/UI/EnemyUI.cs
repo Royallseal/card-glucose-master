@@ -40,6 +40,19 @@ namespace CGM.UI
 
         private void Start()
         {
+            // 自动查找自身或父节点上的 EnemyStats
+            if (_enemyStats == null)
+            {
+                _enemyStats = GetComponent<EnemyStats>();
+                if (_enemyStats == null)
+                    _enemyStats = GetComponentInParent<EnemyStats>();
+            }
+            if (_enemyStats != null)
+            {
+                _enemyStats.OnStatsChanged += RefreshUI;
+                RefreshUI();
+            }
+
             // 缓存玩家 Stats，用于计算意图受击伤害
             if (_cachedPlayer == null)
             {
@@ -136,64 +149,24 @@ namespace CGM.UI
             switch (intent.actionType)
             {
                 case "attack":
-                    // 加载攻击意图图标
                     intentIcon.sprite = Resources.Load<Sprite>("Sprites/UI/Icons/intent_attack");
-                    
-                    // 实时进行受击公式计算 (包含玩家的脆弱、敌方的乏力和活力等)
-                    int baseDamage = intent.GetValue();
-                    int finalDamage = BattleCalculator.CalculateDamage(baseDamage, _enemyStats, _cachedPlayer);
-                    
-                    // 对比初始值进行红绿变色渲染
-                    if (finalDamage > baseDamage)
-                    {
-                        intentValueText.text = $"<color={BattleConstants.ColorGreen}>{finalDamage}</color>";
-                    }
-                    else if (finalDamage < baseDamage)
-                    {
-                        intentValueText.text = $"<color={BattleConstants.ColorRed}>{finalDamage}</color>";
-                    }
-                    else
-                    {
-                        intentValueText.text = finalDamage.ToString();
-                    }
+                    intentValueText.text = intent.GetValue().ToString();
+                    intentValueText.gameObject.SetActive(true);
+                    Debug.Log($"[EnemyUI] 攻击意图数值: {intentValueText.text}, active: {intentValueText.gameObject.activeSelf}");
                     break;
 
                 case "block":
-                    // 加载格挡意图图标
                     intentIcon.sprite = Resources.Load<Sprite>("Sprites/UI/Icons/intent_block");
-                    
-                    // 实时计算最终格挡 (考虑僵硬、耐力等)
-                    int baseBlock = intent.GetValue();
-                    int finalBlock = BattleCalculator.CalculateBlock(baseBlock, _enemyStats);
-                    
-                    // 对比初始值变色
-                    if (finalBlock > baseBlock)
-                    {
-                        intentValueText.text = $"<color={BattleConstants.ColorGreen}>{finalBlock}</color>";
-                    }
-                    else if (finalBlock < baseBlock)
-                    {
-                        intentValueText.text = $"<color={BattleConstants.ColorRed}>{finalBlock}</color>";
-                    }
-                    else
-                    {
-                        intentValueText.text = finalBlock.ToString();
-                    }
+                    intentValueText.gameObject.SetActive(false);
                     break;
 
                 case "buff":
                 case "debuff":
-                    // 从 parameter1 中解析具体的 BuffId，将其对应的状态图标作为意图展现
                     if (System.Enum.TryParse<BuffId>(intent.parameter1, true, out var targetBuffId))
-                    {
-                        intentIcon.sprite = Resources.Load<Sprite>(GetBuffSpritePath(targetBuffId));
-                    }
+                        intentIcon.sprite = Resources.Load<Sprite>(BuffDatabase.GetSpritePath(targetBuffId));
                     else
-                    {
                         intentIcon.sprite = Resources.Load<Sprite>("Sprites/UI/Icons/intent_status");
-                    }
-                    // 意图数值文本直接呈现 Buff 层数 (白字)
-                    intentValueText.text = intent.parameter2.ToString();
+                    intentValueText.gameObject.SetActive(false);
                     break;
 
                 default:
@@ -232,7 +205,7 @@ namespace CGM.UI
                 TextMeshProUGUI txt = iconGo.GetComponentInChildren<TextMeshProUGUI>();
 
                 // 载入对应的图标 Sprite
-                string spritePath = GetBuffSpritePath(id);
+                string spritePath = BuffDatabase.GetSpritePath(id);
                 Sprite sp = Resources.Load<Sprite>(spritePath);
                 if (img != null && sp != null)
                 {
@@ -244,24 +217,6 @@ namespace CGM.UI
                 {
                     txt.text = stacks.ToString();
                 }
-            }
-        }
-
-        /// <summary>
-        /// 获取 BuffId 对应图片资源在 Resources 目录下的相对路径。
-        /// </summary>
-        private string GetBuffSpritePath(BuffId id)
-        {
-            switch (id)
-            {
-                case BuffId.Vitality:    return "Sprites/UI/Icons/buff_vitality";
-                case BuffId.Endurance:   return "Sprites/UI/Icons/buff_endurance";
-                case BuffId.Fragility:   return "Sprites/UI/Icons/debuff_fragility";
-                case BuffId.Lethargy:    return "Sprites/UI/Icons/debuff_lethargy";
-                case BuffId.Stiffness:   return "Sprites/UI/Icons/debuff_stiffness";
-                case BuffId.SlowRelease: return "Sprites/UI/Icons/buff_slow_release";
-                case BuffId.Sensitivity: return "Sprites/UI/Icons/buff_sensitivity";
-                default:                 return "Sprites/UI/Icons/intent_status";
             }
         }
     }

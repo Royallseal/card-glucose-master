@@ -99,7 +99,7 @@ namespace CGM.UI
 
             // 初始刷新一次（如果战斗已经开始）
             OnPhaseChanged(battleController.Phase);
-            OnEnergyChanged(battleController.CurrentEnergy, typeof(BattleSessionController).GetField("startingEnergy", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)?.GetValue(battleController) is int max ? max : 3);
+            OnEnergyChanged(battleController.CurrentEnergy, battleController.MaxEnergy);
         }
 
         private void OnDestroy()
