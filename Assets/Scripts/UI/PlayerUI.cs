@@ -46,6 +46,9 @@ namespace CGM.UI
                 _playerStats.OnStatsChanged += RefreshUI;
                 RefreshUI();
             }
+
+            // 血条只显示，不响应拖拽
+            if (hpSlider != null) hpSlider.interactable = false;
         }
 
         private void OnDestroy()

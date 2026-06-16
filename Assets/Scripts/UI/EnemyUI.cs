@@ -55,6 +55,9 @@ namespace CGM.UI
                 RefreshUI();
             }
 
+            // 血条只显示，不响应拖拽
+            if (hpSlider != null) hpSlider.interactable = false;
+
             // 缓存玩家 Stats，用于计算意图受击伤害
             if (_cachedPlayer == null)
             {

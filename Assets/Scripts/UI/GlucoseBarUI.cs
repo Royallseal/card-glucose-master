@@ -28,6 +28,9 @@ namespace CGM.UI
                 _playerStats.OnGlucoseChanged += RefreshUI;
                 RefreshUI(_playerStats.CurrentGlucose);
             }
+
+            // 血糖条只显示，不响应拖拽
+            if (glucoseSlider != null) glucoseSlider.interactable = false;
         }
 
         private void OnDestroy()
