@@ -232,8 +232,9 @@ namespace CGM.Data
         /// </summary>
         /// <param name="modifierDamage">运行时攻击增益（默认为 0）</param>
         /// <param name="modifierBlock">运行时格挡增益（默认为 0）</param>
+        /// <param name="glucoseMultiplier">血糖变化倍率（默认为 1.0f，高血糖 Hyper 状态下应传入 2.0f 触发红字预警）</param>
         /// <returns>最终带富文本的描述字符串</returns>
-        public string GetDynamicDescription(int modifierDamage = 0, int modifierBlock = 0)
+        public string GetDynamicDescription(int modifierDamage = 0, int modifierBlock = 0, float glucoseMultiplier = 1.0f)
         {
             if (string.IsNullOrEmpty(description)) return "";
 
@@ -246,11 +247,11 @@ namespace CGM.Data
                 string damageStr = currentDamage.ToString();
                 if (modifierDamage > 0)
                 {
-                    damageStr = $"<color=#4EC9B0>{currentDamage}</color>"; // 增益显示绿色
+                    damageStr = $"<color={CGM.Core.BattleConstants.ColorGreen}>{currentDamage}</color>"; // 增益显示绿色
                 }
                 else if (modifierDamage < 0)
                 {
-                    damageStr = $"<color=#FF6B6B>{currentDamage}</color>"; // 减益显示红色
+                    damageStr = $"<color={CGM.Core.BattleConstants.ColorRed}>{currentDamage}</color>"; // 减益显示红色
                 }
                 result = result.Replace("{D}", damageStr);
             }
@@ -262,11 +263,11 @@ namespace CGM.Data
                 string blockStr = currentBlock.ToString();
                 if (modifierBlock > 0)
                 {
-                    blockStr = $"<color=#4EC9B0>{currentBlock}</color>";
+                    blockStr = $"<color={CGM.Core.BattleConstants.ColorGreen}>{currentBlock}</color>";
                 }
                 else if (modifierBlock < 0)
                 {
-                    blockStr = $"<color=#FF6B6B>{currentBlock}</color>";
+                    blockStr = $"<color={CGM.Core.BattleConstants.ColorRed}>{currentBlock}</color>";
                 }
                 result = result.Replace("{B}", blockStr);
             }
@@ -274,11 +275,25 @@ namespace CGM.Data
             // 3. 处理血糖变化占位符 {G}
             if (result.Contains("{G}"))
             {
-                // 格式化血糖变化数值（绝对值展示，带有一位小数），避免长浮点精度问题
-                string formattedVal = System.Math.Abs(glucoseChange).ToString("F1");
-                string glucoseStr = glucoseChange >= 0 
-                    ? $"增加 <color=#FFAD1F>{formattedVal}</color>" 
-                    : $"降低 <color=#4EC9B0>{formattedVal}</color>";
+                // 计算当前受血糖状态修正后的血糖变化值
+                float currentGlucoseChange = glucoseChange * glucoseMultiplier;
+                string formattedVal = System.Math.Abs(currentGlucoseChange).ToString("F1");
+                
+                string glucoseStr;
+                // 如果血糖波动倍率大于 1（高血糖 Hyper 状态），强制显示为红色高亮
+                if (glucoseMultiplier > 1.0f)
+                {
+                    glucoseStr = currentGlucoseChange >= 0 
+                        ? $"增加 <color={CGM.Core.BattleConstants.ColorRed}>{formattedVal}</color>" 
+                        : $"降低 <color={CGM.Core.BattleConstants.ColorRed}>{formattedVal}</color>";
+                }
+                else
+                {
+                    // 正常状态：升糖显示橘黄，降糖显示绿色
+                    glucoseStr = currentGlucoseChange >= 0 
+                        ? $"增加 <color={CGM.Core.BattleConstants.ColorOrange}>{formattedVal}</color>" 
+                        : $"降低 <color={CGM.Core.BattleConstants.ColorGreen}>{formattedVal}</color>";
+                }
                 
                 result = result.Replace("{G}", glucoseStr);
             }
@@ -310,6 +325,7 @@ namespace CGM.Data
 
         /// <summary>
         /// 获取卡牌类型枚举值。
+
         /// </summary>
 
         public CardType GetCardType()
