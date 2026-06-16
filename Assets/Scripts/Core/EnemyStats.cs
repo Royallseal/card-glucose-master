@@ -17,6 +17,11 @@ namespace CGM.Core
         private List<EnemyIntentInfo> intentCycle = new List<EnemyIntentInfo>();
         private int currentIntentIndex = 0;
 
+        /// <summary>
+        /// 回合递增强度系数（每回合增加约 8%）。
+        /// </summary>
+        public float TurnScaling { get; private set; } = 1.0f;
+
         public EnemyInfo EnemyInfo => enemyInfo;
         public string EnemyId => enemyId;
 
@@ -106,15 +111,19 @@ namespace CGM.Core
             switch (intent.actionType)
             {
                 case "attack":
-                    int dmg = BattleCalculator.CalculateDamage(intent.GetValue(), this, player);
+                    int baseDmg = intent.GetValue();
+                    int scaledDmg = Mathf.CeilToInt(baseDmg * TurnScaling);
+                    int dmg = BattleCalculator.CalculateDamage(scaledDmg, this, player);
                     player.TakeDamage(dmg);
-                    Debug.Log($"<color=#FF6B6B>[Enemy Action]</color> <b>{enemyInfo.name}</b> 攻击玩家，造成 <b>{dmg}</b> 点伤害（基础 {intent.GetValue()}）");
+                    Debug.Log($"<color=#FF6B6B>[Enemy Action]</color> <b>{enemyInfo.name}</b> 攻击玩家，造成 <b>{dmg}</b> 点伤害（基础 {baseDmg}，缩放 ×{TurnScaling:F2}）");
                     break;
 
                 case "block":
-                    int blk = BattleCalculator.CalculateBlock(intent.GetValue(), this);
+                    int baseBlk = intent.GetValue();
+                    int scaledBlk = Mathf.CeilToInt(baseBlk * TurnScaling);
+                    int blk = BattleCalculator.CalculateBlock(scaledBlk, this);
                     GainBlock(blk);
-                    Debug.Log($"<color=#4EC9B0>[Enemy Action]</color> <b>{enemyInfo.name}</b> 获得 <b>{blk}</b> 点格挡（基础 {intent.GetValue()}）");
+                    Debug.Log($"<color=#4EC9B0>[Enemy Action]</color> <b>{enemyInfo.name}</b> 获得 <b>{blk}</b> 点格挡（基础 {baseBlk}，缩放 ×{TurnScaling:F2}）");
                     break;
 
                 case "buff":
@@ -148,6 +157,14 @@ namespace CGM.Core
 
             // 推进到下一个意图动作并广播状态刷新
             AdvanceIntent();
+        }
+
+        /// <summary>
+        /// 回合结束递增敌人强度（每回合 +8%）。
+        /// </summary>
+        public void IncrementTurnScaling()
+        {
+            TurnScaling += 0.08f;
         }
     }
 }

@@ -491,7 +491,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &236064229
 RectTransform:
   m_ObjectHideFlags: 0
@@ -2621,7 +2621,7 @@ MonoBehaviour:
   m_VertexBufferAutoSizeReduction: 0
   m_useMaxVisibleDescender: 1
   m_pageToDisplay: 1
-  m_margin: {x: 0, y: 0, z: 0, w: 0}
+  m_margin: {x: 0, y: 0, z: 0, w: 1.6187134}
   m_isUsingLegacyAnimationComponent: 0
   m_isVolumetricText: 0
   m_hasFontAssetChanged: 0
@@ -2829,7 +2829,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 8ccfc1105fc215740885b1f11368bf7d, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 592223c6704dfdd42a41275225f2de42, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -3044,6 +3044,7 @@ MonoBehaviour:
   intentValueText: {fileID: 1028180368}
   buffContainer: {fileID: 980155777}
   buffIconPrefab: {fileID: 5567512023884542568, guid: 5b4a5c8bfaa7186409510d76954ef86c, type: 3}
+  targetIndicator: {fileID: 236064228}
 --- !u!1 &1258548492
 GameObject:
   m_ObjectHideFlags: 0
@@ -4833,7 +4834,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1689170984
 RectTransform:
   m_ObjectHideFlags: 0
@@ -5142,7 +5143,7 @@ MonoBehaviour:
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
   m_fontSizeMax: 72
-  m_fontStyle: 1
+  m_fontStyle: 0
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
   m_textAlignment: 65535
@@ -5831,7 +5832,7 @@ MonoBehaviour:
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
   m_fontSizeMax: 72
-  m_fontStyle: 1
+  m_fontStyle: 0
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
   m_textAlignment: 65535
@@ -6126,7 +6127,7 @@ MonoBehaviour:
   hpText: {fileID: 1068171297}
   blockContainer: {fileID: 1368009925}
   blockText: {fileID: 1861071228}
-  targetIndicator: {fileID: 0}
+  targetIndicator: {fileID: 1689170983}
   buffContainer: {fileID: 1567184328}
   buffIconPrefab: {fileID: 5567512023884542568, guid: 5b4a5c8bfaa7186409510d76954ef86c, type: 3}
 --- !u!1 &2026535229

@@ -63,12 +63,6 @@ namespace CGM.Core
         [Header("战斗奖励")]
         [SerializeField] private int rewardCardCount = 3;
 
-        /// <summary>
-        /// 血糖死亡判定阈值（与设计文档一致）。
-        /// </summary>
-        private const float GlucoseDeathMin = 2.0f;
-        private const float GlucoseDeathMax = 15.0f;
-
         private readonly BattleCardPile cardPile = new BattleCardPile();
         private readonly List<CardInfo> pendingRewardCards = new List<CardInfo>();
 
@@ -262,6 +256,7 @@ namespace CGM.Core
 
             playerStats.TickBuffsEndOfTurn();
             enemyStats.TickBuffsEndOfTurn();
+            enemyStats.IncrementTurnScaling();
             playerStats.ClearBlock();
 
             if (CheckBattleEnd())
@@ -318,16 +313,16 @@ namespace CGM.Core
             if (playerStats != null)
             {
                 float glucose = playerStats.CurrentGlucose;
-                if (glucose < GlucoseDeathMin)
+                if (glucose < BattleConstants.GlucoseDeathMin)
                 {
-                    LogCombat($"[BattleSession] 血糖过低 {glucose:F1} < {GlucoseDeathMin} —— 血糖缺失！");
+                    LogCombat($"[BattleSession] 血糖过低 {glucose:F1} < {BattleConstants.GlucoseDeathMin} —— 血糖缺失！");
                     OnStateWarning?.Invoke("血糖过低，生命垂危！");
                     FinishBattle(BattleOutcome.Defeat);
                     return true;
                 }
-                if (glucose > GlucoseDeathMax)
+                if (glucose > BattleConstants.GlucoseDeathMax)
                 {
-                    LogCombat($"[BattleSession] 血糖过高 {glucose:F1} > {GlucoseDeathMax} —— 高血糖危象！");
+                    LogCombat($"[BattleSession] 血糖过高 {glucose:F1} > {BattleConstants.GlucoseDeathMax} —— 高血糖危象！");
                     OnStateWarning?.Invoke("血糖过高，高血糖危象！");
                     FinishBattle(BattleOutcome.Defeat);
                     return true;

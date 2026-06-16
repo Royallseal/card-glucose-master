@@ -35,6 +35,7 @@ namespace CGM.UI
         [Header("Buff/Debuff UI 容器")]
         [SerializeField] private Transform buffContainer;        // Buff 图标挂载父节点
         [SerializeField] private GameObject buffIconPrefab;      // Buff 图标 Prefab (Resources/Prefabs/BuffIcon)
+        [SerializeField] private GameObject targetIndicator;     // 锁定指示器（拖拽卡牌时显示）
 
         private EnemyStats _enemyStats;
         private PlayerStats _cachedPlayer;
@@ -232,6 +233,15 @@ namespace CGM.UI
                     txt.text = stacks.ToString();
                 }
             }
+        }
+
+        /// <summary>
+        /// 显示或隐藏锁定指示器（拖拽卡牌悬停时使用）。
+        /// </summary>
+        public void ShowTargetIndicator(bool show)
+        {
+            if (targetIndicator != null)
+                targetIndicator.SetActive(show);
         }
     }
 }

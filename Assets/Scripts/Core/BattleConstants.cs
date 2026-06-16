@@ -16,12 +16,14 @@ namespace CGM.Core
         // =========================================================================
         // 血糖阈值与修正比例
         // =========================================================================
+        public const float GlucoseDeathMin = 2.0f;   // 低于此值判负
+        public const float GlucoseDeathMax = 15.0f;   // 高于此值判负
         public const float GlucoseMin = 0.0f;
         public const float GlucoseMax = 15.0f;
 
         public const float HealthyGlucoseMin = 4.4f;
         public const float HealthyGlucoseMax = 7.0f;
-        public const float HyperGlucoseThreshold = 7.1f;
+        public const float HyperGlucoseThreshold = 7.0f;  // >7.0 即为高血糖，与健康区无缝衔接
 
         public const float HealthyModifierMultiplier = 1.25f; // 健康状态提升 25%
         public const float HyperModifierMultiplier = 0.75f;   // 高血糖状态削减 25%

@@ -144,10 +144,22 @@ namespace CGM.UI
                 CardUI cardUI = cardGo.GetComponent<CardUI>();
                 if (cardUI != null)
                 {
-                    cardUI.SetCard(card);
+                    // 计算自身状态修正后的卡面预览值
+                    var player = FindObjectOfType<CGM.Core.PlayerStats>();
+                    int projectedDmg = CGM.Core.BattleCalculator.CalculateSelfDamage(card, player);
+                    int projectedBlk = CGM.Core.BattleCalculator.CalculateSelfBlock(card, player);
+                    int dmgMod = projectedDmg - card.finalDamage;
+                    int blkMod = projectedBlk - card.finalBlock;
+                    cardUI.SetCard(card, dmgMod, blkMod);
                 }
 
-                // 挂载点击出牌回调
+                // 设置拖拽处理器
+                var dragHandler = cardGo.GetComponent<CardDragHandler>();
+                if (dragHandler == null)
+                    dragHandler = cardGo.AddComponent<CardDragHandler>();
+                dragHandler.SetCardInfo(card);
+
+                // 挂载点击出牌回调（保留点击作为快速出牌方式）
                 Button btn = cardGo.GetComponent<Button>();
                 if (btn == null)
                 {
@@ -204,10 +216,6 @@ namespace CGM.UI
             if (endTurnButton != null)
             {
                 endTurnButton.interactable = isPlayerTurn;
-            }
-            if (endTurnButtonText != null)
-            {
-                endTurnButtonText.color = isPlayerTurn ? Color.white : Color.gray;
             }
 
             RefreshHandInteractable();

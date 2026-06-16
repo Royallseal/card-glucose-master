@@ -39,13 +39,28 @@ namespace CGM.Data
 
         /// <summary>
         /// 解析意图字符串，返回结构化的意图行动循环列表。
+        /// 支持用 | 分隔多套循环，开局时随机选一套。
         /// </summary>
         public List<EnemyIntentInfo> GetIntentCycle()
         {
-            List<EnemyIntentInfo> cycle = new List<EnemyIntentInfo>();
-            if (string.IsNullOrEmpty(intentPattern)) return cycle;
+            string effectivePattern = intentPattern;
 
-            string[] intentStrings = intentPattern.Split(';');
+            // 检查是否有多套循环（| 分隔），随机选一套
+            if (!string.IsNullOrEmpty(intentPattern) && intentPattern.Contains("|"))
+            {
+                string[] options = intentPattern.Split('|');
+                effectivePattern = options[UnityEngine.Random.Range(0, options.Length)];
+            }
+
+            return ParsePattern(effectivePattern);
+        }
+
+        private static List<EnemyIntentInfo> ParsePattern(string pattern)
+        {
+            List<EnemyIntentInfo> cycle = new List<EnemyIntentInfo>();
+            if (string.IsNullOrEmpty(pattern)) return cycle;
+
+            string[] intentStrings = pattern.Split(';');
             foreach (var intentStr in intentStrings)
             {
                 if (string.IsNullOrEmpty(intentStr)) continue;
@@ -65,8 +80,8 @@ namespace CGM.Data
                 }
                 else if (intent.actionType == "buff" || intent.actionType == "debuff")
                 {
-                    intent.parameter1 = parts[1].Trim(); // BuffId name
-                    intent.parameter2 = parts.Length > 2 ? int.Parse(parts[2].Trim()) : 1; // stacks
+                    intent.parameter1 = parts[1].Trim();
+                    intent.parameter2 = parts.Length > 2 ? int.Parse(parts[2].Trim()) : 1;
                 }
 
                 cycle.Add(intent);

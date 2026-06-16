@@ -74,11 +74,11 @@ namespace CGM.Core
                 float glucose = player.CurrentGlucose;
                 if (glucose >= BattleConstants.HealthyGlucoseMin && glucose <= BattleConstants.HealthyGlucoseMax)
                 {
-                    return BattleConstants.HealthyModifierMultiplier; // 健康提升 25% (1.25)
+                    return BattleConstants.HealthyModifierMultiplier;
                 }
-                else if (glucose >= BattleConstants.HyperGlucoseThreshold)
+                else if (glucose > BattleConstants.HyperGlucoseThreshold)
                 {
-                    return BattleConstants.HyperModifierMultiplier;   // 高血糖削减 25% (0.75)
+                    return BattleConstants.HyperModifierMultiplier;
                 }
             }
             return 1.0f; // 低血糖或敌人无血糖修正 (1.0)
@@ -89,11 +89,11 @@ namespace CGM.Core
         /// </summary>
         public static float GetGlucoseChangeMultiplier(PlayerStats player)
         {
-            if (player != null && player.CurrentGlucose >= BattleConstants.HyperGlucoseThreshold)
+            if (player != null && player.CurrentGlucose > BattleConstants.HyperGlucoseThreshold)
             {
-                return BattleConstants.HyperGlucoseFluctuationMultiplier; // 高血糖波动翻倍 (2.0)
+                return BattleConstants.HyperGlucoseFluctuationMultiplier;
             }
-            return 1.0f; // 正常波动 (1.0)
+            return 1.0f;
         }
 
         // =========================================================================
@@ -129,6 +129,28 @@ namespace CGM.Core
         public static int CalculateDamage(CardInfo card, EntityStats source, EntityStats target)
         {
             return CalculateDamage(card.finalDamage, source, target);
+        }
+
+        /// <summary>
+        /// 卡面预览伤害——只计入自身状态（活力/乏力/血糖区间），不含目标脆弱。
+        /// </summary>
+        public static int CalculateSelfDamage(CardInfo card, EntityStats source)
+        {
+            if (card == null || card.finalDamage <= 0 || source == null) return 0;
+            int baseDamage = card.finalDamage + GetVitalityDamageBonus(source);
+            float multiplier = GetLethargyDamageMultiplier(source) * GetGlucoseMultiplier(source);
+            return Mathf.Max(0, Mathf.CeilToInt(Mathf.Max(0, baseDamage) * multiplier));
+        }
+
+        /// <summary>
+        /// 卡面预览格挡——只计入自身状态（耐力/僵硬/血糖区间）。
+        /// </summary>
+        public static int CalculateSelfBlock(CardInfo card, EntityStats source)
+        {
+            if (card == null || card.finalBlock <= 0 || source == null) return 0;
+            int baseBlock = card.finalBlock + GetEnduranceBlockBonus(source);
+            float multiplier = GetStiffnessBlockMultiplier(source) * GetGlucoseMultiplier(source);
+            return Mathf.Max(0, Mathf.CeilToInt(Mathf.Max(0, baseBlock) * multiplier));
         }
 
         /// <summary>

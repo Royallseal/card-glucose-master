@@ -132,5 +132,13 @@ namespace CGM.UI
             }
         }
 
+        /// <summary>
+        /// 显示或隐藏锁定指示器。
+        /// </summary>
+        public void ShowTargetIndicator(bool show)
+        {
+            if (targetIndicator != null)
+                targetIndicator.SetActive(show);
+        }
     }
 }
