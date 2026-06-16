@@ -385,7 +385,7 @@ MonoBehaviour:
   enemyStats: {fileID: 1258413644}
   cardDatabase: {fileID: 1731417126}
   enemyDatabase: {fileID: 1731417125}
-  startingEnemyId: complication
+  startingEnemyId: general_complication
   resetEnemyOnBattleStart: 1
   autoStartBattle: 1
   startingEnergy: 3
@@ -3034,6 +3034,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   nameText: {fileID: 1930639769}
+  enemyImage: {fileID: 2074625075}
   hpSlider: {fileID: 2133855668}
   hpText: {fileID: 1123714925}
   blockContainer: {fileID: 1381160224}

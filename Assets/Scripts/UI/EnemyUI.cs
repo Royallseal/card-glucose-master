@@ -18,9 +18,10 @@ namespace CGM.UI
     public class EnemyUI : MonoBehaviour
     {
         [Header("基础 UI 引用")]
-        [SerializeField] private TextMeshProUGUI nameText;       // 敌人名字
-        [SerializeField] private Slider hpSlider;                // 血量进度条
-        [SerializeField] private TextMeshProUGUI hpText;         // 血量数值文案 (如 "45/45")
+        [SerializeField] private TextMeshProUGUI nameText;
+        [SerializeField] private Image enemyImage;               // 敌人全身像
+        [SerializeField] private Slider hpSlider;
+        [SerializeField] private TextMeshProUGUI hpText;
         
         [Header("格挡 UI 引用")]
         [SerializeField] private GameObject blockContainer;      // 格挡 UI 容器
@@ -101,8 +102,14 @@ namespace CGM.UI
 
             gameObject.SetActive(true);
 
-            // 1. 名字与基础血量
+            // 1. 名字、精灵图与基础血量
             nameText.text = _enemyStats.EnemyInfo.name;
+            if (enemyImage != null)
+            {
+                string spritePath = $"Sprites/Characters/Enemies/{_enemyStats.EnemyInfo.name}";
+                Sprite sp = Resources.Load<Sprite>(spritePath);
+                if (sp != null) enemyImage.sprite = sp;
+            }
             hpSlider.maxValue = _enemyStats.MaxHp;
             hpSlider.value = _enemyStats.CurrentHp;
             hpText.text = $"{_enemyStats.CurrentHp}/{_enemyStats.MaxHp}";
@@ -162,10 +169,7 @@ namespace CGM.UI
 
                 case "buff":
                 case "debuff":
-                    if (System.Enum.TryParse<BuffId>(intent.parameter1, true, out var targetBuffId))
-                        intentIcon.sprite = Resources.Load<Sprite>(BuffDatabase.GetSpritePath(targetBuffId));
-                    else
-                        intentIcon.sprite = Resources.Load<Sprite>("Sprites/UI/Icons/intent_status");
+                    intentIcon.sprite = Resources.Load<Sprite>("Sprites/UI/Icons/intent_status");
                     intentValueText.gameObject.SetActive(false);
                     break;
 
@@ -210,6 +214,16 @@ namespace CGM.UI
                 if (img != null && sp != null)
                 {
                     img.sprite = sp;
+                }
+
+                // 应用状态对应颜色
+                if (img != null)
+                {
+                    var info = BuffDatabase.Get(id);
+                    if (info != null && ColorUtility.TryParseHtmlString(info.colorHex, out Color c))
+                        img.color = c;
+                    else
+                        img.color = Color.white;
                 }
 
                 // 呈现状态层数

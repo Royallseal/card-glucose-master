@@ -117,6 +117,17 @@ namespace CGM.UI
                 string spritePath = BuffDatabase.GetSpritePath(id);
                 Sprite sp = Resources.Load<Sprite>(spritePath);
                 if (img != null && sp != null) img.sprite = sp;
+
+                // 应用状态对应颜色
+                if (img != null)
+                {
+                    var info = BuffDatabase.Get(id);
+                    if (info != null && ColorUtility.TryParseHtmlString(info.colorHex, out Color c))
+                        img.color = c;
+                    else
+                        img.color = Color.white;
+                }
+
                 if (txt != null) txt.text = stacks.ToString();
             }
         }
