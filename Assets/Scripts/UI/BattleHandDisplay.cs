@@ -5,6 +5,7 @@
 //       同时为每张手牌挂载点击出牌回调。
 // =============================================================================
 
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -24,10 +25,12 @@ namespace CGM.UI
         [SerializeField] private BattleSessionController battleController;
 
         [Header("手牌区域")]
-        [Tooltip("手牌卡牌的父节点（如 HandPanel）")]
         [SerializeField] private Transform handContainer;
-        [Tooltip("单张卡牌的预制体（必须挂有 CardUI 组件）")]
         [SerializeField] private GameObject cardPrefab;
+        [Tooltip("弃牌堆（弃牌动画终点）")]
+        [SerializeField] private RectTransform discardPileTarget;
+        [Tooltip("抽牌堆（抽牌动画起点）")]
+        [SerializeField] private RectTransform drawPileTarget;
 
         [Header("状态文本")]
         [Tooltip("显示当前回合阶段")]
@@ -47,6 +50,29 @@ namespace CGM.UI
 
         // 当前手牌对象池
         private readonly List<GameObject> handObjects = new List<GameObject>();
+
+        // 视觉计数与目标计数（用于实现随动画逐张更新）
+        private int visualDrawCount = -1;
+        private int visualDiscardCount = -1;
+        private int targetDrawCount = 0;
+        private int targetDiscardCount = 0;
+
+        // 动画状态追踪
+        private bool isDrawingCards = false;
+        private int activeDiscardAnimations = 0;
+
+        private void Awake()
+        {
+            // 清理 HandContainer 下的所有初始子物体（设计时占位符），在 Awake 中完成以确保在 StartBattle 之前
+            if (handContainer != null)
+            {
+                foreach (Transform child in handContainer)
+                {
+                    child.SetParent(null);
+                    Destroy(child.gameObject);
+                }
+            }
+        }
 
         private void Start()
         {
@@ -123,60 +149,208 @@ namespace CGM.UI
         // =========================================================================
         private void OnHandChanged(IReadOnlyList<CardInfo> handCards)
         {
-            // 1. 销毁旧的手牌对象
+            // 记下变动前所有卡牌位置
+            var oldPositions = new Dictionary<GameObject, Vector2>();
             foreach (var go in handObjects)
             {
-                Destroy(go);
-            }
-            handObjects.Clear();
-
-            if (handCards == null || handContainer == null || cardPrefab == null)
-            {
-                return;
+                if (go != null) oldPositions[go] = go.GetComponent<RectTransform>().position;
             }
 
-            // 2. 为每张卡牌实例化 UI，并绑定点击事件
-            foreach (var card in handCards)
+            // ── 优先清理被拖拽打出的卡牌 ──────────────────────────────────────
+            // 必须在 ID 匹配之前处理：同名卡牌（如多张 starter_rice）会导致
+            // 被打出的那张被误判为「还在手牌中」，而另一张无辜留存的牌反而
+            // 触发弃牌动画。直接找到有 DraggedAndPlayed 标记的对象并立即销毁。
+            for (int i = handObjects.Count - 1; i >= 0; i--)
             {
+                var go = handObjects[i];
+                if (go == null) { handObjects.RemoveAt(i); continue; }
+                var dh = go.GetComponent<CardDragHandler>();
+                if (dh != null && dh.DraggedAndPlayed)
+                {
+                    handObjects.RemoveAt(i);
+                    Destroy(go);
+                    // 出牌立刻使弃牌堆视觉计数+1（不超过目标数）
+                    if (visualDiscardCount < targetDiscardCount)
+                    {
+                        visualDiscardCount++;
+                        UpdateCountTexts();
+                    }
+                }
+            }
+
+            var remainIds = new List<string>();
+            if (handCards != null)
+                foreach (var c in handCards) if (c != null) remainIds.Add(c.id);
+
+            for (int i = handObjects.Count - 1; i >= 0; i--)
+            {
+                var go = handObjects[i];
+                if (go == null) { handObjects.RemoveAt(i); continue; }
+                string cardId = go.name.Replace("HandCard_", "");
+                int idx = remainIds.IndexOf(cardId);
+                if (idx >= 0)
+                {
+                    remainIds.RemoveAt(idx);
+                }
+                else
+                {
+                    handObjects.RemoveAt(i);
+                    var anim = go.GetComponent<CardAnimator>();
+                    if (anim != null && discardPileTarget != null)
+                    {
+                        // 移出 handContainer，避免影响布局计算
+                        go.transform.SetParent(discardPileTarget.parent, true);
+                        activeDiscardAnimations++;
+                        anim.PlayDiscardAnimation(discardPileTarget.position, () => {
+                            activeDiscardAnimations--;
+                            // 弃牌飞完时，视觉计数+1
+                            if (visualDiscardCount < targetDiscardCount)
+                            {
+                                visualDiscardCount++;
+                                UpdateCountTexts();
+                            }
+                            CheckAndSyncCounters();
+                        });
+                    }
+                    else
+                    {
+                        Destroy(go);
+                    }
+                }
+            }
+
+            // 新卡批量加入
+            if (remainIds.Count > 0 && cardPrefab != null && handContainer != null)
+            {
+                var toAdd = new List<CardInfo>();
+                if (handCards != null)
+                {
+                    foreach (var card in handCards)
+                    {
+                        if (card == null) continue;
+                        int idx = remainIds.IndexOf(card.id);
+                        if (idx >= 0) { toAdd.Add(card); remainIds.RemoveAt(idx); }
+                    }
+                }
+                if (toAdd.Count > 0)
+                    StartCoroutine(BatchAddRoutine(toAdd));
+            }
+
+            // 剩余卡牌平滑移动到新位置
+            StartCoroutine(SmoothRemaining(oldPositions));
+        }
+
+        private IEnumerator SmoothRemaining(Dictionary<GameObject, Vector2> oldPositions)
+        {
+            // 强制重新计算排版，使布局组立即更新所有子物体的目标位置
+            if (handContainer != null)
+            {
+                LayoutRebuilder.ForceRebuildLayoutImmediate(handContainer.GetComponent<RectTransform>());
+            }
+
+            // 缓存好静止的目标排版位置，避免在插值循环中读取正在移动的位置导致计算退化
+            var targetPositions = new Dictionary<GameObject, Vector2>();
+            foreach (var go in handObjects)
+            {
+                if (go != null)
+                {
+                    targetPositions[go] = go.GetComponent<RectTransform>().position;
+                }
+            }
+
+            float duration = 0.15f;
+            float t = 0f;
+            while (t < duration)
+            {
+                t += Time.deltaTime;
+                float p = Mathf.Clamp01(t / duration);
+                float eased = 1f - (1f - p) * (1f - p); // Ease-out quad
+                
+                foreach (var go in handObjects)
+                {
+                    if (go == null || !oldPositions.ContainsKey(go) || !targetPositions.ContainsKey(go)) continue;
+                    Vector2 oldPos = oldPositions[go];
+                    Vector2 targetPos = targetPositions[go];
+                    go.GetComponent<RectTransform>().position = Vector2.Lerp(oldPos, targetPos, eased);
+                }
+                yield return null;
+            }
+            // 最终让 LayoutGroup 接管
+            if (handContainer != null)
+            {
+                LayoutRebuilder.MarkLayoutForRebuild(handContainer.GetComponent<RectTransform>());
+            }
+        }
+
+        private IEnumerator BatchAddRoutine(List<CardInfo> cards)
+        {
+            isDrawingCards = true;
+            // ⚠️ drawPileTarget 未赋值时退回到屏幕正下方不可见区域，避免卡牌从可见的 (0,0) 飞入产生虚影
+            //    请在 Inspector 中把抽牌堆 UI 拖到 BattleHandDisplay.drawPileTarget 字段！
+            if (drawPileTarget == null)
+                Debug.LogWarning("[BattleHandDisplay] drawPileTarget 未赋值！抽牌动画起点将使用屏幕外备用位置。请在 Inspector 中拖入 DrawPile_UI。");
+            Vector2 startPos = drawPileTarget != null
+                ? (Vector2)drawPileTarget.position
+                : new Vector2(Screen.width * 0.5f, -300f); // 屏幕正下方不可见区域
+
+            foreach (var card in cards)
+            {
+                // 卡牌开始飞出的瞬间，使抽牌堆视觉计数-1（但不低于目标值）
+                if (visualDrawCount > targetDrawCount)
+                {
+                    visualDrawCount--;
+                    UpdateCountTexts();
+                }
+
+                // 1. 实例化一张
                 GameObject cardGo = Instantiate(cardPrefab, handContainer);
                 cardGo.name = $"HandCard_{card.id}";
+                var anim = cardGo.GetComponent<CardAnimator>();
+                if (anim == null) anim = cardGo.AddComponent<CardAnimator>();
 
-                CardUI cardUI = cardGo.GetComponent<CardUI>();
+                var cardUI = cardGo.GetComponent<CardUI>();
                 if (cardUI != null)
                 {
-                    // 计算自身状态修正后的卡面预览值
                     var player = FindObjectOfType<CGM.Core.PlayerStats>();
-                    int projectedDmg = CGM.Core.BattleCalculator.CalculateSelfDamage(card, player);
-                    int projectedBlk = CGM.Core.BattleCalculator.CalculateSelfBlock(card, player);
-                    int dmgMod = projectedDmg - card.finalDamage;
-                    int blkMod = projectedBlk - card.finalBlock;
-                    cardUI.SetCard(card, dmgMod, blkMod);
+                    int pd = CGM.Core.BattleCalculator.CalculateSelfDamage(card, player);
+                    int pb = CGM.Core.BattleCalculator.CalculateSelfBlock(card, player);
+                    cardUI.SetCard(card, pd - card.finalDamage, pb - card.finalBlock);
                 }
 
-                // 设置拖拽处理器
                 var dragHandler = cardGo.GetComponent<CardDragHandler>();
-                if (dragHandler == null)
-                    dragHandler = cardGo.AddComponent<CardDragHandler>();
+                if (dragHandler == null) dragHandler = cardGo.AddComponent<CardDragHandler>();
                 dragHandler.SetCardInfo(card);
 
-                // 挂载点击出牌回调（保留点击作为快速出牌方式）
-                Button btn = cardGo.GetComponent<Button>();
-                if (btn == null)
-                {
-                    btn = cardGo.AddComponent<Button>();
-                }
+                var btn = cardGo.GetComponent<Button>();
+                if (btn == null) btn = cardGo.AddComponent<Button>();
                 btn.onClick.RemoveAllListeners();
-
-                // 用局部变量捕获当前卡牌（闭包陷阱防护）
-                CardInfo capturedCard = card;
-                btn.onClick.AddListener(() => OnCardClicked(capturedCard));
-
-                // 根据能否出牌设置交互状态
-                bool canPlay = battleController.CanPlayCard(card);
-                btn.interactable = canPlay;
+                CardInfo captured = card;
+                btn.onClick.AddListener(() => OnCardClicked(captured));
+                btn.interactable = battleController.CanPlayCard(card);
 
                 handObjects.Add(cardGo);
+
+                // 2. 获取卡牌在 handContainer 中应有的最终世界坐标
+                LayoutRebuilder.ForceRebuildLayoutImmediate(handContainer.GetComponent<RectTransform>());
+                Vector2 endPos = cardGo.GetComponent<RectTransform>().position;
+
+                // 3. 把卡牌移出 LayoutGroup 的管辖范围，避免 Layout 每帧覆盖动画位置
+                //    保持世界坐标不变，挂到 Canvas 根节点下，初始 alpha=0
+                var canvas = GetComponentInParent<Canvas>()?.rootCanvas;
+                var canvasRoot = canvas != null ? canvas.transform : transform.parent;
+                var cg = cardGo.GetComponent<CanvasGroup>();
+                if (cg == null) cg = cardGo.AddComponent<CanvasGroup>();
+                cg.alpha = 0f;
+                cardGo.transform.SetParent(canvasRoot, true);
+
+                // 4. 从抽牌堆飞入，动画结束后自动移回 handContainer
+                anim.PlayDrawAnimation(startPos, endPos, handContainer);
+
+                // 5. 等一段时间再抽下一张
+                yield return new WaitForSeconds(0.15f);
             }
+            isDrawingCards = false;
+            CheckAndSyncCounters();
         }
 
         // =========================================================================
@@ -198,6 +372,12 @@ namespace CGM.UI
         // =========================================================================
         private void OnPhaseChanged(BattleTurnPhase phase)
         {
+            if (phase == BattleTurnPhase.NotStarted)
+            {
+                visualDrawCount = -1;
+                visualDiscardCount = -1;
+            }
+
             if (phaseText != null)
             {
                 phaseText.text = phase switch
@@ -221,18 +401,68 @@ namespace CGM.UI
             RefreshHandInteractable();
         }
 
-        // =========================================================================
-        // 事件回调：牌堆计数
-        // =========================================================================
         private void OnPilesChanged(IReadOnlyList<CardInfo> hand, IReadOnlyList<CardInfo> draw, IReadOnlyList<CardInfo> discard)
+        {
+            int nextDraw = draw?.Count ?? 0;
+            int nextDiscard = discard?.Count ?? 0;
+
+            // 首次赋值初始化
+            if (visualDrawCount == -1 || visualDiscardCount == -1)
+            {
+                visualDrawCount = nextDraw;
+                visualDiscardCount = nextDiscard;
+                UpdateCountTexts();
+                
+                targetDrawCount = nextDraw;
+                targetDiscardCount = nextDiscard;
+                return;
+            }
+
+            // 如果发生洗牌（在正常一局游戏中，弃牌堆减少的唯一可能就是触发了“洗牌”将弃牌堆全部移回抽牌堆）
+            if (nextDiscard < targetDiscardCount)
+            {
+                visualDrawCount += targetDiscardCount;
+                visualDiscardCount = nextDiscard;
+                UpdateCountTexts();
+            }
+
+            targetDrawCount = nextDraw;
+            targetDiscardCount = nextDiscard;
+
+            // 如果当前没有任何动画在播放，直接同步（兜底）
+            if (!isDrawingCards && activeDiscardAnimations == 0)
+            {
+                visualDrawCount = nextDraw;
+                visualDiscardCount = nextDiscard;
+                UpdateCountTexts();
+            }
+        }
+
+        /// <summary>
+        /// 更新 UI 上的抽牌堆和弃牌堆计数文本
+        /// </summary>
+        private void UpdateCountTexts()
         {
             if (drawPileCountText != null)
             {
-                drawPileCountText.text = (draw?.Count ?? 0).ToString();
+                drawPileCountText.text = visualDrawCount.ToString();
             }
             if (discardPileCountText != null)
             {
-                discardPileCountText.text = (discard?.Count ?? 0).ToString();
+                discardPileCountText.text = visualDiscardCount.ToString();
+            }
+        }
+
+        /// <summary>
+        /// 检查当前是否在播放动画，在完全没有动画播放时，把视觉数值对齐到目标最新真实数值（兜底安全逻辑）
+        /// </summary>
+        private void CheckAndSyncCounters()
+        {
+            if (!isDrawingCards && activeDiscardAnimations == 0)
+            {
+                visualDrawCount = targetDrawCount;
+                visualDiscardCount = targetDiscardCount;
+                UpdateCountTexts();
             }
         }
 
@@ -241,9 +471,6 @@ namespace CGM.UI
         // =========================================================================
         private void OnCardPlayed(CardPlayResult result)
         {
-            Debug.Log($"[BattleHandDisplay] 出牌结算完成：{result.Card?.name}，" +
-                      $"伤害 {result.DamageDealt}，格挡 {result.BlockGained}，" +
-                      $"抽牌 {result.CardsDrawn}，血糖变化 {result.GlucoseDelta:F1}");
         }
 
         // =========================================================================
@@ -251,7 +478,6 @@ namespace CGM.UI
         // =========================================================================
         private void OnBattleEnded(BattleOutcome outcome)
         {
-            Debug.Log($"[BattleHandDisplay] 战斗结束：{outcome}");
         }
 
         // =========================================================================

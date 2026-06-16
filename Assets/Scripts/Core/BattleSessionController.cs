@@ -225,6 +225,9 @@ namespace CGM.Core
             NotifyHandChanged();
             NotifyPilesChanged();
 
+            // 敌方格挡在玩家回合结束时清空
+            enemyStats.ClearBlock();
+
             Phase = BattleTurnPhase.EnemyTurn;
             NotifyPhaseChanged();
 

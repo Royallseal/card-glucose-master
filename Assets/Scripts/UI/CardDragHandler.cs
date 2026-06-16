@@ -14,7 +14,7 @@ namespace CGM.UI
     public enum DragLockState { None, LockedOnEnemy, LockedOnPlayer }
 
     [RequireComponent(typeof(CanvasGroup))]
-    public class CardDragHandler : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
+    public class CardDragHandler : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler, IPointerEnterHandler, IPointerExitHandler
     {
         private Canvas _canvas;
         private CanvasGroup _canvasGroup;
@@ -35,7 +35,19 @@ namespace CGM.UI
         private DragLockState _lockState;
         private RectTransform _enemyDetectRect;
         private RectTransform _playerDetectRect;
+        public bool DraggedAndPlayed { get; set; }
         private bool _isDragging;
+
+        // Hover 悬停动效配置
+        private static bool IsAnyCardDragging = false; // 静态全局变量，用于在任何卡牌处于拖拽时屏蔽其他卡牌的 Hover
+        private Canvas _canvasComponent;
+        private bool _isHovered;
+        private bool _hasInitializedDefaultY;
+        private float _defaultY;
+        private Coroutine _hoverCoroutine;
+        private const float HoverScale = 1.15f;      // 放大系数 (1.15倍)
+        private const float HoverYOffset = 50f;      // 向上浮动像素
+        private const float HoverDuration = 0.15f;   // 缓动时间 (0.15秒)
 
         public void SetCardInfo(CardInfo card) { _cardInfo = card; }
 
@@ -45,6 +57,19 @@ namespace CGM.UI
             _canvasGroup = GetComponent<CanvasGroup>();
             _cardUI = GetComponent<CardUI>();
             _canvas = GetComponentInParent<Canvas>();
+
+            // 动态初始化 Sub-Canvas 重排序组件，用于实现置顶且不破坏布局
+            _canvasComponent = GetComponent<Canvas>();
+            if (_canvasComponent == null)
+            {
+                _canvasComponent = gameObject.AddComponent<Canvas>();
+            }
+            _canvasComponent.overrideSorting = false;
+
+            if (GetComponent<GraphicRaycaster>() == null)
+            {
+                gameObject.AddComponent<GraphicRaycaster>();
+            }
         }
 
         private void Start()
@@ -71,7 +96,19 @@ namespace CGM.UI
             if (_cardInfo == null || _battleController == null) return;
             if (!_battleController.CanPlayCard(_cardInfo)) return;
 
+            // 如果正在 Hover，瞬间还原并停止动效，避免把 Hover 的状态带入拖拽克隆
+            if (_isHovered)
+            {
+                _isHovered = false;
+                if (_hoverCoroutine != null) StopCoroutine(_hoverCoroutine);
+                _rectTransform.localScale = Vector3.one;
+                InitDefaultY();
+                _rectTransform.anchoredPosition = new Vector2(_rectTransform.anchoredPosition.x, _defaultY);
+                if (_canvasComponent != null) _canvasComponent.overrideSorting = false;
+            }
+
             _isDragging = true;
+            IsAnyCardDragging = true;
             _originalPosition = _rectTransform.anchoredPosition;
             _originalParent = _rectTransform.parent;
             _originalSiblingIndex = _rectTransform.GetSiblingIndex();
@@ -117,17 +154,30 @@ namespace CGM.UI
         {
             if (!_isDragging) return;
             _isDragging = false;
-            CleanupDrag();
+            IsAnyCardDragging = false;
+
+            // 保存克隆引用，稍后决定动画
+            var clone = _dragClone;
+            _dragClone = null;
+            _dragCloneRect = null;
+
+            // 恢复原卡牌
+            _canvasGroup.alpha = 1f;
+            _canvasGroup.blocksRaycasts = true;
+            SetIndicator(DragLockState.LockedOnEnemy, false);
+            SetIndicator(DragLockState.LockedOnPlayer, false);
 
             bool played = false;
 
             if (_lockState == DragLockState.LockedOnEnemy && _battleController != null && _battleController.CanPlayCard(_cardInfo))
             {
+                this.DraggedAndPlayed = true;
                 _battleController.PlayCard(_cardInfo, _enemyStats);
                 played = true;
             }
             else if (_lockState == DragLockState.LockedOnPlayer && _battleController != null && _battleController.CanPlayCard(_cardInfo))
             {
+                this.DraggedAndPlayed = true;
                 _battleController.PlayCard(_cardInfo, _playerStats);
                 played = true;
             }
@@ -135,21 +185,33 @@ namespace CGM.UI
             _lockState = DragLockState.None;
             UpdateCardFace();
 
-            if (!played)
+            // 确保拖拽结束后 Hover 状态完全复位
+            _isHovered = false;
+            if (_hoverCoroutine != null) StopCoroutine(_hoverCoroutine);
+            if (_canvasComponent != null) _canvasComponent.overrideSorting = false;
+
+            if (played)
             {
+                // 克隆体飞到弃牌堆
+                var discardPile = GameObject.Find("DiscardPile_UI")?.GetComponent<RectTransform>();
+                if (clone != null && discardPile != null)
+                {
+                    var anim = clone.GetComponent<CardAnimator>();
+                    if (anim == null) anim = clone.AddComponent<CardAnimator>();
+                    anim.PlayDiscardAnimation(discardPile.position);
+                }
+                else if (clone != null)
+                {
+                    Destroy(clone);
+                }
+            }
+            else
+            {
+                if (clone != null) Destroy(clone);
                 _rectTransform.SetParent(_originalParent);
                 _rectTransform.SetSiblingIndex(_originalSiblingIndex);
                 _rectTransform.anchoredPosition = _originalPosition;
             }
-        }
-
-        private void CleanupDrag()
-        {
-            if (_dragClone != null) { Destroy(_dragClone); _dragClone = null; _dragCloneRect = null; }
-            SetIndicator(DragLockState.LockedOnEnemy, false);
-            SetIndicator(DragLockState.LockedOnPlayer, false);
-            _canvasGroup.alpha = 1f;
-            _canvasGroup.blocksRaycasts = true;
         }
 
         private bool IsOver(RectTransform rect, Vector2 screenPos)
@@ -192,6 +254,105 @@ namespace CGM.UI
             blkMod = sBlk - _cardInfo.finalBlock;
 
             _cardUI.SetCard(_cardInfo, dmgMod, blkMod);
+        }
+
+        // =========================================================================
+        // Hover 悬停置顶动效实现
+        // =========================================================================
+
+        private void InitDefaultY()
+        {
+            if (!_hasInitializedDefaultY)
+            {
+                _defaultY = _rectTransform.anchoredPosition.y;
+                _hasInitializedDefaultY = true;
+            }
+        }
+
+        public void OnPointerEnter(PointerEventData eventData)
+        {
+            OnHoverEnter(eventData);
+        }
+
+        public void OnPointerExit(PointerEventData eventData)
+        {
+            OnHoverExit(eventData);
+        }
+
+        public void OnHoverEnter(PointerEventData eventData)
+        {
+            if (IsAnyCardDragging) return; // 如果有任何卡牌正在被拖拽，屏蔽 Hover
+            if (_isDragging || _cardInfo == null || _battleController == null) return;
+            if (!_battleController.CanPlayCard(_cardInfo)) return;
+
+            // 动画中（如抽牌/弃牌飞入飞出时）禁止 Hover
+            var anim = GetComponent<CardAnimator>();
+            if (anim != null && anim.IsAnimating) return;
+
+            InitDefaultY();
+            _isHovered = true;
+
+            // 启用渲染层置顶，利用 Sub-Canvas 的 overrideSorting 保证它叠在左右邻近卡牌上方而不影响 Layout 排版顺序
+            if (_canvasComponent != null)
+            {
+                _canvasComponent.overrideSorting = true;
+                _canvasComponent.sortingOrder = 30;
+            }
+
+            StartHoverAnimation(HoverScale, _defaultY + HoverYOffset);
+        }
+
+        public void OnHoverExit(PointerEventData eventData)
+        {
+            if (!_isHovered) return;
+            _isHovered = false;
+
+            StartHoverAnimation(1.0f, _defaultY, () => {
+                // 还原完毕后，释放排序权限归还默认层级，避免阻碍其他 UI 渲染
+                if (!_isHovered && _canvasComponent != null)
+                {
+                    _canvasComponent.overrideSorting = false;
+                }
+            });
+        }
+
+        private void StartHoverAnimation(float targetScale, float targetY, System.Action onComplete = null)
+        {
+            if (_hoverCoroutine != null)
+            {
+                StopCoroutine(_hoverCoroutine);
+            }
+            _hoverCoroutine = StartCoroutine(HoverRoutine(targetScale, targetY, onComplete));
+        }
+
+        private System.Collections.IEnumerator HoverRoutine(float targetScale, float targetY, System.Action onComplete)
+        {
+            Vector3 startScale = _rectTransform.localScale;
+            float startY = _rectTransform.anchoredPosition.y;
+            Vector3 endScale = Vector3.one * targetScale;
+
+            float t = 0f;
+            while (t < HoverDuration)
+            {
+                t += Time.deltaTime;
+                float p = Mathf.Clamp01(t / HoverDuration);
+                float eased = 1f - (1f - p) * (1f - p); // Ease-out quad
+
+                _rectTransform.localScale = Vector3.Lerp(startScale, endScale, eased);
+                Vector2 pos = _rectTransform.anchoredPosition;
+                pos.y = Mathf.Lerp(startY, targetY, eased);
+                _rectTransform.anchoredPosition = pos;
+
+                yield return null;
+            }
+
+            _rectTransform.localScale = endScale;
+            Vector2 finalPos = _rectTransform.anchoredPosition;
+            finalPos.y = targetY;
+            _rectTransform.anchoredPosition = finalPos;
+
+            onComplete?.Invoke();
+            _hoverCoroutine = null;
         }
     }
 }
