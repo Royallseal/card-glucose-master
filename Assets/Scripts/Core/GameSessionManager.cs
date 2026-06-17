@@ -27,6 +27,9 @@ namespace CGM.Core
         [SerializeField] private GameObject endingPanel;
         [SerializeField] private GameObject ultopPanel;
 
+        [Header("卡牌预制体 (用于动态生成)")]
+        [SerializeField] private GameObject cardPrefab;
+
         [Header("结算与奖励 UI 引用")]
         [Tooltip("结算界面卡牌奖励容器 (Canvas/SettlementPanel/CardListPanel/Cards)")]
         [SerializeField] private Transform rewardCardsContainer;
@@ -422,7 +425,7 @@ namespace CGM.Core
                 }
             }
 
-            // 4. 展示并绑定卡牌奖励 UI (从 pre-placed 寻找 Scroll View/Viewport/Content 里的 3 个 Card)
+            // 4. 展示并绑定卡牌奖励 UI
             if (rewardCardsContainer != null)
             {
                 Transform contentTransform = rewardCardsContainer.Find("Scroll View/Viewport/Content");
@@ -431,51 +434,59 @@ namespace CGM.Core
                     contentTransform = rewardCardsContainer;
                 }
 
+                // 清除原有的测试/残留卡牌
+                foreach (Transform child in contentTransform)
+                {
+                    Destroy(child.gameObject);
+                }
+
                 var pendingRewards = battleController.PendingRewardCards;
                 if (pendingRewards != null && pendingRewards.Count > 0)
                 {
-                    for (int i = 0; i < contentTransform.childCount; i++)
+                    if (cardPrefab == null)
                     {
-                        Transform cardChild = contentTransform.GetChild(i);
-                        if (i < pendingRewards.Count)
+                        cardPrefab = Resources.Load<GameObject>("Prefabs/Card");
+                    }
+
+                    foreach (var cardInfo in pendingRewards)
+                    {
+                        if (cardPrefab == null) continue;
+
+                        GameObject cardChild = Instantiate(cardPrefab, contentTransform);
+                        cardChild.name = $"RewardCard_{cardInfo.id}";
+                        cardChild.transform.localScale = Vector3.one;
+
+                        var cg = cardChild.GetComponent<CanvasGroup>();
+                        if (cg == null) cg = cardChild.AddComponent<CanvasGroup>();
+                        cg.alpha = 1.0f;
+
+                        // 渲染卡牌数据
+                        var cardUI = cardChild.GetComponent<UI.CardUI>();
+                        if (cardUI != null)
                         {
-                            cardChild.gameObject.SetActive(true);
-                            CardInfo cardInfo = pendingRewards[i];
-
-                            // 渲染卡牌
-                            var cardUI = cardChild.GetComponent<UI.CardUI>();
-                            if (cardUI != null)
-                            {
-                                cardUI.SetCard(cardInfo);
-                            }
-
-                            // 禁用拖拽脚本以免冲突
-                            var dragHandler = cardChild.GetComponent<UI.CardDragHandler>();
-                            if (dragHandler != null)
-                            {
-                                dragHandler.enabled = false;
-                            }
-
-                            // 重置 CardUI 缩放与透明度 CanvasGroup
-                            cardChild.localScale = Vector3.one;
-                            var cg = cardChild.GetComponent<CanvasGroup>();
-                            if (cg != null) cg.alpha = 1.0f;
-
-                            // 挂载特有的 Hover 放大/点击固定组件
-                            var rewardCardClick = cardChild.GetComponent<UI.RewardCardInteraction>();
-                            if (rewardCardClick == null)
-                            {
-                                rewardCardClick = cardChild.gameObject.AddComponent<UI.RewardCardInteraction>();
-                            }
-                            rewardCardClick.Initialize(cardInfo, OnRewardCardClicked);
-
-                            // 如果卡牌上原本有旧的 Button 监听，全部移除
-                            var btn = cardChild.GetComponent<Button>();
-                            if (btn != null) btn.onClick.RemoveAllListeners();
+                            cardUI.SetCard(cardInfo);
                         }
-                        else
+
+                        // 禁用拖拽脚本以免冲突
+                        var dragHandler = cardChild.GetComponent<UI.CardDragHandler>();
+                        if (dragHandler != null)
                         {
-                            cardChild.gameObject.SetActive(false);
+                            dragHandler.enabled = false;
+                        }
+
+                        // 挂载特有的 Hover 放大/点击固定组件
+                        var rewardCardClick = cardChild.GetComponent<UI.RewardCardInteraction>();
+                        if (rewardCardClick == null)
+                        {
+                            rewardCardClick = cardChild.AddComponent<UI.RewardCardInteraction>();
+                        }
+                        rewardCardClick.Initialize(cardInfo, OnRewardCardClicked);
+
+                        // 如果卡牌上原本有旧的 Button 监听，全部移除
+                        var btn = cardChild.GetComponent<Button>();
+                        if (btn != null)
+                        {
+                            btn.onClick.RemoveAllListeners();
                         }
                     }
                 }

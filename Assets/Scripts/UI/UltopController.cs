@@ -127,8 +127,8 @@ namespace CGM.UI
 
             if (playerStats != null)
             {
-                // 血量实时更新，字体设置为红色，使用 BattleConstants.ColorRed 富文本或直接修改 text 属性
-                hpValueText.text = $"<color={BattleConstants.ColorRed}>{playerStats.CurrentHp}</color>/{playerStats.MaxHp}";
+                // 血量实时更新，字体全段设置为红色，使用 BattleConstants.ColorRed 富文本
+                hpValueText.text = $"<color={BattleConstants.ColorRed}>{playerStats.CurrentHp}/{playerStats.MaxHp}</color>";
             }
             else
             {
@@ -176,12 +176,12 @@ namespace CGM.UI
 
                 if (next != null)
                 {
-                    // 下一关文本一样，但是颜色较淡 (淡灰色)
-                    nextLevelText.text = $"下一关: <color=#A0A0A0>{next.levelName}</color>";
+                    // 下一关文本一样，但是颜色较淡 (深灰色 #555555 以防看不清)
+                    nextLevelText.text = $"下一关: <color=#555555>{next.levelName}</color>";
                 }
                 else
                 {
-                    nextLevelText.text = "下一关: <color=#A0A0A0>无</color>";
+                    nextLevelText.text = "下一关: <color=#555555>无</color>";
                 }
             }
         }
