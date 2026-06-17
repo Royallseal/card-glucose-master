@@ -64,6 +64,20 @@ namespace CGM.UI
             if (settingButton != null && settingPanel != null)
             {
                 settingButton.onClick.AddListener(ToggleSettingPanel);
+
+                // 统一配置设置按钮的 Hover 特效和音效
+                var settingHover = settingButton.gameObject.GetComponent<UIHoverButtonEffects>();
+                if (settingHover == null) settingHover = settingButton.gameObject.AddComponent<UIHoverButtonEffects>();
+                settingHover.Setup(Resources.Load<AudioClip>("Audio/Button_Hover"), 1.1f);
+            }
+
+            // 统一配置卡组按钮的 Hover 特效和音效
+            Transform cardsButtonTrans = transform.Find("Icon_Line/Cards");
+            if (cardsButtonTrans != null)
+            {
+                var cardsHover = cardsButtonTrans.gameObject.GetComponent<UIHoverButtonEffects>();
+                if (cardsHover == null) cardsHover = cardsButtonTrans.gameObject.AddComponent<UIHoverButtonEffects>();
+                cardsHover.Setup(Resources.Load<AudioClip>("Audio/Button_Hover"), 1.05f);
             }
 
             // 初始化 UI 显示

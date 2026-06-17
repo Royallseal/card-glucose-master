@@ -55,6 +55,14 @@ namespace CGM.UI
                 canvasComponent.overrideSorting = true;
                 canvasComponent.sortingOrder = 35;
             }
+
+            // 播放卡牌 Hover 音效
+            AudioClip cardHoverSound = Resources.Load<AudioClip>("Audio/Card_Hover");
+            if (cardHoverSound != null)
+            {
+                Vector3 pos = Camera.main != null ? Camera.main.transform.position : transform.position;
+                AudioSource.PlayClipAtPoint(cardHoverSound, pos, 0.8f);
+            }
         }
 
         public void OnPointerExit(PointerEventData eventData)

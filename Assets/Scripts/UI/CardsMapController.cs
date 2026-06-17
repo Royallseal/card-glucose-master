@@ -272,18 +272,20 @@ namespace CGM.UI
                     cardUI.SetCard(card);
                 }
 
-                // 禁用一切拖拽和战斗逻辑
+                // 启用 CardDragHandler 但设置为仅展示，保留 hover 和音效
                 CardDragHandler dragHandler = cardGo.GetComponent<CardDragHandler>();
-                if (dragHandler != null)
+                if (dragHandler == null)
                 {
-                    dragHandler.enabled = false;
+                    dragHandler = cardGo.AddComponent<CardDragHandler>();
                 }
+                dragHandler.SetDisplayOnly(true);
+                dragHandler.SetCardInfo(card);
 
                 Button cardBtn = cardGo.GetComponent<Button>();
                 if (cardBtn != null)
                 {
                     cardBtn.onClick.RemoveAllListeners();
-                    cardBtn.interactable = false; // 图鉴及列表卡牌不需要点击功能
+                    // 不将 interactable 设为 false 以免影响 Raycast
                 }
             }
         }

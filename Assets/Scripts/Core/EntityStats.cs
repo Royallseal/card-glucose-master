@@ -196,6 +196,18 @@ namespace CGM.Core
         }
 
         /// <summary>
+        /// 清除当前实体身上的所有 Buff/Debuff 状态。
+        /// </summary>
+        public void ClearAllBuffs()
+        {
+            if (activeBuffs.Count > 0)
+            {
+                activeBuffs.Clear();
+                NotifyChange();
+            }
+        }
+
+        /// <summary>
         /// 开启或隐藏锁定指示器 UI。
         /// </summary>
         /// <param name="show">是否显示</param>

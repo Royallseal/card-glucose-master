@@ -49,6 +49,12 @@ namespace CGM.UI
         private const float HoverYOffset = 50f;      // 向上浮动像素
         private const float HoverDuration = 0.15f;   // 缓动时间 (0.15秒)
 
+        [Header("展示专用模式")]
+        [SerializeField] private bool isDisplayOnly = false;
+
+        public void SetDisplayOnly(bool val) { isDisplayOnly = val; }
+        public bool IsDisplayOnly => isDisplayOnly;
+        public CardInfo CardInfo => _cardInfo;
         public void SetCardInfo(CardInfo card) { _cardInfo = card; }
 
         private void Awake()
@@ -88,11 +94,11 @@ namespace CGM.UI
             _cardInfo != null && (_cardInfo.finalDamage > 0 || _cardInfo.HasEffect("apply_debuff"));
 
         private bool CanTargetSelf() =>
-            _cardInfo != null && (_cardInfo.finalBlock > 0 || _cardInfo.HasEffect("apply_buff")
-                || _cardInfo.HasEffect("draw") || _cardInfo.HasEffect("glucose_cap"));
+            _cardInfo != null && !CanTargetEnemy();
 
         public void OnBeginDrag(PointerEventData eventData)
         {
+            if (isDisplayOnly) return;
             if (_cardInfo == null || _battleController == null) return;
             if (!_battleController.CanPlayCard(_cardInfo)) return;
 
@@ -129,6 +135,7 @@ namespace CGM.UI
 
         public void OnDrag(PointerEventData eventData)
         {
+            if (isDisplayOnly) return;
             if (_dragCloneRect == null) return;
             RectTransformUtility.ScreenPointToLocalPointInRectangle(
                 _canvas.transform as RectTransform, eventData.position, _canvas.worldCamera, out Vector2 localPos);
@@ -140,7 +147,7 @@ namespace CGM.UI
 
             if (overEnemy && CanTargetEnemy()) newState = DragLockState.LockedOnEnemy;
             else if (overPlayer && CanTargetSelf()) newState = DragLockState.LockedOnPlayer;
-
+            
             if (newState != _lockState)
             {
                 SetIndicator(DragLockState.LockedOnEnemy, newState == DragLockState.LockedOnEnemy);
@@ -152,6 +159,7 @@ namespace CGM.UI
 
         public void OnEndDrag(PointerEventData eventData)
         {
+            if (isDisplayOnly) return;
             if (!_isDragging) return;
             _isDragging = false;
             IsAnyCardDragging = false;
@@ -253,7 +261,8 @@ namespace CGM.UI
             int sBlk = BattleCalculator.CalculateSelfBlock(_cardInfo, _playerStats);
             blkMod = sBlk - _cardInfo.finalBlock;
 
-            _cardUI.SetCard(_cardInfo, dmgMod, blkMod);
+            float glucoseMultiplier = _playerStats != null ? BattleCalculator.GetGlucoseChangeMultiplier(_playerStats) : 1.0f;
+            _cardUI.SetCard(_cardInfo, dmgMod, blkMod, glucoseMultiplier);
         }
 
         // =========================================================================
@@ -282,8 +291,12 @@ namespace CGM.UI
         public void OnHoverEnter(PointerEventData eventData)
         {
             if (IsAnyCardDragging) return; // 如果有任何卡牌正在被拖拽，屏蔽 Hover
-            if (_isDragging || _cardInfo == null || _battleController == null) return;
-            if (!_battleController.CanPlayCard(_cardInfo)) return;
+            if (_isDragging || _cardInfo == null) return;
+
+            if (!isDisplayOnly)
+            {
+                if (_battleController == null || !_battleController.CanPlayCard(_cardInfo)) return;
+            }
 
             // 动画中（如抽牌/弃牌飞入飞出时）禁止 Hover
             var anim = GetComponent<CardAnimator>();
@@ -291,6 +304,14 @@ namespace CGM.UI
 
             InitDefaultY();
             _isHovered = true;
+
+            // 播放卡牌 Hover 音效
+            AudioClip cardHoverSound = Resources.Load<AudioClip>("Audio/Card_Hover");
+            if (cardHoverSound != null)
+            {
+                Vector3 pos = Camera.main != null ? Camera.main.transform.position : transform.position;
+                AudioSource.PlayClipAtPoint(cardHoverSound, pos, 0.8f);
+            }
 
             // 启用渲染层置顶，利用 Sub-Canvas 的 overrideSorting 保证它叠在左右邻近卡牌上方而不影响 Layout 排版顺序
             if (_canvasComponent != null)

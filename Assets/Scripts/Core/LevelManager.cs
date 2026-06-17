@@ -59,6 +59,11 @@ namespace CGM.Core
         public LevelNode CurrentNode => (currentLevelIndex >= 0 && currentLevelIndex < levelSequence.Count) ? levelSequence[currentLevelIndex] : null;
         public LevelNode NextNode => (currentLevelIndex + 1 >= 0 && currentLevelIndex + 1 < levelSequence.Count) ? levelSequence[currentLevelIndex + 1] : null;
 
+        /// <summary>
+        /// 当前所在层数：1 层（关卡 1-6），2 层（关卡 7-12）。
+        /// </summary>
+        public int CurrentLayer => currentLevelIndex < 6 ? 1 : 2;
+
         private void Awake()
         {
             if (Instance != null && Instance != this)

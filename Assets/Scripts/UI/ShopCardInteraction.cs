@@ -34,8 +34,27 @@ namespace CGM.UI
             CardInfo = card;
             Price = price;
             onClickCallback = clickCallback;
-            hoverSound = hoverClip;
             clickSound = clickClip;
+
+            // 统一配置卡牌 Hover 音效为 Card_Hover
+            hoverSound = Resources.Load<AudioClip>("Audio/Card_Hover");
+            if (hoverSound == null)
+            {
+                hoverSound = hoverClip;
+            }
+
+            // 移除 CardDragHandler.Awake 中动态添加的多余 Canvas 和 GraphicRaycaster，
+            // 避免与父 Canvas 的 GraphicRaycaster 冲突导致点击事件无法传递。
+            var extraCanvas = GetComponent<Canvas>();
+            if (extraCanvas != null)
+            {
+                Destroy(extraCanvas);
+            }
+            var extraRaycaster = GetComponent<UnityEngine.UI.GraphicRaycaster>();
+            if (extraRaycaster != null)
+            {
+                Destroy(extraRaycaster);
+            }
 
             canvasGroup = GetComponent<CanvasGroup>();
             if (canvasGroup == null)

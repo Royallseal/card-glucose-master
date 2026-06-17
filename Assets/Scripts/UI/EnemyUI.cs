@@ -161,14 +161,22 @@ namespace CGM.UI
             {
                 case "attack":
                     intentIcon.sprite = Resources.Load<Sprite>("Sprites/UI/Icons/intent_attack");
-                    intentValueText.text = intent.GetValue().ToString();
+                    // 实时计算攻击意图数值：综合敌人自身 Buff（活力/乏力）、玩家 Debuff（脆弱）、血糖修正、回合强度缩放
+                    int baseDmg = intent.GetValue();
+                    int scaledDmg = Mathf.CeilToInt(baseDmg * _enemyStats.TurnScaling);
+                    int realDmg = BattleCalculator.CalculateDamage(scaledDmg, _enemyStats, _cachedPlayer);
+                    intentValueText.text = realDmg.ToString();
                     intentValueText.gameObject.SetActive(true);
-                    Debug.Log($"[EnemyUI] 攻击意图数值: {intentValueText.text}, active: {intentValueText.gameObject.activeSelf}");
                     break;
 
                 case "block":
                     intentIcon.sprite = Resources.Load<Sprite>("Sprites/UI/Icons/intent_block");
-                    intentValueText.gameObject.SetActive(false);
+                    // 实时计算格挡意图数值：综合敌人自身 Buff（耐力/僵硬）、血糖修正、回合强度缩放
+                    int baseBlk = intent.GetValue();
+                    int scaledBlk = Mathf.CeilToInt(baseBlk * _enemyStats.TurnScaling);
+                    int realBlk = BattleCalculator.CalculateBlock(scaledBlk, _enemyStats);
+                    intentValueText.text = realBlk.ToString();
+                    intentValueText.gameObject.SetActive(true);
                     break;
 
                 case "buff":

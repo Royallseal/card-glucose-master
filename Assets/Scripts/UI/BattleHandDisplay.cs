@@ -115,12 +115,33 @@ namespace CGM.UI
             // 战斗日志 → Debug 输出
             battleController.OnCombatLog += OnCombatLog;
 
+            // 订阅玩家属性变化，实现手牌数值与描述的实时刷新
+            if (battleController.PlayerStats != null)
+            {
+                battleController.PlayerStats.OnStatsChanged += RefreshHandCardVisuals;
+                battleController.PlayerStats.OnGlucoseChanged += RefreshHandCardVisualsWithGlucose;
+            }
+
             // =====================================================================
             // 按钮绑定
             // =====================================================================
             if (endTurnButton != null)
             {
                 endTurnButton.onClick.AddListener(OnEndTurnClicked);
+            }
+
+            // 动态配置抽牌堆与弃牌堆的 Hover 特效和音效
+            if (drawPileTarget != null)
+            {
+                var h = drawPileTarget.gameObject.GetComponent<UIHoverButtonEffects>();
+                if (h == null) h = drawPileTarget.gameObject.AddComponent<UIHoverButtonEffects>();
+                h.Setup(Resources.Load<AudioClip>("Audio/Button_Hover"), 1.05f);
+            }
+            if (discardPileTarget != null)
+            {
+                var h = discardPileTarget.gameObject.GetComponent<UIHoverButtonEffects>();
+                if (h == null) h = discardPileTarget.gameObject.AddComponent<UIHoverButtonEffects>();
+                h.Setup(Resources.Load<AudioClip>("Audio/Button_Hover"), 1.05f);
             }
 
             // 初始刷新一次（如果战斗已经开始）
@@ -141,6 +162,12 @@ namespace CGM.UI
                 battleController.OnBattleEnded -= OnBattleEnded;
                 battleController.OnStateWarning -= OnStateWarning;
                 battleController.OnCombatLog -= OnCombatLog;
+
+                if (battleController.PlayerStats != null)
+                {
+                    battleController.PlayerStats.OnStatsChanged -= RefreshHandCardVisuals;
+                    battleController.PlayerStats.OnGlucoseChanged -= RefreshHandCardVisualsWithGlucose;
+                }
             }
         }
 
@@ -315,7 +342,8 @@ namespace CGM.UI
                     var player = FindObjectOfType<CGM.Core.PlayerStats>();
                     int pd = CGM.Core.BattleCalculator.CalculateSelfDamage(card, player);
                     int pb = CGM.Core.BattleCalculator.CalculateSelfBlock(card, player);
-                    cardUI.SetCard(card, pd - card.finalDamage, pb - card.finalBlock);
+                    float glucoseMultiplier = player != null ? CGM.Core.BattleCalculator.GetGlucoseChangeMultiplier(player) : 1.0f;
+                    cardUI.SetCard(card, pd - card.finalDamage, pb - card.finalBlock, glucoseMultiplier);
                 }
 
                 var dragHandler = cardGo.GetComponent<CardDragHandler>();
@@ -554,6 +582,35 @@ namespace CGM.UI
                 bool canPlay = battleController.Phase == BattleTurnPhase.PlayerTurn
                                && battleController.CurrentEnergy > 0;
                 btn.interactable = canPlay;
+            }
+        }
+
+        private void RefreshHandCardVisualsWithGlucose(float glucose)
+        {
+            RefreshHandCardVisuals();
+        }
+
+        public void RefreshHandCardVisuals()
+        {
+            if (battleController == null || battleController.PlayerStats == null) return;
+
+            var player = battleController.PlayerStats;
+            float glucoseMultiplier = BattleCalculator.GetGlucoseChangeMultiplier(player);
+
+            foreach (var go in handObjects)
+            {
+                if (go == null) continue;
+
+                var cardUI = go.GetComponent<CardUI>();
+                var dragHandler = go.GetComponent<CardDragHandler>();
+                if (cardUI != null && dragHandler != null && dragHandler.CardInfo != null)
+                {
+                    var card = dragHandler.CardInfo;
+                    int pd = BattleCalculator.CalculateSelfDamage(card, player);
+                    int pb = BattleCalculator.CalculateSelfBlock(card, player);
+
+                    cardUI.SetCard(card, pd - card.finalDamage, pb - card.finalBlock, glucoseMultiplier);
+                }
             }
         }
     }

@@ -18,12 +18,34 @@ namespace CGM.UI
         [Range(0f, 1f)]
         [SerializeField] private float volume = 0.8f;
 
+        [Header("目标 Transform (默认自身)")]
+        [SerializeField] private Transform targetTransform;
+
         private Vector3 originalScale;
         private Coroutine scaleCoroutine;
 
         private void Start()
         {
-            originalScale = transform.localScale;
+            if (targetTransform == null)
+            {
+                targetTransform = transform;
+            }
+            originalScale = targetTransform.localScale;
+
+            // UI 按钮统一使用 Button_Hover 音效
+            if (hoverSound == null)
+            {
+                hoverSound = Resources.Load<AudioClip>("Audio/Button_Hover");
+            }
+        }
+
+        public void SetTargetTransform(Transform target)
+        {
+            targetTransform = target;
+            if (targetTransform != null)
+            {
+                originalScale = targetTransform.localScale;
+            }
         }
 
         private void OnDisable()
@@ -34,7 +56,10 @@ namespace CGM.UI
                 StopCoroutine(scaleCoroutine);
                 scaleCoroutine = null;
             }
-            transform.localScale = originalScale;
+            if (targetTransform != null)
+            {
+                targetTransform.localScale = originalScale;
+            }
         }
 
         public void OnPointerEnter(PointerEventData eventData)
@@ -65,7 +90,10 @@ namespace CGM.UI
                 StopCoroutine(scaleCoroutine);
                 scaleCoroutine = null;
             }
-            transform.localScale = originalScale;
+            if (targetTransform != null)
+            {
+                targetTransform.localScale = originalScale;
+            }
         }
 
         private void StartScaleLerp(Vector3 target)
@@ -79,15 +107,21 @@ namespace CGM.UI
 
         private IEnumerator ScaleRoutine(Vector3 target)
         {
-            Vector3 start = transform.localScale;
+            Vector3 start = targetTransform != null ? targetTransform.localScale : transform.localScale;
             float elapsed = 0f;
             while (elapsed < duration)
             {
                 elapsed += Time.deltaTime;
-                transform.localScale = Vector3.Lerp(start, target, elapsed / duration);
+                if (targetTransform != null)
+                {
+                    targetTransform.localScale = Vector3.Lerp(start, target, elapsed / duration);
+                }
                 yield return null;
             }
-            transform.localScale = target;
+            if (targetTransform != null)
+            {
+                targetTransform.localScale = target;
+            }
             scaleCoroutine = null;
         }
 

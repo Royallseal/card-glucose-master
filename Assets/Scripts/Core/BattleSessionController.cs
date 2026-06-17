@@ -77,6 +77,9 @@ namespace CGM.Core
         public event Action<string> OnCombatLog;
         public event Action<string> OnStateWarning;
 
+        public PlayerStats PlayerStats => playerStats;
+        public EnemyStats EnemyStats => enemyStats;
+
         public BattleTurnPhase Phase { get; private set; } = BattleTurnPhase.NotStarted;
         public int CurrentEnergy { get; private set; }
         public int MaxEnergy => startingEnergy;
@@ -155,8 +158,11 @@ namespace CGM.Core
             CurrentEnergy = startingEnergy;
             Phase = BattleTurnPhase.PlayerTurn;
 
+            // 新战斗开始时清空双方状态栏（格挡 + 所有 Buff/Debuff）
             playerStats.ClearBlock();
+            playerStats.ClearAllBuffs();
             enemyStats.ClearBlock();
+            enemyStats.ClearAllBuffs();
 
             NotifyPhaseChanged();
             NotifyEnergyChanged();
@@ -240,6 +246,12 @@ namespace CGM.Core
             NotifyHandChanged();
             NotifyPilesChanged();
 
+            // 玩家身上 Buff 每回合结束时衰减
+            if (playerStats != null)
+            {
+                playerStats.TickBuffsEndOfTurn();
+            }
+
             // 敌方格挡在玩家回合结束时清空
             enemyStats.ClearBlock();
 
@@ -272,7 +284,6 @@ namespace CGM.Core
                 enemyStats.ExecuteIntent(playerStats);
             }
 
-            playerStats.TickBuffsEndOfTurn();
             enemyStats.TickBuffsEndOfTurn();
             enemyStats.IncrementTurnScaling();
             playerStats.ClearBlock();

@@ -178,6 +178,10 @@ namespace CGM.Core
                 HideAllPanels();
                 startingPanel.SetActive(true);
                 if (ultopPanel != null) ultopPanel.SetActive(false);
+
+                // 开始界面 BGM
+                EnsureBgmManager();
+                if (BgmManager.Instance != null) BgmManager.Instance.PlayBgm("Dance of fireflies");
             }
             else
             {
@@ -294,7 +298,27 @@ namespace CGM.Core
 
             if (node.type == LevelType.Enemy || node.type == LevelType.Boss)
             {
-                if (battlePanel != null) battlePanel.SetActive(true);
+                if (battlePanel != null)
+                {
+                    battlePanel.SetActive(true);
+
+                    // 按当前层数切换战斗背景图：一层用 background1，二层用 background2
+                    int layer = LevelManager.Instance.CurrentLayer;
+                    string bgSpriteName = layer == 1 ? "background1" : "background2";
+                    Transform bgTrans = battlePanel.transform.Find("Background");
+                    if (bgTrans != null)
+                    {
+                        Image bgImage = bgTrans.GetComponent<Image>();
+                        if (bgImage != null)
+                        {
+                            Sprite bgSprite = Resources.Load<Sprite>($"Sprites/UI/Backgrounds/{bgSpriteName}");
+                            if (bgSprite != null)
+                            {
+                                bgImage.sprite = bgSprite;
+                            }
+                        }
+                    }
+                }
 
                 // 装载敌人并启动战斗
                 if (battleController != null)
@@ -302,10 +326,21 @@ namespace CGM.Core
                     battleController.StartingEnemyId = node.enemyId;
                     battleController.StartBattle();
                 }
+
+                // 战斗 BGM：普通敌人用 Battle Scars，Boss 用 Advent time
+                EnsureBgmManager();
+                if (BgmManager.Instance != null)
+                {
+                    BgmManager.Instance.PlayBgm(node.type == LevelType.Boss ? "Advent time" : "Battle Scars");
+                }
             }
             else if (node.type == LevelType.Shop)
             {
                 if (shopPanel != null) shopPanel.SetActive(true);
+
+                // 商店 BGM
+                EnsureBgmManager();
+                if (BgmManager.Instance != null) BgmManager.Instance.PlayBgm("Back to yesterday");
             }
 
             // 通知顶部栏刷新
@@ -384,13 +419,14 @@ namespace CGM.Core
                 chooseGoldButton.gameObject.SetActive(true);
                 chooseGoldButton.interactable = true;
 
-                // 为金币奖励按钮配置 Hover 特效和音效
+                // 为金币奖励按钮配置 Hover 特效和音效（统一使用 Button_Hover）
                 var goldHover = chooseGoldButton.gameObject.GetComponent<UI.UIHoverButtonEffects>();
                 if (goldHover == null) goldHover = chooseGoldButton.gameObject.AddComponent<UI.UIHoverButtonEffects>();
-                goldHover.Setup(hoverAudioClip, 1.05f);
+                AudioClip buttonHoverClip = Resources.Load<AudioClip>("Audio/Button_Hover");
+                goldHover.Setup(buttonHoverClip != null ? buttonHoverClip : hoverAudioClip, 1.05f);
             }
 
-            // 2. 隐藏确认按钮与下一关按钮，直到玩家完成对应的交互
+            // 2. 隐藏确认按钮（卡牌可以不选，下一关按钮始终可见）
             if (chooseUIConfirmButton != null)
             {
                 chooseUIConfirmButton.SetActive(false);
@@ -398,7 +434,8 @@ namespace CGM.Core
 
             if (settlementExitButton != null)
             {
-                settlementExitButton.gameObject.SetActive(false);
+                settlementExitButton.gameObject.SetActive(true);
+                settlementExitButton.interactable = true;
             }
 
             // 重置选中的卡牌
@@ -413,7 +450,8 @@ namespace CGM.Core
                 {
                     var settingHover = settingButtonTrans.gameObject.GetComponent<UI.UIHoverButtonEffects>();
                     if (settingHover == null) settingHover = settingButtonTrans.gameObject.AddComponent<UI.UIHoverButtonEffects>();
-                    settingHover.Setup(hoverAudioClip, 1.1f);
+                    AudioClip btnHover1 = Resources.Load<AudioClip>("Audio/Button_Hover");
+                    settingHover.Setup(btnHover1 != null ? btnHover1 : hoverAudioClip, 1.1f);
                 }
 
                 Transform cardsButtonTrans = ultop.transform.Find("Icon_Line/Cards");
@@ -421,7 +459,8 @@ namespace CGM.Core
                 {
                     var cardsHover = cardsButtonTrans.gameObject.GetComponent<UI.UIHoverButtonEffects>();
                     if (cardsHover == null) cardsHover = cardsButtonTrans.gameObject.AddComponent<UI.UIHoverButtonEffects>();
-                    cardsHover.Setup(hoverAudioClip, 1.05f);
+                    AudioClip btnHover2 = Resources.Load<AudioClip>("Audio/Button_Hover");
+                    cardsHover.Setup(btnHover2 != null ? btnHover2 : hoverAudioClip, 1.05f);
                 }
             }
 
@@ -497,6 +536,8 @@ namespace CGM.Core
             {
                 settlementPanel.SetActive(true);
             }
+
+            // 结算场景属于战斗收尾，不中断战斗 BGM，保持音乐连贯直到下一关
         }
 
         private void OnChooseGoldClicked()
@@ -564,6 +605,12 @@ namespace CGM.Core
             if (chooseUIConfirmButton != null)
             {
                 chooseUIConfirmButton.SetActive(false);
+            }
+
+            // 飞行动画期间临时禁用下一关按钮，避免误操作
+            if (settlementExitButton != null)
+            {
+                settlementExitButton.interactable = false;
             }
 
             string chosenCardId = selectedCard.CardInfo.id;
@@ -687,6 +734,10 @@ namespace CGM.Core
                 // 如果没有结局面板，退回起始面板
                 if (startingPanel != null) startingPanel.SetActive(true);
             }
+
+            // 结束界面 BGM
+            EnsureBgmManager();
+            if (BgmManager.Instance != null) BgmManager.Instance.PlayBgm("Dance of fireflies");
         }
 
         private void ShowEndingPanel()
@@ -700,11 +751,22 @@ namespace CGM.Core
             {
                 if (startingPanel != null) startingPanel.SetActive(true);
             }
+
+            // 结束界面 BGM
+            EnsureBgmManager();
+            if (BgmManager.Instance != null) BgmManager.Instance.PlayBgm("Dance of fireflies");
+
             Debug.Log("[GameSessionManager] 恭喜你通过全部关卡，达成通关！");
         }
 
         private void OnSettlementExitClicked()
         {
+            // 若未手动领取金币，自动触发领取逻辑
+            if (!isGoldChosen)
+            {
+                OnChooseGoldClicked();
+            }
+
             if (LevelManager.Instance != null)
             {
                 LevelManager.Instance.EnterNextLevel();
@@ -735,6 +797,18 @@ namespace CGM.Core
             if (cardsMapPanel != null) cardsMapPanel.SetActive(false);
             if (startingPanel != null) startingPanel.SetActive(false);
             if (endingPanel != null) endingPanel.SetActive(false);
+        }
+
+        /// <summary>
+        /// 确保场景中存在 BgmManager 实例，若不存在则自动创建
+        /// </summary>
+        private void EnsureBgmManager()
+        {
+            if (BgmManager.Instance == null)
+            {
+                GameObject bgmGo = new GameObject("[BgmManager]");
+                bgmGo.AddComponent<BgmManager>();
+            }
         }
 
 #if UNITY_EDITOR
