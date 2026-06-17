@@ -133,6 +133,42 @@ namespace CGM.Core
                 restartGameButton.onClick.AddListener(RestartGame);
             }
 
+            // 绑定顶部 Ultop 牌组按钮点击事件，进入本人牌组界面
+            var ultop = FindObjectOfType<UI.UltopController>();
+            if (ultop != null)
+            {
+                Transform cardsButtonTrans = ultop.transform.Find("Icon_Line/Cards");
+                if (cardsButtonTrans != null)
+                {
+                    var btn = cardsButtonTrans.GetComponent<Button>();
+                    if (btn == null) btn = cardsButtonTrans.gameObject.AddComponent<Button>();
+                    btn.onClick.RemoveAllListeners();
+                    btn.onClick.AddListener(() => OpenCardsMap(UI.CardsMapMode.PlayerDeck));
+                }
+            }
+
+            // 绑定战斗面板中抽牌堆与弃牌堆的点击事件
+            if (battlePanel != null)
+            {
+                Transform drawPileTrans = battlePanel.transform.Find("DrawPile_UI");
+                if (drawPileTrans != null)
+                {
+                    var btn = drawPileTrans.GetComponent<Button>();
+                    if (btn == null) btn = drawPileTrans.gameObject.AddComponent<Button>();
+                    btn.onClick.RemoveAllListeners();
+                    btn.onClick.AddListener(() => OpenCardsMap(UI.CardsMapMode.DrawPile));
+                }
+
+                Transform discardPileTrans = battlePanel.transform.Find("DiscardPile_UI");
+                if (discardPileTrans != null)
+                {
+                    var btn = discardPileTrans.GetComponent<Button>();
+                    if (btn == null) btn = discardPileTrans.gameObject.AddComponent<Button>();
+                    btn.onClick.RemoveAllListeners();
+                    btn.onClick.AddListener(() => OpenCardsMap(UI.CardsMapMode.DiscardPile));
+                }
+            }
+
             // 根据是否配置了开始面板，决定初始状态
             if (startingPanel != null)
             {
@@ -171,6 +207,35 @@ namespace CGM.Core
             if (restartGameButton != null)
             {
                 restartGameButton.onClick.RemoveListener(RestartGame);
+            }
+
+            // 清理动态绑定的卡组及抽弃牌堆点击事件
+            var ultop = FindObjectOfType<UI.UltopController>();
+            if (ultop != null)
+            {
+                Transform cardsButtonTrans = ultop.transform.Find("Icon_Line/Cards");
+                if (cardsButtonTrans != null)
+                {
+                    var btn = cardsButtonTrans.GetComponent<Button>();
+                    if (btn != null) btn.onClick.RemoveAllListeners();
+                }
+            }
+
+            if (battlePanel != null)
+            {
+                Transform drawPileTrans = battlePanel.transform.Find("DrawPile_UI");
+                if (drawPileTrans != null)
+                {
+                    var btn = drawPileTrans.GetComponent<Button>();
+                    if (btn != null) btn.onClick.RemoveAllListeners();
+                }
+
+                Transform discardPileTrans = battlePanel.transform.Find("DiscardPile_UI");
+                if (discardPileTrans != null)
+                {
+                    var btn = discardPileTrans.GetComponent<Button>();
+                    if (btn != null) btn.onClick.RemoveAllListeners();
+                }
             }
         }
 
@@ -246,6 +311,29 @@ namespace CGM.Core
             {
                 ultop.UpdateAllUI();
             }
+        }
+
+        /// <summary>
+        /// 打开卡牌展示面板 (DrawPile, DiscardPile, PlayerDeck, CardLibrary)
+        /// </summary>
+        public void OpenCardsMap(UI.CardsMapMode mode)
+        {
+            if (cardsMapPanel == null) return;
+
+            // 寻找当前正处于打开状态的源面板
+            GameObject currentActivePanel = null;
+            if (battlePanel != null && battlePanel.activeSelf) currentActivePanel = battlePanel;
+            else if (shopPanel != null && shopPanel.activeSelf) currentActivePanel = shopPanel;
+            else if (settlementPanel != null && settlementPanel.activeSelf) currentActivePanel = settlementPanel;
+            else if (startingPanel != null && startingPanel.activeSelf) currentActivePanel = startingPanel;
+
+            var controller = cardsMapPanel.GetComponent<UI.CardsMapController>();
+            if (controller == null)
+            {
+                controller = cardsMapPanel.AddComponent<UI.CardsMapController>();
+            }
+
+            controller.Open(mode, currentActivePanel);
         }
 
         private void OnBattleEnded(BattleOutcome outcome)
