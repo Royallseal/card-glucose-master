@@ -72,6 +72,7 @@ namespace CGM.Core
         public event Action<IReadOnlyList<CardInfo>, IReadOnlyList<CardInfo>, IReadOnlyList<CardInfo>> OnPilesChanged;
         public event Action<CardPlayResult> OnCardPlayed;
         public event Action<EnemyIntentInfo> OnEnemyIntentResolved;
+        public event Action OnEnemyAttackFullyBlocked;
         public event Action<IReadOnlyList<CardInfo>> OnRewardsGenerated;
         public event Action<BattleOutcome> OnBattleEnded;
         public event Action<string> OnCombatLog;
@@ -281,9 +282,21 @@ namespace CGM.Core
             EnemyIntentInfo intent = enemyStats.GetCurrentIntent();
             if (intent != null)
             {
-                OnEnemyIntentResolved?.Invoke(intent);
                 LogCombat($"[BattleSession] 敌人行动：{intent.actionType}。");
+
+                // 记录玩家战前状态，用于判定攻击是否被完全格挡
+                int preHp = playerStats.CurrentHp;
                 enemyStats.ExecuteIntent(playerStats);
+
+                // 攻击被玩家全格挡时，通知特效系统播放 Defend 而非 Attack
+                bool playerFullyBlocked = intent.actionType == "attack"
+                    && playerStats.CurrentHp == preHp
+                    && intent.GetValue() > 0;
+
+                if (playerFullyBlocked)
+                    OnEnemyAttackFullyBlocked?.Invoke();
+                else
+                    OnEnemyIntentResolved?.Invoke(intent);
             }
 
             enemyStats.TickBuffsEndOfTurn();

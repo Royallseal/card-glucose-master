@@ -132,6 +132,11 @@ namespace CGM.UI
                 }
 
                 if (txt != null) txt.text = stacks.ToString();
+
+                // 悬停描述
+                var hover = iconGo.GetComponent<BuffIconHover>();
+                if (hover == null) hover = iconGo.AddComponent<BuffIconHover>();
+                hover.Setup(id);
             }
         }
 

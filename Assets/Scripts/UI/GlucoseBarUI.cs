@@ -49,8 +49,16 @@ namespace CGM.UI
             }
             if (glucoseValueText != null)
             {
-                glucoseValueText.text = $"{glucose:F1} mmol/L";
+                string colorHex = GetGlucoseStateColorHex(glucose);
+                glucoseValueText.text = $"<color={colorHex}>{glucose:F1}</color>";
             }
+        }
+
+        private string GetGlucoseStateColorHex(float glucose)
+        {
+            if (glucose < BattleConstants.HealthyGlucoseMin) return BattleConstants.ColorOrange;
+            if (glucose <= BattleConstants.HealthyGlucoseMax) return BattleConstants.ColorGreen;
+            return BattleConstants.ColorRed;
         }
     }
 }

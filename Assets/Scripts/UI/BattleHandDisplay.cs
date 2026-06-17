@@ -48,6 +48,13 @@ namespace CGM.UI
         [Tooltip("结束回合按钮的文本（用于置灰反馈）")]
         [SerializeField] private TextMeshProUGUI endTurnButtonText;
 
+        [Header("回合计数")]
+        [Tooltip("回合计数器文本 (BattlePanel/RoundCound/RoundCoundText)")]
+        [SerializeField] private TextMeshProUGUI roundCountText;
+
+        [Header("特效锁定")]
+        [SerializeField] private BattleEffectController effectController;
+
         // 当前手牌对象池
         private readonly List<GameObject> handObjects = new List<GameObject>();
 
@@ -72,6 +79,30 @@ namespace CGM.UI
                     Destroy(child.gameObject);
                 }
             }
+
+            // 自动查找回合计数器
+            if (roundCountText == null)
+            {
+                var battlePanel = GetComponentInParent<Canvas>()?.transform.Find("BattlePanel");
+                if (battlePanel == null)
+                {
+                    var allCanvases = FindObjectsOfType<Canvas>();
+                    foreach (var c in allCanvases)
+                    {
+                        var bp = c.transform.Find("BattlePanel");
+                        if (bp != null) { battlePanel = bp; break; }
+                    }
+                }
+                if (battlePanel != null)
+                {
+                    var rc = battlePanel.Find("RoundCound/RoundCoundText");
+                    if (rc != null) roundCountText = rc.GetComponent<TextMeshProUGUI>();
+                }
+            }
+
+            // 自动查找特效控制器
+            if (effectController == null)
+                effectController = FindObjectOfType<BattleEffectController>();
         }
 
         private void Start()
@@ -420,11 +451,19 @@ namespace CGM.UI
                 };
             }
 
-            // 只有玩家回合才能点结束回合
+            // 只有玩家回合且不在播特效时才能点结束回合
             bool isPlayerTurn = phase == BattleTurnPhase.PlayerTurn;
+            bool effectLocked = effectController != null && effectController.IsPlayingEffect;
             if (endTurnButton != null)
             {
-                endTurnButton.interactable = isPlayerTurn;
+                endTurnButton.interactable = isPlayerTurn && !effectLocked;
+            }
+
+            // 更新回合计数（TurnNumber 表示当前第几个玩家回合，即第几回合）
+            if (roundCountText != null && battleController != null &&
+                phase != BattleTurnPhase.NotStarted)
+            {
+                roundCountText.text = $"第{battleController.TurnNumber}回合";
             }
 
             RefreshHandInteractable();
@@ -537,6 +576,10 @@ namespace CGM.UI
         {
             if (battleController == null || card == null) return;
 
+            // 特效播放期间禁用卡牌交互
+            if (effectController != null && effectController.IsPlayingEffect)
+                return;
+
             if (!battleController.CanPlayCard(card))
             {
                 Debug.Log($"[BattleHandDisplay] 无法打出 {card.name}（能量不足或不在手牌中）");
@@ -570,6 +613,8 @@ namespace CGM.UI
         /// </summary>
         private void RefreshHandInteractable()
         {
+            bool effectLocked = effectController != null && effectController.IsPlayingEffect;
+
             foreach (var go in handObjects)
             {
                 Button btn = go.GetComponent<Button>();
@@ -578,8 +623,8 @@ namespace CGM.UI
                 CardUI cardUI = go.GetComponent<CardUI>();
                 if (cardUI == null) continue;
 
-                // 用反射获取当前卡片数据不方便，直接查 battleController
-                bool canPlay = battleController.Phase == BattleTurnPhase.PlayerTurn
+                bool canPlay = !effectLocked
+                               && battleController.Phase == BattleTurnPhase.PlayerTurn
                                && battleController.CurrentEnergy > 0;
                 btn.interactable = canPlay;
             }

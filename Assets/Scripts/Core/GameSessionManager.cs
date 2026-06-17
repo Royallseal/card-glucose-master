@@ -177,6 +177,13 @@ namespace CGM.Core
             // 绑定战斗面板中抽牌堆与弃牌堆的点击事件
             if (battlePanel != null)
             {
+                // 确保 BattleEffectController 存在
+                var effectCtrl = battlePanel.GetComponent<UI.BattleEffectController>();
+                if (effectCtrl == null)
+                {
+                    effectCtrl = battlePanel.AddComponent<UI.BattleEffectController>();
+                }
+
                 Transform drawPileTrans = battlePanel.transform.Find("DrawPile_UI");
                 if (drawPileTrans != null)
                 {

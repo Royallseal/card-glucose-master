@@ -23,7 +23,13 @@ namespace CGM.Core
         public int SelfDamage { get; private set; }
         public int CardsDrawn { get; private set; }
         public float GlucoseDelta { get; private set; }
+        public bool FullyBlocked { get; private set; }
         public List<string> Messages { get; } = new List<string>();
+
+        public void MarkFullyBlocked()
+        {
+            FullyBlocked = true;
+        }
 
         public void AddDamage(int value)
         {
@@ -87,16 +93,22 @@ namespace CGM.Core
                             }
 
                             int damage = BattleCalculator.CalculateDamage(card, player, primaryTarget);
+                            int preHp = primaryTarget.CurrentHp;
                             primaryTarget.TakeDamage(damage);
                             result.AddDamage(damage);
+                            if (primaryTarget.CurrentHp == preHp && damage > 0)
+                                result.MarkFullyBlocked();
                         }
                     }
                 }
                 else if (primaryTarget != null)
                 {
                     int damage = BattleCalculator.CalculateDamage(card, player, primaryTarget);
+                    int preHp = primaryTarget.CurrentHp;
                     primaryTarget.TakeDamage(damage);
                     result.AddDamage(damage);
+                    if (primaryTarget.CurrentHp == preHp && damage > 0)
+                        result.MarkFullyBlocked();
                 }
             }
 
