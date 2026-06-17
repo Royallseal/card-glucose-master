@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using CGM.Data;
+
 
 namespace CGM.Core
 {
@@ -78,22 +80,15 @@ namespace CGM.Core
             levelSequence.Clear();
             currentLevelIndex = 0;
 
-            // 动态加载 JSON 配置文件
-            TextAsset jsonAsset = Resources.Load<TextAsset>("Configs/levels");
-            LevelConfigWrapper config = null;
-            if (jsonAsset != null)
-            {
-                config = JsonUtility.FromJson<LevelConfigWrapper>(jsonAsset.text);
-            }
+            // 一层弱怪、强怪、Boss 池
+            List<string> layer1Weak = new List<string> { "fried_chicken", "milk_tea_ghost" };
+            List<string> layer1Strong = new List<string> { "couch_potato", "stay_up_bat", "snack_demon" };
+            string layer1Boss = "fat_lord";
 
-            // 获取各层的配置池（若 JSON 加载失败则回退到默认数据，保证游戏稳定性）
-            List<string> layer1Weak = (config != null && config.layers.Count > 0) ? new List<string>(config.layers[0].weakEnemyIds) : new List<string> { "fried_chicken", "milk_tea_ghost" };
-            List<string> layer1Strong = (config != null && config.layers.Count > 0) ? new List<string>(config.layers[0].strongEnemyIds) : new List<string> { "couch_potato", "stay_up_bat", "snack_demon" };
-            string layer1Boss = (config != null && config.layers.Count > 0) ? config.layers[0].bossId : "fat_lord";
-
-            List<string> layer2Weak = (config != null && config.layers.Count > 1) ? new List<string>(config.layers[1].weakEnemyIds) : new List<string> { "numb_assassin", "floater_phantom" };
-            List<string> layer2Strong = (config != null && config.layers.Count > 1) ? new List<string>(config.layers[1].strongEnemyIds) : new List<string> { "acid_storm", "hardened_giant", "high_sugar_golem" };
-            string layer2Boss = (config != null && config.layers.Count > 1) ? config.layers[1].bossId : "general_complication";
+            // 二层弱怪、强怪、Boss 池
+            List<string> layer2Weak = new List<string> { "numb_assassin", "floater_phantom" };
+            List<string> layer2Strong = new List<string> { "acid_storm", "hardened_giant", "high_sugar_golem" };
+            string layer2Boss = "general_complication";
 
             // --- 一层 ---
             // 1~2关：一层弱怪随机乱序
@@ -129,7 +124,7 @@ namespace CGM.Core
             // 12关：二层 Boss
             AddBossNode(12, layer2Boss);
 
-            Debug.Log($"[LevelManager] 关卡序列生成成功，从 JSON 动态加载。当前关卡：{CurrentNode?.levelName}");
+            Debug.Log($"[LevelManager] 关卡序列生成成功。当前关卡：{CurrentNode?.levelName}");
         }
 
         /// <summary>
@@ -193,6 +188,21 @@ namespace CGM.Core
 
         private string GetLevelNameForEnemy(string enemyId)
         {
+            EnemyDatabase db = EnemyDatabase.Instance;
+            if (db == null)
+            {
+                db = FindObjectOfType<EnemyDatabase>();
+            }
+
+            if (db != null)
+            {
+                var enemy = db.GetEnemyById(enemyId);
+                if (enemy != null && !string.IsNullOrEmpty(enemy.levelName))
+                {
+                    return enemy.levelName;
+                }
+            }
+
             switch (enemyId)
             {
                 case "fried_chicken": return "油锅地狱";

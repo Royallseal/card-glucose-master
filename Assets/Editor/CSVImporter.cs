@@ -342,9 +342,9 @@ namespace CGM.Editor
                 if (string.IsNullOrEmpty(line)) continue;
 
                 List<string> fields = ParseCSVLine(line);
-                if (fields.Count < 4)
+                if (fields.Count < 5)
                 {
-                    Debug.LogWarning($"[CSVImporter] 初始敌人表第 {i + 1} 行字段不足（期望 4，实际 {fields.Count}），已跳过：{line}");
+                    Debug.LogWarning($"[CSVImporter] 初始敌人表第 {i + 1} 行字段不足（期望 5，实际 {fields.Count}），已跳过：{line}");
                     continue;
                 }
 
@@ -355,7 +355,8 @@ namespace CGM.Editor
                         id = fields[0].Trim(),
                         name = fields[1].Trim(),
                         maxHp = int.Parse(fields[2].Trim()),
-                        intentPattern = fields[3].Trim()
+                        intentPattern = fields[3].Trim(),
+                        levelName = fields[4].Trim()
                     };
 
                     enemies.Add(enemy);

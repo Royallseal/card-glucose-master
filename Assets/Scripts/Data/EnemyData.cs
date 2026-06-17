@@ -36,6 +36,7 @@ namespace CGM.Data
         public string name;
         public int maxHp;
         public string intentPattern; // 分号分隔的意图循环序列，例如: attack:5;block:5;debuff:stiffness:1
+        public string levelName;     // 对应的关卡/场景名字，来自 CSV 配置
 
         /// <summary>
         /// 解析意图字符串，返回结构化的意图行动循环列表。
