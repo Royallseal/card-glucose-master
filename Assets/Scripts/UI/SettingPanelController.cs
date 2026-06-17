@@ -55,10 +55,44 @@ namespace CGM.UI
 
         private void OnEnable()
         {
-            // 首次打开时播放入场动画
+            CanvasGroup cg = GetComponent<CanvasGroup>();
+            if (cg == null) cg = gameObject.AddComponent<CanvasGroup>();
+
             if (isOpen && animCoroutine == null)
             {
                 PlayOpenAnimation();
+            }
+            else if (isOpen && animCoroutine != null)
+            {
+                animCoroutine = null;
+                PlayOpenAnimation();
+            }
+            else if (!isOpen)
+            {
+                cg.alpha = 0f;
+                cg.interactable = false;
+            }
+        }
+
+        private void OnDisable()
+        {
+            if (animCoroutine != null)
+            {
+                StopCoroutine(animCoroutine);
+                animCoroutine = null;
+            }
+        }
+
+        /// <summary>
+        /// 强制重置状态（当游戏面板切换时由 GameSessionManager 调用）。
+        /// </summary>
+        public void ResetState()
+        {
+            isOpen = false;
+            if (animCoroutine != null)
+            {
+                StopCoroutine(animCoroutine);
+                animCoroutine = null;
             }
         }
 
@@ -159,11 +193,9 @@ namespace CGM.UI
 
         private void OnCardLibraryClicked()
         {
-            // 打开卡牌图鉴（复用 CardsMapPanel，与抽牌堆/弃牌堆一致）
             var gsm = GameSessionManager.Instance;
             if (gsm != null)
             {
-                // 以设置面板自身为源面板；CardLibrary 关闭时会恢复设置面板
                 gsm.OpenCardsMapFromSettings(CardsMapMode.CardLibrary, gameObject);
             }
         }

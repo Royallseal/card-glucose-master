@@ -884,7 +884,13 @@ namespace CGM.Core
             if (cardsMapPanel != null) cardsMapPanel.SetActive(false);
             if (startingPanel != null) startingPanel.SetActive(false);
             if (endingPanel != null) endingPanel.SetActive(false);
-            if (settingPanel != null) settingPanel.SetActive(false);
+            if (settingPanel != null)
+            {
+                // 强制重置设置面板状态，防止 isOpen 卡死
+                var spc = settingPanel.GetComponent<UI.SettingPanelController>();
+                if (spc != null) spc.ResetState();
+                settingPanel.SetActive(false);
+            }
         }
 
         /// <summary>

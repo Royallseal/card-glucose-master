@@ -90,6 +90,10 @@ namespace CGM.UI
                 sourcePanel = srcPanel;
                 modeHistory.Clear();
                 gameObject.SetActive(true);
+
+                // 确保 CardsMap 渲染在最顶层
+                transform.SetAsLastSibling();
+
                 if (srcPanel != null)
                 {
                     srcPanel.SetActive(false);
@@ -118,7 +122,6 @@ namespace CGM.UI
             }
             else
             {
-                // 关闭整个面板，恢复源面板
                 gameObject.SetActive(false);
                 if (sourcePanel != null)
                 {
