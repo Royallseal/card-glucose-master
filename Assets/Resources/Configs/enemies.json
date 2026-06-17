@@ -4,73 +4,85 @@
             "id": "fried_chicken",
             "name": "炸鸡怪兽",
             "maxHp": 45,
-            "intentPattern": "attack:6;block:4;attack:8"
+            "intentPattern": "attack:6;block:4;attack:8",
+            "levelName": "油锅地狱"
         },
         {
             "id": "milk_tea_ghost",
             "name": "奶茶幽灵",
             "maxHp": 40,
-            "intentPattern": "debuff:lethargy:1;attack:6;block:4;attack:8|attack:7;debuff:lethargy:1;attack:6"
+            "intentPattern": "debuff:lethargy:1;attack:6;block:4;attack:8|attack:7;debuff:lethargy:1;attack:6",
+            "levelName": "甜蜜幻境"
         },
         {
             "id": "couch_potato",
             "name": "久坐沙发",
             "maxHp": 62,
-            "intentPattern": "attack:9;debuff:stiffness:1;block:6;attack:10|debuff:stiffness:2;attack:8;attack:11"
+            "intentPattern": "attack:9;debuff:stiffness:1;block:6;attack:10|debuff:stiffness:2;attack:8;attack:11",
+            "levelName": "惰性沼泽"
         },
         {
             "id": "stay_up_bat",
             "name": "熬夜蝙蝠",
             "maxHp": 60,
-            "intentPattern": "debuff:lethargy:1;attack:8;block:5;attack:10|attack:9;block:5;attack:9;debuff:lethargy:1"
+            "intentPattern": "debuff:lethargy:1;attack:8;block:5;attack:10|attack:9;block:5;attack:9;debuff:lethargy:1",
+            "levelName": "无眠荒野"
         },
         {
             "id": "snack_demon",
             "name": "零食恶魔",
             "maxHp": 66,
-            "intentPattern": "debuff:fragility:1;attack:8;block:5;attack:12|attack:10;debuff:fragility:1;attack:10"
+            "intentPattern": "debuff:fragility:1;attack:8;block:5;attack:12|attack:10;debuff:fragility:1;attack:10",
+            "levelName": "深夜回廊"
         },
         {
             "id": "fat_lord",
             "name": "肥胖领主",
             "maxHp": 150,
-            "intentPattern": "debuff:lethargy:1;attack:12;block:12;buff:vitality:2;attack:16;attack:20"
+            "intentPattern": "debuff:lethargy:1;attack:12;block:12;buff:vitality:2;attack:16;attack:20",
+            "levelName": "脂质王座"
         },
         {
             "id": "numb_assassin",
             "name": "麻木刺客",
             "maxHp": 78,
-            "intentPattern": "debuff:stiffness:1;attack:10;block:6;attack:14|attack:12;debuff:stiffness:1;attack:12"
+            "intentPattern": "debuff:stiffness:1;attack:10;block:6;attack:14|attack:12;debuff:stiffness:1;attack:12",
+            "levelName": "冰寒防线"
         },
         {
             "id": "floater_phantom",
             "name": "飞蚊幻影",
             "maxHp": 72,
-            "intentPattern": "debuff:lethargy:1;attack:10;block:6;attack:13|attack:11;debuff:lethargy:1;attack:11"
+            "intentPattern": "debuff:lethargy:1;attack:10;block:6;attack:13|attack:11;debuff:lethargy:1;attack:11",
+            "levelName": "重影深渊"
         },
         {
             "id": "acid_storm",
             "name": "酸性风暴",
             "maxHp": 120,
-            "intentPattern": "debuff:fragility:2;attack:13;block:8;attack:18|attack:15;debuff:fragility:2;attack:15"
+            "intentPattern": "debuff:fragility:2;attack:13;block:8;attack:18|attack:15;debuff:fragility:2;attack:15",
+            "levelName": "失衡血海"
         },
         {
             "id": "hardened_giant",
             "name": "硬化巨人",
             "maxHp": 140,
-            "intentPattern": "block:14;buff:endurance:2;attack:14;block:10;attack:18"
+            "intentPattern": "block:14;buff:endurance:2;attack:14;block:10;attack:18",
+            "levelName": "凝固森林"
         },
         {
             "id": "high_sugar_golem",
             "name": "高糖傀儡",
             "maxHp": 125,
-            "intentPattern": "buff:vitality:2;attack:14;debuff:stiffness:2;block:8;attack:18|attack:16;debuff:stiffness:2;buff:vitality:2;attack:14"
+            "intentPattern": "buff:vitality:2;attack:14;debuff:stiffness:2;block:8;attack:18|attack:16;debuff:stiffness:2;buff:vitality:2;attack:14",
+            "levelName": "迷失禁区"
         },
         {
             "id": "general_complication",
             "name": "并发将军",
             "maxHp": 200,
-            "intentPattern": "debuff:fragility:2;attack:18;debuff:stiffness:2;block:15;attack:24;buff:vitality:2;attack:28"
+            "intentPattern": "debuff:fragility:2;attack:18;debuff:stiffness:2;block:15;attack:24;buff:vitality:2;attack:28",
+            "levelName": "致命风眼"
         }
     ]
 }

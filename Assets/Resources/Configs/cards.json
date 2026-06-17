@@ -10,7 +10,7 @@
             "finalDamage": 6,
             "finalBlock": 0,
             "description": "造成 {D} 点伤害，{G} 血糖。",
-            "iconColor": "#569CD6",
+            "iconColor": "#7EC8F8",
             "effects": []
         },
         {
@@ -23,7 +23,7 @@
             "finalDamage": 0,
             "finalBlock": 5,
             "description": "获得 {B} 点格挡，{G} 血糖。",
-            "iconColor": "#569CD6",
+            "iconColor": "#7EC8F8",
             "effects": []
         },
         {
@@ -36,7 +36,7 @@
             "finalDamage": 18,
             "finalBlock": 0,
             "description": "造成 {D} 点伤害，{G} 血糖。",
-            "iconColor": "#E65A5A",
+            "iconColor": "#FF7676",
             "effects": []
         },
         {
@@ -49,7 +49,7 @@
             "finalDamage": 0,
             "finalBlock": 7,
             "description": "获得 {B} 点格挡，{G} 血糖。",
-            "iconColor": "#E65A5A",
+            "iconColor": "#FF7676",
             "effects": []
         },
         {
@@ -62,7 +62,7 @@
             "finalDamage": 0,
             "finalBlock": 3,
             "description": "获得 {B} 点格挡。获得 {E0_V2} 层「缓释」。",
-            "iconColor": "#E65A5A",
+            "iconColor": "#FF7676",
             "effects": [
                 {
                     "effectType": "apply_buff",
@@ -81,7 +81,7 @@
             "finalDamage": 4,
             "finalBlock": 0,
             "description": "造成 {D} 点伤害 {E0_V1} 次，{G} 血糖。",
-            "iconColor": "#E65A5A",
+            "iconColor": "#FF7676",
             "effects": [
                 {
                     "effectType": "hit",
@@ -100,7 +100,7 @@
             "finalDamage": 0,
             "finalBlock": 0,
             "description": "抽 {E0_V1} 张牌。获得 {E1_V2} 层「缓释」。",
-            "iconColor": "#E65A5A",
+            "iconColor": "#FF7676",
             "effects": [
                 {
                     "effectType": "draw",
@@ -124,7 +124,7 @@
             "finalDamage": 0,
             "finalBlock": 13,
             "description": "获得 {B} 点格挡，{G} 血糖。",
-            "iconColor": "#E65A5A",
+            "iconColor": "#FF7676",
             "effects": []
         },
         {
@@ -137,7 +137,7 @@
             "finalDamage": 0,
             "finalBlock": 4,
             "description": "获得 {B} 点格挡，{G} 血糖。",
-            "iconColor": "#4EC9B0",
+            "iconColor": "#66D9B6",
             "effects": []
         },
         {
@@ -150,7 +150,7 @@
             "finalDamage": 0,
             "finalBlock": 0,
             "description": "{G} 血糖。获得 {E0_V2} 层「活力」。",
-            "iconColor": "#4EC9B0",
+            "iconColor": "#66D9B6",
             "effects": [
                 {
                     "effectType": "apply_buff",
@@ -169,7 +169,7 @@
             "finalDamage": 9,
             "finalBlock": 0,
             "description": "造成 {D} 点伤害，{G} 血糖。使目标获得 {E0_V2} 层「脆弱」。",
-            "iconColor": "#4EC9B0",
+            "iconColor": "#66D9B6",
             "effects": [
                 {
                     "effectType": "apply_debuff",
@@ -188,7 +188,7 @@
             "finalDamage": 0,
             "finalBlock": 7,
             "description": "获得 {B} 点格挡，{G} 血糖。使目标获得 {E0_V2} 层「乏力」。",
-            "iconColor": "#4EC9B0",
+            "iconColor": "#66D9B6",
             "effects": [
                 {
                     "effectType": "apply_debuff",
@@ -207,7 +207,7 @@
             "finalDamage": 14,
             "finalBlock": 0,
             "description": "造成 {D} 点伤害，{G} 血糖。",
-            "iconColor": "#4EC9B0",
+            "iconColor": "#66D9B6",
             "effects": []
         },
         {
@@ -220,7 +220,7 @@
             "finalDamage": 11,
             "finalBlock": 0,
             "description": "失去 {E0_V1} 生命值。造成 {D} 点伤害 {E1_V1} 次，{G} 血糖。",
-            "iconColor": "#4EC9B0",
+            "iconColor": "#66D9B6",
             "effects": [
                 {
                     "effectType": "self_damage",
@@ -244,7 +244,7 @@
             "finalDamage": 0,
             "finalBlock": 0,
             "description": "{G} 血糖。",
-            "iconColor": "#C586C0",
+            "iconColor": "#DA9EDA",
             "effects": []
         },
         {
@@ -257,7 +257,7 @@
             "finalDamage": 0,
             "finalBlock": 0,
             "description": "{G} 血糖。",
-            "iconColor": "#C586C0",
+            "iconColor": "#DA9EDA",
             "effects": []
         },
         {
@@ -270,7 +270,7 @@
             "finalDamage": 0,
             "finalBlock": 0,
             "description": "若当前血糖高于 {E0_V1}，将其复原至 {E0_V1}。",
-            "iconColor": "#C586C0",
+            "iconColor": "#DA9EDA",
             "effects": [
                 {
                     "effectType": "glucose_cap",
@@ -289,7 +289,7 @@
             "finalDamage": 0,
             "finalBlock": 0,
             "description": "{G} 血糖。",
-            "iconColor": "#C586C0",
+            "iconColor": "#DA9EDA",
             "effects": []
         },
         {
@@ -302,7 +302,7 @@
             "finalDamage": 0,
             "finalBlock": 0,
             "description": "抽 {E0_V1} 张牌。获得 {E1_V2} 层「敏化」。",
-            "iconColor": "#C586C0",
+            "iconColor": "#DA9EDA",
             "effects": [
                 {
                     "effectType": "draw",
@@ -326,7 +326,7 @@
             "finalDamage": 0,
             "finalBlock": 0,
             "description": "{G} 血糖。获得 {E0_V2} 层「敏化」。",
-            "iconColor": "#C586C0",
+            "iconColor": "#DA9EDA",
             "effects": [
                 {
                     "effectType": "apply_buff",
