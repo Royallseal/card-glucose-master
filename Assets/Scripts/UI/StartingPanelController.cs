@@ -106,9 +106,15 @@ namespace CGM.UI
 
         private void OnSettingClicked()
         {
+            // 通过 SettingPanelController 打开设置（半透明覆盖在开始界面上方）
             if (settingPanel != null)
             {
-                settingPanel.SetActive(!settingPanel.activeSelf);
+                var controller = settingPanel.GetComponent<SettingPanelController>();
+                if (controller == null)
+                {
+                    controller = settingPanel.AddComponent<SettingPanelController>();
+                }
+                controller.Open(gameObject, fromStartingPanel: true);
             }
         }
 

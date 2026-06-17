@@ -250,10 +250,31 @@ namespace CGM.UI
 
         private void ToggleSettingPanel()
         {
-            if (settingPanel != null)
+            // 通过 SettingPanelController 打开/关闭设置（半透明覆盖在战斗/商店界面上方）
+            if (settingPanel == null) return;
+
+            var spController = settingPanel.GetComponent<SettingPanelController>();
+            if (spController == null)
             {
-                settingPanel.SetActive(!settingPanel.activeSelf);
+                spController = settingPanel.AddComponent<SettingPanelController>();
             }
+
+            // 如果设置面板已打开，关闭它
+            if (settingPanel.activeSelf)
+            {
+                spController.Close();
+                return;
+            }
+
+            // 打开设置面板，来源是当前活跃的游戏面板（战斗/商店）
+            GameObject currentGamePanel = gameObject; // fallback: Ultop 所属面板
+            var gsm = Core.GameSessionManager.Instance;
+            if (gsm != null)
+            {
+                currentGamePanel = gsm.GetCurrentActiveGamePanel() ?? gameObject;
+            }
+
+            spController.Open(currentGamePanel, fromStartingPanel: false);
         }
 
         private string GetGlucoseStateName(float glucose)

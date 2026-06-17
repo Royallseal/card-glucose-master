@@ -224,7 +224,16 @@ namespace CGM.UI
                 case CardsMapMode.CardLibrary:
                     if (CardDatabase.Instance != null)
                     {
-                        list.AddRange(CardDatabase.Instance.GetAllCards());
+                        // 卡牌图鉴：每种卡牌（按 id）只展示一张
+                        var allCards = CardDatabase.Instance.GetAllCards();
+                        var seenIds = new System.Collections.Generic.HashSet<string>();
+                        foreach (var card in allCards)
+                        {
+                            if (card != null && seenIds.Add(card.id))
+                            {
+                                list.Add(card);
+                            }
+                        }
                     }
                     break;
             }

@@ -5,6 +5,7 @@ namespace CGM.Core
 {
     /// <summary>
     /// 全局背景音乐管理器，负责音乐的加载、循环播放以及淡入淡出平滑过渡。
+    /// 音量由 AudioManager 统一管理，支持运行时动态调整。
     /// </summary>
     public class BgmManager : MonoBehaviour
     {
@@ -12,12 +13,17 @@ namespace CGM.Core
 
         [Header("淡入淡出配置")]
         [SerializeField] private float defaultFadeDuration = 1.5f;  // 默认过渡时长
-        [SerializeField] private float targetVolume = 0.55f;        // 目标音量（0~1）
 
         private AudioSource audioSource;
         private Coroutine fadeCoroutine;
+        private Coroutine volumeAdjustCoroutine;
         private string currentTrackName = "";
         private bool hasDelayedStartDone = false;
+
+        /// <summary>
+        /// 目标音量，从 AudioManager 动态获取。
+        /// </summary>
+        private float TargetVolume => AudioManager.Instance != null ? AudioManager.Instance.BgmVolume : 0.55f;
 
         private void Awake()
         {
@@ -38,6 +44,52 @@ namespace CGM.Core
             audioSource.loop = true;
             audioSource.playOnAwake = false;
             audioSource.volume = 0f; // 初始静音，靠淡入控制
+        }
+
+        private void Start()
+        {
+            // 订阅 AudioManager 音量变化事件，实现运行时实时调整
+            if (AudioManager.Instance != null)
+            {
+                AudioManager.Instance.OnBgmVolumeChanged += OnBgmVolumeChanged;
+            }
+        }
+
+        private void OnDestroy()
+        {
+            if (AudioManager.Instance != null)
+            {
+                AudioManager.Instance.OnBgmVolumeChanged -= OnBgmVolumeChanged;
+            }
+        }
+
+        /// <summary>
+        /// AudioManager 通知 BGM 音量改变时，平滑过渡当前播放音量。
+        /// </summary>
+        private void OnBgmVolumeChanged(float newVolume)
+        {
+            if (!audioSource.isPlaying || audioSource.clip == null) return;
+
+            if (volumeAdjustCoroutine != null)
+            {
+                StopCoroutine(volumeAdjustCoroutine);
+            }
+            volumeAdjustCoroutine = StartCoroutine(AdjustVolumeRoutine(newVolume, 0.5f));
+        }
+
+        private IEnumerator AdjustVolumeRoutine(float targetVol, float duration)
+        {
+            float startVol = audioSource.volume;
+            float elapsed = 0f;
+            while (elapsed < duration)
+            {
+                elapsed += Time.deltaTime;
+                float t = Mathf.Clamp01(elapsed / duration);
+                audioSource.volume = Mathf.Lerp(startVol, targetVol, t);
+                yield return null;
+            }
+            audioSource.volume = targetVol;
+            volumeAdjustCoroutine = null;
         }
 
         /// <summary>
@@ -123,15 +175,16 @@ namespace CGM.Core
 
             // 2. 淡入新音乐
             {
+                float targetVol = TargetVolume;
                 float elapsed = 0f;
                 float halfDuration = duration * 0.5f;
                 while (elapsed < halfDuration)
                 {
                     elapsed += Time.deltaTime;
-                    audioSource.volume = Mathf.Lerp(0f, targetVolume, elapsed / halfDuration);
+                    audioSource.volume = Mathf.Lerp(0f, targetVol, elapsed / halfDuration);
                     yield return null;
                 }
-                audioSource.volume = targetVolume;
+                audioSource.volume = targetVol;
             }
 
             fadeCoroutine = null;

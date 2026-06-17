@@ -1308,7 +1308,8 @@ MonoBehaviour:
   startingPanel: {fileID: 556333562}
   endingPanel: {fileID: 1722524330}
   ultopPanel: {fileID: 1698378059}
-  cardPrefab: {fileID: 0}
+  settingPanel: {fileID: 666188754}
+  cardPrefab: {fileID: 5731757152123929233, guid: eb320fd39db92744fa16b81267efb121, type: 3}
   rewardCardsContainer: {fileID: 1892175559}
   settlementExitButton: {fileID: 460738765}
   settlementGoldValueText: {fileID: 965424534}
@@ -5172,7 +5173,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &556333563
 RectTransform:
   m_ObjectHideFlags: 0

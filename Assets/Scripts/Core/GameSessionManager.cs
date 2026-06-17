@@ -26,6 +26,8 @@ namespace CGM.Core
         [SerializeField] private GameObject startingPanel;
         [SerializeField] private GameObject endingPanel;
         [SerializeField] private GameObject ultopPanel;
+        [Tooltip("设置面板引用 (Canvas/SettingPanel)")]
+        [SerializeField] private GameObject settingPanel;
 
         [Header("卡牌预制体 (用于动态生成)")]
         [SerializeField] private GameObject cardPrefab;
@@ -73,6 +75,20 @@ namespace CGM.Core
             }
             Instance = this;
             DontDestroyOnLoad(gameObject);
+
+            // 确保 AudioManager 在 Awake 阶段创建（早于其他组件的 Start）
+            EnsureAudioManager();
+
+            // 自动查找设置面板（如果 Inspector 中未赋值）
+            if (settingPanel == null)
+            {
+                var canvas = GameObject.Find("Canvas");
+                if (canvas != null)
+                {
+                    Transform spTrans = canvas.transform.Find("SettingPanel");
+                    if (spTrans != null) settingPanel = spTrans.gameObject;
+                }
+            }
         }
 
         private void Start()
@@ -145,6 +161,16 @@ namespace CGM.Core
                     if (btn == null) btn = cardsButtonTrans.gameObject.AddComponent<Button>();
                     btn.onClick.RemoveAllListeners();
                     btn.onClick.AddListener(() => OpenCardsMap(UI.CardsMapMode.PlayerDeck));
+                }
+            }
+
+            // 确保 SettingPanel 上有 SettingPanelController 组件
+            if (settingPanel != null)
+            {
+                var spController = settingPanel.GetComponent<UI.SettingPanelController>();
+                if (spController == null)
+                {
+                    spController = settingPanel.AddComponent<UI.SettingPanelController>();
                 }
             }
 
@@ -858,6 +884,60 @@ namespace CGM.Core
             if (cardsMapPanel != null) cardsMapPanel.SetActive(false);
             if (startingPanel != null) startingPanel.SetActive(false);
             if (endingPanel != null) endingPanel.SetActive(false);
+            if (settingPanel != null) settingPanel.SetActive(false);
+        }
+
+        /// <summary>
+        /// 获取当前活跃的游戏面板（战斗/商店/结算之一），供 SettingPanelController 确定来源。
+        /// </summary>
+        public GameObject GetCurrentActiveGamePanel()
+        {
+            if (battlePanel != null && battlePanel.activeSelf) return battlePanel;
+            if (shopPanel != null && shopPanel.activeSelf) return shopPanel;
+            if (settlementPanel != null && settlementPanel.activeSelf) return settlementPanel;
+            return null;
+        }
+
+        /// <summary>
+        /// 返回主菜单（开始界面），从游戏中退出时调用。
+        /// </summary>
+        public void ReturnToMainMenu()
+        {
+            // 隐藏所有游戏面板
+            HideAllPanels();
+
+            // 停止 BGM
+            if (BgmManager.Instance != null) BgmManager.Instance.StopBgm();
+
+            // 重新播放开始界面 BGM
+            EnsureBgmManager();
+            if (BgmManager.Instance != null) BgmManager.Instance.PlayBgm("Dance of fireflies");
+
+            // 显示开始界面
+            if (startingPanel != null) startingPanel.SetActive(true);
+
+            // 隐藏顶部 UI
+            if (ultopPanel != null) ultopPanel.SetActive(false);
+
+            // 重置关卡
+            if (LevelManager.Instance != null) LevelManager.Instance.ResetGame();
+        }
+
+        /// <summary>
+        /// 从设置面板中打开卡牌图鉴。
+        /// 与 OpenCardsMap 的区别：sourcePanel 为设置面板自身而非游戏面板。
+        /// </summary>
+        public void OpenCardsMapFromSettings(UI.CardsMapMode mode, GameObject settingsPanel)
+        {
+            if (cardsMapPanel == null) return;
+
+            var controller = cardsMapPanel.GetComponent<UI.CardsMapController>();
+            if (controller == null)
+            {
+                controller = cardsMapPanel.AddComponent<UI.CardsMapController>();
+            }
+
+            controller.Open(mode, settingsPanel);
         }
 
         /// <summary>
@@ -869,6 +949,18 @@ namespace CGM.Core
             {
                 GameObject bgmGo = new GameObject("[BgmManager]");
                 bgmGo.AddComponent<BgmManager>();
+            }
+        }
+
+        /// <summary>
+        /// 确保场景中存在 AudioManager 实例，若不存在则自动创建
+        /// </summary>
+        private void EnsureAudioManager()
+        {
+            if (AudioManager.Instance == null)
+            {
+                GameObject amGo = new GameObject("[AudioManager]");
+                amGo.AddComponent<AudioManager>();
             }
         }
 
