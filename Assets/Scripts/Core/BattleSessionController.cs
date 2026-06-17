@@ -38,7 +38,7 @@ namespace CGM.Core
         [Header("起始配置")]
         [SerializeField] private string startingEnemyId;
         [SerializeField] private bool resetEnemyOnBattleStart = true;
-        [SerializeField] private bool autoStartBattle = true;
+        [SerializeField] private bool autoStartBattle = false; // 由 GameSessionManager 统一管理战斗启动
 
         [Header("回合配置")]
         [SerializeField] private int startingEnergy = 3;
@@ -108,6 +108,8 @@ namespace CGM.Core
 
         private void Awake()
         {
+            // 强制禁用自动启动，由 GameSessionManager 统一管理战斗生命周期
+            autoStartBattle = false;
             ResolveDependencies();
         }
 

@@ -62,6 +62,7 @@ namespace CGM.Core
         private int currentGoldReward = 0;
         private bool isGoldChosen = false;
         private UI.RewardCardInteraction selectedCard = null;
+        private bool isStartingGame = false; // 防重入标记
 
         private void Awake()
         {
@@ -129,16 +130,9 @@ namespace CGM.Core
                 shopExitButton.onClick.AddListener(OnShopExitClicked);
             }
 
-            // 绑定开始与结束按钮（备用路径；StartingPanelController 会自行绑定开始面板中的按钮）
-            if (startGameButton != null)
-            {
-                startGameButton.onClick.AddListener(StartGame);
-            }
-
-            if (restartGameButton != null)
-            {
-                restartGameButton.onClick.AddListener(RestartGame);
-            }
+            // 开始/重新开始按钮的绑定已由 StartingPanelController / EndingPanelController 各自负责，
+            // GameSessionManager 不再重复绑定，避免 StartGame() 被双击触发两次导致手牌翻倍。
+            // （若场景中无对应面板控制器，请将按钮引用挂到对应面板控制器上，而非此处。）
 
             // 绑定顶部 Ultop 牌组按钮点击事件，进入本人牌组界面
             var ultop = FindObjectOfType<UI.UltopController>();
@@ -210,15 +204,7 @@ namespace CGM.Core
                 shopExitButton.onClick.RemoveListener(OnShopExitClicked);
             }
 
-            if (startGameButton != null)
-            {
-                startGameButton.onClick.RemoveListener(StartGame);
-            }
-
-            if (restartGameButton != null)
-            {
-                restartGameButton.onClick.RemoveListener(RestartGame);
-            }
+            // startGameButton / restartGameButton 的绑定与解绑已由各面板控制器负责，此处不再处理
 
             // 清理动态绑定的卡组及抽弃牌堆点击事件
             var ultop = FindObjectOfType<UI.UltopController>();
@@ -255,6 +241,10 @@ namespace CGM.Core
         /// </summary>
         public void StartGame()
         {
+            // 防止同一帧内重复触发（如多个按钮监听器同时绑定）
+            if (isStartingGame) return;
+            isStartingGame = true;
+
             if (LevelManager.Instance != null)
             {
                 LevelManager.Instance.ResetGame();
@@ -273,6 +263,8 @@ namespace CGM.Core
             }
 
             LoadCurrentLevel();
+
+            isStartingGame = false;
         }
 
 #if UNITY_EDITOR
