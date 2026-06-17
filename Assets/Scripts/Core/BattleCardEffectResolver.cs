@@ -26,6 +26,9 @@ namespace CGM.Core
         public bool FullyBlocked { get; private set; }
         public List<string> Messages { get; } = new List<string>();
 
+        /// <summary>多段攻击的每击结果。</summary>
+        public List<HitResult> HitResults { get; } = new List<HitResult>();
+
         public void MarkFullyBlocked()
         {
             FullyBlocked = true;
@@ -34,6 +37,18 @@ namespace CGM.Core
         public void AddDamage(int value)
         {
             DamageDealt += Mathf.Max(0, value);
+        }
+
+        public void AddHitResult(bool blocked, int rawDamage)
+        {
+            HitResults.Add(new HitResult { blocked = blocked, rawDamage = rawDamage });
+        }
+
+        /// <summary>单次攻击命中的结果。</summary>
+        public struct HitResult
+        {
+            public bool blocked;   // 此次攻击是否被完全格挡
+            public int rawDamage;  // 原始伤害值
         }
 
         public void AddBlock(int value)
@@ -96,8 +111,9 @@ namespace CGM.Core
                             int preHp = primaryTarget.CurrentHp;
                             primaryTarget.TakeDamage(damage);
                             result.AddDamage(damage);
-                            if (primaryTarget.CurrentHp == preHp && damage > 0)
-                                result.MarkFullyBlocked();
+                            bool blocked = primaryTarget.CurrentHp == preHp && damage > 0;
+                            result.AddHitResult(blocked, damage);
+                            if (blocked) result.MarkFullyBlocked();
                         }
                     }
                 }
@@ -107,8 +123,9 @@ namespace CGM.Core
                     int preHp = primaryTarget.CurrentHp;
                     primaryTarget.TakeDamage(damage);
                     result.AddDamage(damage);
-                    if (primaryTarget.CurrentHp == preHp && damage > 0)
-                        result.MarkFullyBlocked();
+                    bool blocked = primaryTarget.CurrentHp == preHp && damage > 0;
+                    result.AddHitResult(blocked, damage);
+                    if (blocked) result.MarkFullyBlocked();
                 }
             }
 

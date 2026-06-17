@@ -370,11 +370,7 @@ namespace CGM.UI
                 var cardUI = cardGo.GetComponent<CardUI>();
                 if (cardUI != null)
                 {
-                    var player = FindObjectOfType<CGM.Core.PlayerStats>();
-                    int pd = CGM.Core.BattleCalculator.CalculateSelfDamage(card, player);
-                    int pb = CGM.Core.BattleCalculator.CalculateSelfBlock(card, player);
-                    float glucoseMultiplier = player != null ? CGM.Core.BattleCalculator.GetGlucoseChangeMultiplier(player) : 1.0f;
-                    cardUI.SetCard(card, pd - card.finalDamage, pb - card.finalBlock, glucoseMultiplier);
+                    SetCardRealTimeValues(cardUI, card);
                 }
 
                 var dragHandler = cardGo.GetComponent<CardDragHandler>();
@@ -639,9 +635,6 @@ namespace CGM.UI
         {
             if (battleController == null || battleController.PlayerStats == null) return;
 
-            var player = battleController.PlayerStats;
-            float glucoseMultiplier = BattleCalculator.GetGlucoseChangeMultiplier(player);
-
             foreach (var go in handObjects)
             {
                 if (go == null) continue;
@@ -650,13 +643,35 @@ namespace CGM.UI
                 var dragHandler = go.GetComponent<CardDragHandler>();
                 if (cardUI != null && dragHandler != null && dragHandler.CardInfo != null)
                 {
-                    var card = dragHandler.CardInfo;
-                    int pd = BattleCalculator.CalculateSelfDamage(card, player);
-                    int pb = BattleCalculator.CalculateSelfBlock(card, player);
-
-                    cardUI.SetCard(card, pd - card.finalDamage, pb - card.finalBlock, glucoseMultiplier);
+                    SetCardRealTimeValues(cardUI, dragHandler.CardInfo);
                 }
             }
+        }
+
+        /// <summary>
+        /// 根据玩家和敌人的实时状态计算卡牌实际数值并渲染到 UI。
+        /// </summary>
+        private void SetCardRealTimeValues(CardUI cardUI, CGM.Data.CardInfo card)
+        {
+            if (battleController == null || card == null) return;
+            var player = battleController.PlayerStats;
+            var enemy = battleController.EnemyStats;
+
+            // 对敌人的实际伤害（含敌人脆弱）
+            int actualDamage = enemy != null
+                ? CGM.Core.BattleCalculator.CalculateDamage(card, player, enemy)
+                : CGM.Core.BattleCalculator.CalculateSelfDamage(card, player);
+
+            // 自身格挡（不受敌人影响）
+            int actualBlock = CGM.Core.BattleCalculator.CalculateSelfBlock(card, player);
+
+            float glucoseMultiplier = player != null
+                ? CGM.Core.BattleCalculator.GetGlucoseChangeMultiplier(player) : 1.0f;
+
+            cardUI.SetCard(card,
+                actualDamage - card.finalDamage,
+                actualBlock - card.finalBlock,
+                glucoseMultiplier);
         }
     }
 }

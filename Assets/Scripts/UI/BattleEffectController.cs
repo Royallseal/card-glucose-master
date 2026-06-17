@@ -138,15 +138,25 @@ namespace CGM.UI
         {
             var list = new List<EffectRequest>();
 
-            // 1. 攻击 / 全格挡
-            if (result.Card != null && result.Card.finalDamage > 0)
+            // 1. 攻击 / 全格挡 — 多段攻击按每击独立判定
+            if (result.HitResults.Count > 0)
             {
+                foreach (var hit in result.HitResults)
+                {
+                    list.Add(hit.blocked
+                        ? EffectReq(EffectType.Defend, false)
+                        : EffectReq(EffectType.Attack, false));
+                }
+            }
+            else if (result.Card != null && result.Card.finalDamage > 0)
+            {
+                // 兜底：非 Hit 效果的攻击（如未来扩展）
                 list.Add(result.FullyBlocked
                     ? EffectReq(EffectType.Defend, false)
                     : EffectReq(EffectType.Attack, false));
             }
 
-            // 2. 获得格挡（独立于 Status，复用 Defend 图标但不同缩放和音效）
+            // 2. 获得格挡
             if (result.BlockGained > 0)
                 list.Add(EffectReq(EffectType.GainBlock, false, result.BlockGained));
 
