@@ -129,7 +129,7 @@ namespace CGM.Core
                 shopExitButton.onClick.AddListener(OnShopExitClicked);
             }
 
-            // 绑定开始与结束按钮
+            // 绑定开始与结束按钮（备用路径；StartingPanelController 会自行绑定开始面板中的按钮）
             if (startGameButton != null)
             {
                 startGameButton.onClick.AddListener(StartGame);

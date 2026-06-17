@@ -5165,6 +5165,7 @@ GameObject:
   - component: {fileID: 556333563}
   - component: {fileID: 556333565}
   - component: {fileID: 556333564}
+  - component: {fileID: 556333566}
   m_Layer: 5
   m_Name: StartingPanel
   m_TagString: Untagged
@@ -5233,6 +5234,30 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 556333562}
   m_CullTransparentMesh: 1
+--- !u!114 &556333566
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 556333562}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cc171e26f9357c1488b7e5c9bfddcc8f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  startGameButton: {fileID: 1965882781}
+  settingButton: {fileID: 826715854}
+  exitButton: {fileID: 825850112}
+  settingPanel: {fileID: 666188754}
+  cardRects:
+  - {fileID: 1166797982}
+  - {fileID: 842703494}
+  - {fileID: 975712385}
+  - {fileID: 1895426858}
+  cardOriginAnchor: {fileID: 1895426858}
+  cardAnimDuration: 0.6
+  cardStaggerDelay: 0.12
 --- !u!1 &559327162
 GameObject:
   m_ObjectHideFlags: 0
