@@ -105,6 +105,14 @@ namespace CGM.Core
             startingDeckCardIds.Add(cardId);
         }
 
+        /// <summary>
+        /// 重置牌组到默认初始状态（新游戏开始时调用）。
+        /// </summary>
+        public void ResetDeckToDefault(List<string> defaultDeck)
+        {
+            startingDeckCardIds = new List<string>(defaultDeck);
+        }
+
         private bool battleEnded;
 
         private void Awake()

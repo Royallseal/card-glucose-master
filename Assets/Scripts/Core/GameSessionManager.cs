@@ -66,6 +66,18 @@ namespace CGM.Core
         private UI.RewardCardInteraction selectedCard = null;
         private bool isStartingGame = false; // 防重入标记
 
+        // 本局统计数据（战斗结算汇总）
+        private int totalBattlesFought = 0;
+        private int totalTurnsAcrossAllBattles = 0;
+        private int maxTurnsInSingleBattle = 0;
+        private int minTurnsInSingleBattle = int.MaxValue;
+        private int totalDamageDealtAllBattles = 0;
+        private int totalBlockGainedAllBattles = 0;
+        private int totalCardsPlayedAllBattles = 0;
+
+        // 原始起始牌组（用于重开时重置）
+        private List<string> originalStartingDeck;
+
         private void Awake()
         {
             if (Instance != null && Instance != this)
@@ -100,10 +112,11 @@ namespace CGM.Core
                 lmGo.AddComponent<LevelManager>();
             }
 
-            // 绑定战斗结束监听
+            // 绑定战斗结束监听 + 卡牌播放统计
             if (battleController != null)
             {
                 battleController.OnBattleEnded += OnBattleEnded;
+                battleController.OnCardPlayed += OnCardPlayedForStats;
             }
             else
             {
@@ -111,6 +124,7 @@ namespace CGM.Core
                 if (battleController != null)
                 {
                     battleController.OnBattleEnded += OnBattleEnded;
+                    battleController.OnCardPlayed += OnCardPlayedForStats;
                 }
             }
 
@@ -225,6 +239,7 @@ namespace CGM.Core
             if (battleController != null)
             {
                 battleController.OnBattleEnded -= OnBattleEnded;
+                battleController.OnCardPlayed -= OnCardPlayedForStats;
             }
 
             if (settlementExitButton != null)
@@ -277,6 +292,17 @@ namespace CGM.Core
             // 防止同一帧内重复触发（如多个按钮监听器同时绑定）
             if (isStartingGame) return;
             isStartingGame = true;
+
+            // 重置本局统计数据
+            ResetSessionStats();
+
+            // 保存并重置起始牌组到初始状态
+            if (battleController != null)
+            {
+                if (originalStartingDeck == null)
+                    originalStartingDeck = new List<string>(battleController.StartingDeckCardIds);
+                battleController.ResetDeckToDefault(originalStartingDeck);
+            }
 
             if (LevelManager.Instance != null)
             {
@@ -470,6 +496,16 @@ namespace CGM.Core
 
         private void OnBattleEnded(BattleOutcome outcome)
         {
+            // 记录本局统计数据
+            if (battleController != null)
+            {
+                totalBattlesFought++;
+                int turns = battleController.TurnNumber;
+                totalTurnsAcrossAllBattles += turns;
+                if (turns > maxTurnsInSingleBattle) maxTurnsInSingleBattle = turns;
+                if (turns < minTurnsInSingleBattle) minTurnsInSingleBattle = turns;
+            }
+
             if (outcome == BattleOutcome.Victory)
             {
                 StartCoroutine(ShowVictorySettlementDelay());
@@ -478,6 +514,14 @@ namespace CGM.Core
             {
                 StartCoroutine(ShowDefeatEndingDelay());
             }
+        }
+
+        private void OnCardPlayedForStats(CardPlayResult result)
+        {
+            if (result == null) return;
+            totalCardsPlayedAllBattles++;
+            totalDamageDealtAllBattles += result.DamageDealt;
+            totalBlockGainedAllBattles += result.BlockGained;
         }
 
         private IEnumerator ShowVictorySettlementDelay()
@@ -818,39 +862,70 @@ namespace CGM.Core
         private IEnumerator ShowDefeatEndingDelay()
         {
             yield return new WaitForSeconds(1.5f);
-            HideAllPanels();
-            if (endingPanel != null)
-            {
-                endingPanel.SetActive(true);
-            }
-            else
-            {
-                // 如果没有结局面板，退回起始面板
-                if (startingPanel != null) startingPanel.SetActive(true);
-            }
-
-            // 结束界面 BGM
-            EnsureBgmManager();
-            if (BgmManager.Instance != null) BgmManager.Instance.PlayBgm("Dance of fireflies");
+            ShowEndingPanel(false);
         }
 
         private void ShowEndingPanel()
         {
+            ShowEndingPanel(true);
+        }
+
+        private void ShowEndingPanel(bool victory)
+        {
             HideAllPanels();
-            if (endingPanel != null)
-            {
-                endingPanel.SetActive(true);
-            }
-            else
+            if (endingPanel == null)
             {
                 if (startingPanel != null) startingPanel.SetActive(true);
+                return;
             }
 
-            // 结束界面 BGM
+            endingPanel.SetActive(true);
+
+            var controller = endingPanel.GetComponent<UI.EndingPanelController>();
+            if (controller == null)
+                controller = endingPanel.AddComponent<UI.EndingPanelController>();
+
+            var stats = BuildEndingStats();
+            if (victory)
+                controller.ShowVictory(stats);
+            else
+                controller.ShowDefeat(stats);
+
             EnsureBgmManager();
             if (BgmManager.Instance != null) BgmManager.Instance.PlayBgm("Dance of fireflies");
 
-            Debug.Log("[GameSessionManager] 恭喜你通过全部关卡，达成通关！");
+            Debug.Log($"[GameSessionManager] {(victory ? "恭喜通关！" : "战斗失败。")}");
+        }
+
+        private void ResetSessionStats()
+        {
+            totalBattlesFought = 0;
+            totalTurnsAcrossAllBattles = 0;
+            maxTurnsInSingleBattle = 0;
+            minTurnsInSingleBattle = int.MaxValue;
+            totalDamageDealtAllBattles = 0;
+            totalBlockGainedAllBattles = 0;
+            totalCardsPlayedAllBattles = 0;
+        }
+
+        private List<UI.StatLine> BuildEndingStats()
+        {
+            var list = new List<UI.StatLine>();
+            int deckSize = battleController != null ? battleController.StartingDeckCardIds.Count : 0;
+            int avgTurns = totalBattlesFought > 0 ? totalTurnsAcrossAllBattles / totalBattlesFought : 0;
+            int minT = minTurnsInSingleBattle == int.MaxValue ? 0 : minTurnsInSingleBattle;
+
+            list.Add(new UI.StatLine { label = "击败敌人数",    value = totalBattlesFought.ToString(), colorHex = BattleConstants.ColorGold });
+            list.Add(new UI.StatLine { label = "总回合数",      value = totalTurnsAcrossAllBattles.ToString(), colorHex = BattleConstants.ColorGreen });
+            list.Add(new UI.StatLine { label = "最多回合数",    value = maxTurnsInSingleBattle.ToString(), colorHex = BattleConstants.ColorRed });
+            list.Add(new UI.StatLine { label = "最少回合数",    value = minT.ToString(), colorHex = BattleConstants.ColorOrange });
+            list.Add(new UI.StatLine { label = "平均回合数",    value = avgTurns.ToString(), colorHex = "#4EC9B0" });
+            list.Add(new UI.StatLine { label = "牌组大小",      value = deckSize.ToString(), colorHex = "#FFAD1F" });
+            list.Add(new UI.StatLine { label = "总伤害输出",    value = totalDamageDealtAllBattles.ToString(), colorHex = BattleConstants.ColorRed });
+            list.Add(new UI.StatLine { label = "总格挡获得",    value = totalBlockGainedAllBattles.ToString(), colorHex = BattleConstants.ColorGreen });
+            list.Add(new UI.StatLine { label = "使用卡牌数",    value = totalCardsPlayedAllBattles.ToString(), colorHex = BattleConstants.ColorGold });
+
+            return list;
         }
 
         private void OnSettlementExitClicked()
