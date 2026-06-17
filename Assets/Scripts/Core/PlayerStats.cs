@@ -13,28 +13,38 @@ namespace CGM.Core
         [Header("玩家特有配置")]
         [Range(0f, 15f)]
         [SerializeField] private float currentGlucose = 5.7f;
+        [SerializeField] private int gold = 99;
 
         /// <summary>
         /// 当血糖值发生任何改变时触发，通知血糖仪 UI 刷新。
         /// </summary>
         public event Action<float> OnGlucoseChanged;
 
+        /// <summary>
+        /// 当金币发生变化时触发，通知金币 UI 刷新。
+        /// </summary>
+        public event Action<int> OnGoldChanged;
+
         public float CurrentGlucose => currentGlucose;
+        public int Gold => gold;
 
         protected override void Start()
         {
             base.Start();
             NotifyGlucoseChange();
+            OnGoldChanged?.Invoke(gold);
         }
 
         /// <summary>
-        /// 初始化玩家的生命值与血糖初始值。
+        /// 初始化玩家的生命值与血糖、金币初始值。
         /// </summary>
-        public void Initialize(int maxHealth, float startGlucose)
+        public void Initialize(int maxHealth, float startGlucose, int startGold = 99)
         {
             base.Initialize(maxHealth);
             currentGlucose = Mathf.Clamp(startGlucose, BattleConstants.GlucoseMin, BattleConstants.GlucoseMax);
+            gold = startGold;
             NotifyGlucoseChange();
+            OnGoldChanged?.Invoke(gold);
         }
 
         /// <summary>
@@ -86,6 +96,15 @@ namespace CGM.Core
             {
                 SetGlucose(currentGlucose + changeAmount);
             }
+        }
+
+        /// <summary>
+        /// 修改玩家金币数量，金币最低为0。
+        /// </summary>
+        public void ChangeGold(int amount)
+        {
+            gold = Mathf.Max(0, gold + amount);
+            OnGoldChanged?.Invoke(gold);
         }
 
         private void NotifyGlucoseChange()

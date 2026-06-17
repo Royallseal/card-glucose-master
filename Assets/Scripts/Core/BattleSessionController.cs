@@ -85,6 +85,21 @@ namespace CGM.Core
         public IReadOnlyList<CardInfo> DrawPile => cardPile.DrawPile;
         public IReadOnlyList<CardInfo> DiscardPile => cardPile.DiscardPile;
         public IReadOnlyList<CardInfo> PendingRewardCards => pendingRewardCards;
+        public List<string> StartingDeckCardIds => startingDeckCardIds;
+        public string StartingEnemyId
+        {
+            get => startingEnemyId;
+            set => startingEnemyId = value;
+        }
+
+        public void AddCardToStartingDeck(string cardId)
+        {
+            if (startingDeckCardIds == null)
+            {
+                startingDeckCardIds = new List<string>();
+            }
+            startingDeckCardIds.Add(cardId);
+        }
 
         private bool battleEnded;
 

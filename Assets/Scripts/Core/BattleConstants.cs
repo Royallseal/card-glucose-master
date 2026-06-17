@@ -12,6 +12,7 @@ namespace CGM.Core
         public const string ColorGreen = "#4EC9B0";  // 伤害/格挡增益、血糖下降健康色 (青绿色)
         public const string ColorRed = "#FF6B6B";    // 伤害/格挡减益、高血糖警示红色 (淡红色)
         public const string ColorOrange = "#FFAD1F"; // 血糖上升/状态高亮橙黄色 (橘黄色)
+        public const string ColorGold = "#FFD700";   // 金币黄色 (黄色)
 
         // =========================================================================
         // 血糖阈值与修正比例
