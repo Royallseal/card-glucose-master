@@ -54,6 +54,10 @@ namespace CGM.Core
         [SerializeField] private Button startGameButton;
         [SerializeField] private Button restartGameButton;
 
+        [Header("调试")]
+        [Tooltip("设为 >=0 则直接从该关卡索引起始（0=第1关 … 5=商店1 … 6=Boss1 … 7=二层第1关 … 10=商店2 … 11=Boss2）")]
+        [SerializeField] private int debugSkipToLevel = -1;
+
         // 运行时状态
         private int currentGoldReward = 0;
         private bool isGoldChosen = false;
@@ -254,6 +258,12 @@ namespace CGM.Core
             if (LevelManager.Instance != null)
             {
                 LevelManager.Instance.ResetGame();
+
+                // Debug：Inspector 中设 debugSkipToLevel >= 0 则直接跳关
+                if (debugSkipToLevel >= 0)
+                {
+                    LevelManager.Instance.SetDebugLevel(debugSkipToLevel);
+                }
             }
 
             // 初始化玩家属性 (血量80，血糖5.7，金币99)
@@ -264,6 +274,46 @@ namespace CGM.Core
 
             LoadCurrentLevel();
         }
+
+#if UNITY_EDITOR
+        private void Update()
+        {
+            // 键盘快捷键快速跳关（仅 Editor 下有效）
+            if (!Input.anyKeyDown) return;
+
+            bool shift = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
+
+            // Shift+数字键 跳 10/11/12（必须先于普通数字键处理）
+            if (shift)
+            {
+                if (Input.GetKeyDown(KeyCode.Alpha0)) { JumpToLevel(10); return; }
+                if (Input.GetKeyDown(KeyCode.Alpha1)) { JumpToLevel(11); return; }
+                if (Input.GetKeyDown(KeyCode.Alpha2)) { JumpToLevel(12); return; }
+            }
+
+            // 普通数字键 0-9（Shift 没按下时才生效，避免冲突）
+            for (int i = 0; i <= 9; i++)
+            {
+                if (Input.GetKeyDown((KeyCode)((int)KeyCode.Alpha0 + i)))
+                {
+                    JumpToLevel(i);
+                    return;
+                }
+            }
+        }
+
+        private void JumpToLevel(int index)
+        {
+            if (LevelManager.Instance == null) return;
+            int maxIdx = LevelManager.Instance.LevelSequence.Count - 1;
+            if (index < 0 || index > maxIdx) return;
+
+            LevelManager.Instance.SetDebugLevel(index);
+            // 不重置 PlayerStats —— 跳关应保持当前数据，仅切换关卡
+            LoadCurrentLevel();
+            Debug.Log($"[GameSessionManager] 快捷键跳关 → 索引 {index}");
+        }
+#endif
 
         /// <summary>
         /// 重新开始游戏
@@ -311,7 +361,7 @@ namespace CGM.Core
                         Image bgImage = bgTrans.GetComponent<Image>();
                         if (bgImage != null)
                         {
-                            Sprite bgSprite = Resources.Load<Sprite>($"Sprites/UI/Backgrounds/{bgSpriteName}");
+                            Sprite bgSprite = Resources.Load<Sprite>($"Sprites/Backgrounds/{bgSpriteName}");
                             if (bgSprite != null)
                             {
                                 bgImage.sprite = bgSprite;
@@ -336,7 +386,21 @@ namespace CGM.Core
             }
             else if (node.type == LevelType.Shop)
             {
-                if (shopPanel != null) shopPanel.SetActive(true);
+                if (shopPanel != null)
+                {
+                    // 确保 ShopController 组件存在（场景未保存时动态补齐）
+                    var shopCtrl = shopPanel.GetComponent<UI.ShopController>();
+                    if (shopCtrl == null)
+                    {
+                        shopCtrl = shopPanel.AddComponent<UI.ShopController>();
+                    }
+                    // 注入 PlayerStats（此时 BattlePanel 可能已隐藏，FindObjectOfType 找不到 inactive 对象）
+                    if (playerStats != null)
+                    {
+                        shopCtrl.SetPlayerStats(playerStats);
+                    }
+                    shopPanel.SetActive(true);
+                }
 
                 // 商店 BGM
                 EnsureBgmManager();
@@ -347,6 +411,11 @@ namespace CGM.Core
             var ultop = FindObjectOfType<UI.UltopController>();
             if (ultop != null)
             {
+                // 注入 PlayerStats（确保 UltopController 始终持有正确引用，不受面板显隐影响）
+                if (playerStats != null)
+                {
+                    ultop.SetPlayerStats(playerStats);
+                }
                 ultop.UpdateAllUI();
             }
         }

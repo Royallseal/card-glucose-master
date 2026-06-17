@@ -23,7 +23,16 @@ namespace CGM.UI
 
         private void Awake()
         {
-            playerStats = FindObjectOfType<PlayerStats>();
+            // 不在此处 FindObjectOfType，因为 ShopPanel 激活时 BattlePanel 可能已隐藏，
+            // PlayerStats 所在物体 inactive 导致查找失败。由 GameSessionManager 通过 SetPlayerStats 注入。
+        }
+
+        /// <summary>
+        /// 由 GameSessionManager 注入 PlayerStats 引用，避免依赖 FindObjectOfType 查找 inactive 对象。
+        /// </summary>
+        public void SetPlayerStats(PlayerStats stats)
+        {
+            playerStats = stats;
         }
 
         private void OnEnable()
@@ -44,12 +53,23 @@ namespace CGM.UI
             selectedCard = null;
             shopCards.Clear();
 
-            // 1. 获取 Content 容器
+            // 1. 获取 Content 容器（ShopPanel → CardListPanel → Cards → Scroll View → Viewport → Content）
             Transform contentTrans = transform.Find("CardListPanel/Cards/Scroll View/Viewport/Content");
             if (contentTrans == null)
             {
-                Debug.LogError("[ShopController] 未能找到 Content 节点：CardListPanel/Cards/Scroll View/Viewport/Content");
+                // 备用路径：递归查找最内层 Content
+                contentTrans = FindDeepChild(transform, "Content");
+            }
+            if (contentTrans == null)
+            {
+                Debug.LogError("[ShopController] 未能找到 Content 节点。");
                 return;
+            }
+
+            // 清除 Content 中的旧卡牌（用 DestroyImmediate 确保立即移除，避免与后续 Find 冲突）
+            for (int i = contentTrans.childCount - 1; i >= 0; i--)
+            {
+                DestroyImmediate(contentTrans.GetChild(i).gameObject);
             }
 
             // 确保 CardDatabase 加载就绪
@@ -66,7 +86,7 @@ namespace CGM.UI
 
             if (commonPool.Count == 0 || uncommonPool.Count == 0 || rarePool.Count == 0)
             {
-                Debug.LogError("[ShopController] 卡牌候选池为空，请检查 cards.json 是否正确编译。");
+                Debug.LogError($"[ShopController] 卡牌候选池为空 Common={commonPool.Count} Uncommon={uncommonPool.Count} Rare={rarePool.Count}");
                 return;
             }
 
@@ -80,6 +100,8 @@ namespace CGM.UI
             int uncommonPrice = Random.Range(115, 146);
             int rarePrice = Random.Range(200, 241);
 
+            Debug.Log($"[ShopController] 生成商品: {commonCard.name}({commonPrice}G) | {uncommonCard.name}({uncommonPrice}G) | {rareCard.name}({rarePrice}G)  玩家金币={playerStats?.Gold ?? -1}");
+
             // 5. 对 Content 下的 3 张预置卡牌进行装载
             ConfigureCardSlot(contentTrans, 0, "Card", commonCard, commonPrice);
             ConfigureCardSlot(contentTrans, 1, "Card (1)", uncommonCard, uncommonPrice);
@@ -87,6 +109,7 @@ namespace CGM.UI
 
             // 6. 全局刷新一次可购买状态与置灰效果
             UpdateCardAffordability();
+            Debug.Log($"[ShopController] 商店初始化完成，Content 子物体数={contentTrans.childCount}");
         }
 
         private List<CardInfo> GetCardsOfRarityFiltered(CardRarity rarity)
@@ -111,13 +134,27 @@ namespace CGM.UI
                 slotTrans = content.GetChild(index);
             }
 
+            // 如果 Content 中没有预置卡牌槽位，则从预制体动态生成
+            GameObject cardGo;
             if (slotTrans == null)
             {
-                Debug.LogError($"[ShopController] 未能找到商品卡槽: {childName}");
-                return;
+                GameObject prefab = Resources.Load<GameObject>("Prefabs/Card");
+                if (prefab != null)
+                {
+                    cardGo = Instantiate(prefab, content);
+                    cardGo.name = childName;
+                }
+                else
+                {
+                    Debug.LogError("[ShopController] 无法加载卡牌预制体 Resources/Prefabs/Card");
+                    return;
+                }
+            }
+            else
+            {
+                cardGo = slotTrans.gameObject;
             }
 
-            GameObject cardGo = slotTrans.gameObject;
             cardGo.SetActive(true);
             cardGo.transform.localScale = Vector3.one;
 
@@ -288,6 +325,20 @@ namespace CGM.UI
             {
                 ultop.UpdateCardsCount();
             }
+        }
+
+        /// <summary>
+        /// 递归深度优先查找指定名称的子 Transform（用于路径不确定时的兜底查找）。
+        /// </summary>
+        private Transform FindDeepChild(Transform parent, string name)
+        {
+            foreach (Transform child in parent)
+            {
+                if (child.name == name) return child;
+                Transform found = FindDeepChild(child, name);
+                if (found != null) return found;
+            }
+            return null;
         }
     }
 }

@@ -42,13 +42,8 @@ namespace CGM.UI
             // 自动解析依赖
             ResolveDependencies();
 
-            // 绑定事件监听
-            if (playerStats != null)
-            {
-                playerStats.OnStatsChanged += UpdateHpUI;
-                playerStats.OnGlucoseChanged += UpdateGlucoseUI;
-                playerStats.OnGoldChanged += UpdateGoldUI;
-            }
+            // 绑定事件监听（playerStats 可能为 null，由 GameSessionManager 后续注入）
+            BindPlayerStatsEvents();
 
             if (battleController != null)
             {
@@ -120,6 +115,36 @@ namespace CGM.UI
             UpdateGoldUI(playerStats != null ? playerStats.Gold : 99);
             UpdateLevelUI();
             UpdateCardsCount();
+        }
+
+        /// <summary>
+        /// 由 GameSessionManager 注入 PlayerStats（避免 FindObjectOfType 查 inactive 对象失败）。
+        /// </summary>
+        public void SetPlayerStats(PlayerStats stats)
+        {
+            if (playerStats != null)
+            {
+                // 解绑旧引用
+                playerStats.OnStatsChanged -= UpdateHpUI;
+                playerStats.OnGlucoseChanged -= UpdateGlucoseUI;
+                playerStats.OnGoldChanged -= UpdateGoldUI;
+            }
+            playerStats = stats;
+            BindPlayerStatsEvents();
+            UpdateAllUI();
+        }
+
+        private void BindPlayerStatsEvents()
+        {
+            if (playerStats != null)
+            {
+                playerStats.OnStatsChanged -= UpdateHpUI;
+                playerStats.OnGlucoseChanged -= UpdateGlucoseUI;
+                playerStats.OnGoldChanged -= UpdateGoldUI;
+                playerStats.OnStatsChanged += UpdateHpUI;
+                playerStats.OnGlucoseChanged += UpdateGlucoseUI;
+                playerStats.OnGoldChanged += UpdateGoldUI;
+            }
         }
 
         private void ResolveDependencies()

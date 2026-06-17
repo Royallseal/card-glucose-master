@@ -43,17 +43,24 @@ namespace CGM.UI
                 hoverSound = hoverClip;
             }
 
-            // 移除 CardDragHandler.Awake 中动态添加的多余 Canvas 和 GraphicRaycaster，
-            // 避免与父 Canvas 的 GraphicRaycaster 冲突导致点击事件无法传递。
-            var extraCanvas = GetComponent<Canvas>();
-            if (extraCanvas != null)
+            // 确保卡牌有独立的 Canvas + GraphicRaycaster，供 ShopCardInteraction 独占处理所有指针事件。
+            // 同时移除可能冲突的 CardDragHandler，避免双重 hover/click 响应。
+            var cardCanvas = GetComponent<Canvas>();
+            if (cardCanvas == null)
             {
-                Destroy(extraCanvas);
+                cardCanvas = gameObject.AddComponent<Canvas>();
+                cardCanvas.overrideSorting = false;
             }
-            var extraRaycaster = GetComponent<UnityEngine.UI.GraphicRaycaster>();
-            if (extraRaycaster != null)
+            if (GetComponent<UnityEngine.UI.GraphicRaycaster>() == null)
             {
-                Destroy(extraRaycaster);
+                gameObject.AddComponent<UnityEngine.UI.GraphicRaycaster>();
+            }
+
+            // 移除冲突的 CardDragHandler（如果有），由 ShopCardInteraction 独占指针事件
+            var dragHandler = GetComponent<CardDragHandler>();
+            if (dragHandler != null)
+            {
+                Destroy(dragHandler);
             }
 
             canvasGroup = GetComponent<CanvasGroup>();
@@ -90,9 +97,9 @@ namespace CGM.UI
 
             if (priceText != null)
             {
-                // 金币不够时价格显示为红色，足够时显示为黄色
+                // 买得起显示绿色，买不起显示红色
                 priceText.color = affordable 
-                    ? TryParseColor("#FFAD1F", Color.yellow) 
+                    ? TryParseColor("#4EC9B0", Color.green) 
                     : TryParseColor("#FF6B6B", Color.red);
             }
 

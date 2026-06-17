@@ -64,6 +64,19 @@ namespace CGM.Core
         /// </summary>
         public int CurrentLayer => currentLevelIndex < 6 ? 1 : 2;
 
+        /// <summary>
+        /// [Debug] 直接跳转到指定关卡索引（0~11），用于快速测试。
+        /// </summary>
+        public void SetDebugLevel(int index)
+        {
+            if (index >= 0 && index < levelSequence.Count)
+            {
+                currentLevelIndex = index;
+                OnLevelChanged?.Invoke();
+                Debug.Log($"[LevelManager] 调试跳关 → 关卡 {CurrentNode.number} ({CurrentNode.levelName})，层数：{CurrentLayer}");
+            }
+        }
+
         private void Awake()
         {
             if (Instance != null && Instance != this)
