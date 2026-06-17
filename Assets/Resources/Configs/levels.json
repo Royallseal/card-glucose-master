@@ -1,0 +1,16 @@
+{
+  "layers": [
+    {
+      "layer": 1,
+      "weakEnemyIds": ["fried_chicken", "milk_tea_ghost"],
+      "strongEnemyIds": ["couch_potato", "stay_up_bat", "snack_demon"],
+      "bossId": "fat_lord"
+    },
+    {
+      "layer": 2,
+      "weakEnemyIds": ["numb_assassin", "floater_phantom"],
+      "strongEnemyIds": ["acid_storm", "hardened_giant", "high_sugar_golem"],
+      "bossId": "general_complication"
+    }
+  ]
+}

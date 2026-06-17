@@ -20,6 +20,21 @@ namespace CGM.Core
         public string levelName;
     }
 
+    [System.Serializable]
+    public class LevelConfigData
+    {
+        public int layer;
+        public List<string> weakEnemyIds;
+        public List<string> strongEnemyIds;
+        public string bossId;
+    }
+
+    [System.Serializable]
+    public class LevelConfigWrapper
+    {
+        public List<LevelConfigData> layers;
+    }
+
     /// <summary>
     /// 关卡管理器，负责开局随机生成 12 关的过关流，并管理当前关卡的流转。
     /// </summary>
@@ -63,15 +78,30 @@ namespace CGM.Core
             levelSequence.Clear();
             currentLevelIndex = 0;
 
+            // 动态加载 JSON 配置文件
+            TextAsset jsonAsset = Resources.Load<TextAsset>("Configs/levels");
+            LevelConfigWrapper config = null;
+            if (jsonAsset != null)
+            {
+                config = JsonUtility.FromJson<LevelConfigWrapper>(jsonAsset.text);
+            }
+
+            // 获取各层的配置池（若 JSON 加载失败则回退到默认数据，保证游戏稳定性）
+            List<string> layer1Weak = (config != null && config.layers.Count > 0) ? new List<string>(config.layers[0].weakEnemyIds) : new List<string> { "fried_chicken", "milk_tea_ghost" };
+            List<string> layer1Strong = (config != null && config.layers.Count > 0) ? new List<string>(config.layers[0].strongEnemyIds) : new List<string> { "couch_potato", "stay_up_bat", "snack_demon" };
+            string layer1Boss = (config != null && config.layers.Count > 0) ? config.layers[0].bossId : "fat_lord";
+
+            List<string> layer2Weak = (config != null && config.layers.Count > 1) ? new List<string>(config.layers[1].weakEnemyIds) : new List<string> { "numb_assassin", "floater_phantom" };
+            List<string> layer2Strong = (config != null && config.layers.Count > 1) ? new List<string>(config.layers[1].strongEnemyIds) : new List<string> { "acid_storm", "hardened_giant", "high_sugar_golem" };
+            string layer2Boss = (config != null && config.layers.Count > 1) ? config.layers[1].bossId : "general_complication";
+
             // --- 一层 ---
-            // 1~2关：一层弱怪 (fried_chicken, milk_tea_ghost) 随机乱序
-            List<string> layer1Weak = new List<string> { "fried_chicken", "milk_tea_ghost" };
+            // 1~2关：一层弱怪随机乱序
             ShuffleList(layer1Weak);
             AddEnemyNode(1, layer1Weak[0]);
             AddEnemyNode(2, layer1Weak[1]);
 
-            // 3~4关：一层强怪 (couch_potato, stay_up_bat, snack_demon) 选 2 个，随机乱序
-            List<string> layer1Strong = new List<string> { "couch_potato", "stay_up_bat", "snack_demon" };
+            // 3~4关：一层强怪选 2 个，随机乱序
             ShuffleList(layer1Strong);
             AddEnemyNode(3, layer1Strong[0]);
             AddEnemyNode(4, layer1Strong[1]);
@@ -79,18 +109,16 @@ namespace CGM.Core
             // 5关：第一个商店
             AddShopNode(5);
 
-            // 6关：一层 Boss (fat_lord)
-            AddBossNode(6, "fat_lord");
+            // 6关：一层 Boss
+            AddBossNode(6, layer1Boss);
 
             // --- 二层 ---
-            // 7~8关：二层弱怪 (numb_assassin, floater_phantom) 随机乱序
-            List<string> layer2Weak = new List<string> { "numb_assassin", "floater_phantom" };
+            // 7~8关：二层弱怪随机乱序
             ShuffleList(layer2Weak);
             AddEnemyNode(7, layer2Weak[0]);
             AddEnemyNode(8, layer2Weak[1]);
 
-            // 9~10关：二层强怪 (acid_storm, hardened_giant, high_sugar_golem) 选 2 个，随机乱序
-            List<string> layer2Strong = new List<string> { "acid_storm", "hardened_giant", "high_sugar_golem" };
+            // 9~10关：二层强怪选 2 个，随机乱序
             ShuffleList(layer2Strong);
             AddEnemyNode(9, layer2Strong[0]);
             AddEnemyNode(10, layer2Strong[1]);
@@ -98,10 +126,10 @@ namespace CGM.Core
             // 11关：第二个商店
             AddShopNode(11);
 
-            // 12关：二层 Boss (general_complication)
-            AddBossNode(12, "general_complication");
+            // 12关：二层 Boss
+            AddBossNode(12, layer2Boss);
 
-            Debug.Log($"[LevelManager] 关卡序列生成成功，当前关卡：{CurrentNode?.levelName}");
+            Debug.Log($"[LevelManager] 关卡序列生成成功，从 JSON 动态加载。当前关卡：{CurrentNode?.levelName}");
         }
 
         /// <summary>

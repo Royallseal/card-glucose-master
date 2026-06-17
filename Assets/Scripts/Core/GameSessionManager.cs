@@ -34,6 +34,14 @@ namespace CGM.Core
         [SerializeField] private Button settlementExitButton;
         [Tooltip("结算界面金币值文本 (Gold_Value)")]
         [SerializeField] private TextMeshProUGUI settlementGoldValueText;
+        [SerializeField] private GameObject goldIconGo;
+        [SerializeField] private GameObject goldValueGo;
+        [SerializeField] private Button chooseGoldButton;
+        [SerializeField] private GameObject chooseUIConfirmButton;
+
+        [Header("音效配置")]
+        [SerializeField] private AudioClip hoverAudioClip;
+        [SerializeField] private AudioClip clickAudioClip;
 
         [Header("商店 UI 引用")]
         [Tooltip("商店退出按钮 (Canvas/ShopPanel/CardListPanel/ExitUI)")]
@@ -42,6 +50,11 @@ namespace CGM.Core
         [Header("游戏开始/重新开始按钮")]
         [SerializeField] private Button startGameButton;
         [SerializeField] private Button restartGameButton;
+
+        // 运行时状态
+        private int currentGoldReward = 0;
+        private bool isGoldChosen = false;
+        private UI.RewardCardInteraction selectedCard = null;
 
         private void Awake()
         {
@@ -80,6 +93,22 @@ namespace CGM.Core
             if (playerStats == null)
             {
                 playerStats = FindObjectOfType<PlayerStats>();
+            }
+
+            // 绑定金币与确认卡牌奖励按钮
+            if (chooseGoldButton != null)
+            {
+                chooseGoldButton.onClick.AddListener(OnChooseGoldClicked);
+            }
+
+            if (chooseUIConfirmButton != null)
+            {
+                var btn = chooseUIConfirmButton.GetComponent<Button>();
+                if (btn == null)
+                {
+                    btn = chooseUIConfirmButton.AddComponent<Button>();
+                }
+                btn.onClick.AddListener(OnConfirmCardClicked);
             }
 
             // 绑定结算与商店退出按钮
@@ -235,26 +264,71 @@ namespace CGM.Core
         {
             yield return new WaitForSeconds(1.5f); // 延迟 1.5 秒展示结算以呈现最后一击动画效果
 
-            // 1. 给玩家奖励随机金币 (30~50)
-            int goldReward = Random.Range(30, 51);
-            if (playerStats != null)
-            {
-                playerStats.ChangeGold(goldReward);
-            }
+            // 1. 产生随机金币奖励金额并记录，但不立刻增加玩家金币（等玩家点击时才增加）
+            currentGoldReward = Random.Range(30, 51);
+            isGoldChosen = false;
 
-            // 2. 显示金币增加额
+            // 显示金币数量
             if (settlementGoldValueText != null)
             {
-                settlementGoldValueText.text = $"+{goldReward}";
+                settlementGoldValueText.text = $"+{currentGoldReward}";
             }
 
-            // 3. 展示并绑定卡牌奖励 UI (从 pre-placed 寻找 Scroll View/Viewport/Content 里的 3 个 Card)
+            // 确保金币奖励相关 GameObject 重新激活显示
+            if (goldIconGo != null) goldIconGo.SetActive(true);
+            if (goldValueGo != null) goldValueGo.SetActive(true);
+            if (chooseGoldButton != null)
+            {
+                chooseGoldButton.gameObject.SetActive(true);
+                chooseGoldButton.interactable = true;
+
+                // 为金币奖励按钮配置 Hover 特效和音效
+                var goldHover = chooseGoldButton.gameObject.GetComponent<UI.UIHoverButtonEffects>();
+                if (goldHover == null) goldHover = chooseGoldButton.gameObject.AddComponent<UI.UIHoverButtonEffects>();
+                goldHover.Setup(hoverAudioClip, 1.05f);
+            }
+
+            // 2. 隐藏确认按钮与下一关按钮，直到玩家完成对应的交互
+            if (chooseUIConfirmButton != null)
+            {
+                chooseUIConfirmButton.SetActive(false);
+            }
+
+            if (settlementExitButton != null)
+            {
+                settlementExitButton.gameObject.SetActive(false);
+            }
+
+            // 重置选中的卡牌
+            selectedCard = null;
+
+            // 3. 配置顶部 UI 可点击项 (设置与卡组) 的 Hover 特效与音效
+            var ultop = FindObjectOfType<UI.UltopController>();
+            if (ultop != null)
+            {
+                Transform settingButtonTrans = ultop.transform.Find("Icon_Line/Setting");
+                if (settingButtonTrans != null)
+                {
+                    var settingHover = settingButtonTrans.gameObject.GetComponent<UI.UIHoverButtonEffects>();
+                    if (settingHover == null) settingHover = settingButtonTrans.gameObject.AddComponent<UI.UIHoverButtonEffects>();
+                    settingHover.Setup(hoverAudioClip, 1.1f);
+                }
+
+                Transform cardsButtonTrans = ultop.transform.Find("Icon_Line/Cards");
+                if (cardsButtonTrans != null)
+                {
+                    var cardsHover = cardsButtonTrans.gameObject.GetComponent<UI.UIHoverButtonEffects>();
+                    if (cardsHover == null) cardsHover = cardsButtonTrans.gameObject.AddComponent<UI.UIHoverButtonEffects>();
+                    cardsHover.Setup(hoverAudioClip, 1.05f);
+                }
+            }
+
+            // 4. 展示并绑定卡牌奖励 UI (从 pre-placed 寻找 Scroll View/Viewport/Content 里的 3 个 Card)
             if (rewardCardsContainer != null)
             {
                 Transform contentTransform = rewardCardsContainer.Find("Scroll View/Viewport/Content");
                 if (contentTransform == null)
                 {
-                    // 尝试直接作为 content
                     contentTransform = rewardCardsContainer;
                 }
 
@@ -276,7 +350,7 @@ namespace CGM.Core
                                 cardUI.SetCard(cardInfo);
                             }
 
-                            // 禁用拖拽与悬停逻辑以免与结算页面冲突
+                            // 禁用拖拽脚本以免冲突
                             var dragHandler = cardChild.GetComponent<UI.CardDragHandler>();
                             if (dragHandler != null)
                             {
@@ -288,22 +362,17 @@ namespace CGM.Core
                             var cg = cardChild.GetComponent<CanvasGroup>();
                             if (cg != null) cg.alpha = 1.0f;
 
-                            // 绑定点击交互，选中该卡牌奖励
-                            var btn = cardChild.GetComponent<Button>();
-                            if (btn == null)
+                            // 挂载特有的 Hover 放大/点击固定组件
+                            var rewardCardClick = cardChild.GetComponent<UI.RewardCardInteraction>();
+                            if (rewardCardClick == null)
                             {
-                                btn = cardChild.gameObject.AddComponent<Button>();
+                                rewardCardClick = cardChild.gameObject.AddComponent<UI.RewardCardInteraction>();
                             }
-                            btn.interactable = true;
-                            btn.onClick.RemoveAllListeners();
+                            rewardCardClick.Initialize(cardInfo, OnRewardCardClicked);
 
-                            string cid = cardInfo.id;
-                            GameObject cardGo = cardChild.gameObject;
-                            Transform container = contentTransform;
-                            btn.onClick.AddListener(() =>
-                            {
-                                OnRewardCardChosen(cid, cardGo, container);
-                            });
+                            // 如果卡牌上原本有旧的 Button 监听，全部移除
+                            var btn = cardChild.GetComponent<Button>();
+                            if (btn != null) btn.onClick.RemoveAllListeners();
                         }
                         else
                         {
@@ -313,12 +382,6 @@ namespace CGM.Core
                 }
             }
 
-            // 默认使退出按钮可以点击（以防玩家跳过/卡组不增加直接走）
-            if (settlementExitButton != null)
-            {
-                settlementExitButton.interactable = true;
-            }
-
             // 打开结算面板
             if (settlementPanel != null)
             {
@@ -326,41 +389,179 @@ namespace CGM.Core
             }
         }
 
-        private void OnRewardCardChosen(string cardId, GameObject chosenCardGo, Transform container)
+        private void OnChooseGoldClicked()
         {
-            // 将选中卡牌加入起始卡组
+            if (isGoldChosen) return;
+            isGoldChosen = true;
+
+            // 播放金币点击音效
+            if (clickAudioClip != null && Camera.main != null)
+            {
+                AudioSource.PlayClipAtPoint(clickAudioClip, Camera.main.transform.position);
+            }
+
+            // 上方 UI 增加金币并刷新
+            if (playerStats != null)
+            {
+                playerStats.ChangeGold(currentGoldReward);
+            }
+
+            // 金币相关的组件（图标和文本，按钮）消失，背景框不消失
+            if (goldIconGo != null) goldIconGo.SetActive(false);
+            if (goldValueGo != null) goldValueGo.SetActive(false);
+            if (chooseGoldButton != null)
+            {
+                chooseGoldButton.gameObject.SetActive(false);
+            }
+
+            Debug.Log($"[GameSessionManager] 玩家领取了金币奖励：+{currentGoldReward} 金币。");
+        }
+
+        private void OnRewardCardClicked(UI.RewardCardInteraction clickedInteraction)
+        {
+            if (clickedInteraction == null || selectedCard == clickedInteraction) return;
+
+            // 播放点击音效
+            if (clickAudioClip != null && Camera.main != null)
+            {
+                AudioSource.PlayClipAtPoint(clickAudioClip, Camera.main.transform.position);
+            }
+
+            // 取消之前选中的卡牌特效
+            if (selectedCard != null)
+            {
+                selectedCard.SetSelected(false);
+            }
+
+            // 选中新卡牌并保持放大状态
+            selectedCard = clickedInteraction;
+            selectedCard.SetSelected(true);
+
+            // 选中一张卡牌之后，显示“确认”按钮
+            if (chooseUIConfirmButton != null)
+            {
+                chooseUIConfirmButton.SetActive(true);
+            }
+
+            Debug.Log($"[GameSessionManager] 玩家选中了卡牌奖励: {clickedInteraction.CardInfo.name}。");
+        }
+
+        private void OnConfirmCardClicked()
+        {
+            if (selectedCard == null) return;
+
+            // 确认按钮消失
+            if (chooseUIConfirmButton != null)
+            {
+                chooseUIConfirmButton.SetActive(false);
+            }
+
+            string chosenCardId = selectedCard.CardInfo.id;
+            GameObject selectedCardGo = selectedCard.gameObject;
+
+            // 其余两张牌消失，只保留背景
+            Transform contentTransform = rewardCardsContainer.Find("Scroll View/Viewport/Content");
+            if (contentTransform == null)
+            {
+                contentTransform = rewardCardsContainer;
+            }
+
+            for (int i = 0; i < contentTransform.childCount; i++)
+            {
+                Transform child = contentTransform.GetChild(i);
+                if (child.gameObject != selectedCardGo)
+                {
+                    child.gameObject.SetActive(false);
+                }
+            }
+
+            // 开始播放卡牌飞入顶部牌组的动画，并在飞入后加入卡组并更新 UI
+            StartCoroutine(AnimateCardFlyToDeck(selectedCardGo, chosenCardId));
+        }
+
+        private IEnumerator AnimateCardFlyToDeck(GameObject cardGo, string cardId)
+        {
+            // 播放飞入/点击音效
+            if (clickAudioClip != null && Camera.main != null)
+            {
+                AudioSource.PlayClipAtPoint(clickAudioClip, Camera.main.transform.position);
+            }
+
+            // 寻找到 UItop 卡组的目标位置
+            Transform deckTarget = null;
+            var ultop = FindObjectOfType<UI.UltopController>();
+            if (ultop != null)
+            {
+                deckTarget = ultop.transform.Find("Icon_Line/Cards");
+            }
+
+            if (deckTarget != null)
+            {
+                // 创建一个飞行的临时克隆卡牌挂在 Canvas 下
+                Canvas canvas = FindObjectOfType<Canvas>();
+                GameObject flyClone = Instantiate(cardGo, canvas.transform);
+                flyClone.name = "FlyCardClone_" + cardId;
+
+                // 去除克隆体上的事件绑定与交互脚本，以免造成事件穿透
+                Destroy(flyClone.GetComponent<UI.RewardCardInteraction>());
+                Destroy(flyClone.GetComponent<Button>());
+                var cg = flyClone.GetComponent<CanvasGroup>();
+                if (cg == null) cg = flyClone.AddComponent<CanvasGroup>();
+                cg.blocksRaycasts = false;
+
+                // 初始位置设为原卡牌的位置与大小
+                flyClone.transform.position = cardGo.transform.position;
+                flyClone.transform.localScale = cardGo.transform.localScale;
+
+                // 隐藏原卡牌
+                cardGo.SetActive(false);
+
+                // 平滑插值动画
+                Vector3 startPos = flyClone.transform.position;
+                Vector3 startScale = flyClone.transform.localScale;
+                float elapsed = 0f;
+                float duration = 0.75f; // 0.75 秒飞行时间
+
+                while (elapsed < duration)
+                {
+                    elapsed += Time.deltaTime;
+                    float t = elapsed / duration;
+                    float easedT = t * (2 - t); // Ease Out 算法
+
+                    flyClone.transform.position = Vector3.Lerp(startPos, deckTarget.position, easedT);
+                    flyClone.transform.localScale = Vector3.Lerp(startScale, Vector3.one * 0.15f, easedT); // 渐缩至 0.15 倍吸入
+                    cg.alpha = Mathf.Lerp(1.0f, 0f, easedT); // 渐隐
+
+                    yield return null;
+                }
+
+                Destroy(flyClone);
+            }
+            else
+            {
+                cardGo.SetActive(false);
+            }
+
+            // 将卡牌加入玩家牌组
             if (battleController != null)
             {
                 battleController.AddCardToStartingDeck(cardId);
             }
 
-            // 选中后将其他卡牌致灰并置为不可交互，选中卡牌略微放大高亮
-            for (int i = 0; i < container.childCount; i++)
-            {
-                Transform child = container.GetChild(i);
-                var btn = child.GetComponent<Button>();
-                if (btn != null) btn.interactable = false;
-
-                if (child.gameObject != chosenCardGo)
-                {
-                    var cg = child.GetComponent<CanvasGroup>();
-                    if (cg == null) cg = child.gameObject.AddComponent<CanvasGroup>();
-                    cg.alpha = 0.4f;
-                }
-                else
-                {
-                    child.localScale = Vector3.one * 1.05f;
-                }
-            }
-
-            // 立即刷新 Ultop 牌组计数显示
-            var ultop = FindObjectOfType<UI.UltopController>();
+            // 刷新顶部牌组计数
             if (ultop != null)
             {
                 ultop.UpdateCardsCount();
             }
 
-            Debug.Log($"[GameSessionManager] 选中奖励卡牌: {cardId}，已成功加入起始卡组！");
+            // 整个卡牌选取与飞入结束后，激活“下一关”退出按钮
+            if (settlementExitButton != null)
+            {
+                settlementExitButton.gameObject.SetActive(true);
+                settlementExitButton.interactable = true;
+            }
+
+            Debug.Log($"[GameSessionManager] 关卡奖励卡牌 {cardId} 已被成功加入，可以推进到下一关。");
         }
 
         private IEnumerator ShowDefeatEndingDelay()
@@ -469,6 +670,18 @@ namespace CGM.Core
 
                     Transform goldV = setP.Find("CardListPanel/Golds/Gold/Gold_Value");
                     if (goldV != null) settlementGoldValueText = goldV.GetComponent<TextMeshProUGUI>();
+
+                    Transform goldIconTrans = setP.Find("CardListPanel/Golds/Gold/Gold_Icon");
+                    if (goldIconTrans != null) goldIconGo = goldIconTrans.gameObject;
+
+                    Transform goldValTrans = setP.Find("CardListPanel/Golds/Gold/Gold_Value");
+                    if (goldValTrans != null) goldValueGo = goldValTrans.gameObject;
+
+                    Transform chooseGTrans = setP.Find("CardListPanel/Golds/Gold/Choose_Gold");
+                    if (chooseGTrans != null) chooseGoldButton = chooseGTrans.GetComponent<Button>();
+
+                    Transform chooseUI = setP.Find("CardListPanel/Cards/ChooseUI");
+                    if (chooseUI != null) chooseUIConfirmButton = chooseUI.gameObject;
                 }
 
                 // Under ShopPanel

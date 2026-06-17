@@ -196,21 +196,12 @@ namespace CGM.UI
             UpdateCardsCount();
         }
 
-        /// <summary>
-        /// 更新玩家当前的牌组数量。
-        /// 战斗中：当前抽牌堆+弃牌堆+手牌数量。
-        /// 战斗外：当前 startingDeckCardIds.Count 牌组数。
-        /// </summary>
         public void UpdateCardsCount()
         {
             if (cardsCountText == null) return;
 
             int totalCards = 0;
-            if (battleController != null && battleController.Phase != BattleTurnPhase.NotStarted)
-            {
-                totalCards = battleController.Hand.Count + battleController.DrawPile.Count + battleController.DiscardPile.Count;
-            }
-            else if (battleController != null && battleController.StartingDeckCardIds != null)
+            if (battleController != null && battleController.StartingDeckCardIds != null)
             {
                 totalCards = battleController.StartingDeckCardIds.Count;
             }
