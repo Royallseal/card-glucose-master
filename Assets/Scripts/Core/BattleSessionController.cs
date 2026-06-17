@@ -385,7 +385,7 @@ namespace CGM.Core
         private void GenerateRewards()
         {
             pendingRewardCards.Clear();
-            pendingRewardCards.AddRange(RandomManager.GetRandomRewardCards(rewardCardCount));
+            pendingRewardCards.AddRange(RandomManager.GetRandomRewardCardsForCurrentLevel(rewardCardCount));
             OnRewardsGenerated?.Invoke(pendingRewardCards);
         }
 

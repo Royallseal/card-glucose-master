@@ -353,7 +353,18 @@ namespace CGM.Core
             yield return new WaitForSeconds(1.5f); // 延迟 1.5 秒展示结算以呈现最后一击动画效果
 
             // 1. 产生随机金币奖励金额并记录，但不立刻增加玩家金币（等玩家点击时才增加）
-            currentGoldReward = Random.Range(30, 51);
+            bool isBossBattle = LevelManager.Instance != null &&
+                                LevelManager.Instance.CurrentNode != null &&
+                                LevelManager.Instance.CurrentNode.type == LevelType.Boss;
+
+            if (isBossBattle)
+            {
+                currentGoldReward = Random.Range(90, 111);
+            }
+            else
+            {
+                currentGoldReward = Random.Range(26, 35);
+            }
             isGoldChosen = false;
 
             // 显示金币数量

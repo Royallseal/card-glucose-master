@@ -87,6 +87,108 @@ namespace CGM.Core
         }
 
         /// <summary>
+        /// 根据当前关卡及怪物品类动态生成符合稀有度概率规则的卡牌奖励列表。
+        /// 规则：
+        /// - 敌人 1 & 2 (由 node.number 1, 2, 7, 8 判断) 仅掉落 Common/Uncommon (普通/良好)。
+        /// - 敌人 3 & 4 (由 node.number 3, 4, 9, 10 判断) 25% 概率包含 Rare (优质)，否则为 普通/良好。
+        /// - Boss 必掉落 优质卡牌 (Rare) 三选一。
+        /// </summary>
+        public static List<CardInfo> GetRandomRewardCardsForCurrentLevel(int rewardCount = 3)
+        {
+            List<CardInfo> rewardList = new List<CardInfo>();
+            if (CardDatabase.Instance == null) return rewardList;
+
+            List<CardInfo> allCards = CardDatabase.Instance.GetAllCards();
+            if (allCards == null || allCards.Count == 0) return rewardList;
+
+            // 1. 过滤 Starter 初始卡
+            List<CardInfo> pool = new List<CardInfo>();
+            foreach (var card in allCards)
+            {
+                if (card.GetCardType() != CardType.Starter)
+                {
+                    pool.Add(card);
+                }
+            }
+
+            // 2. 根据关卡层级与位置确定允许的卡牌稀有度
+            List<CardRarity> allowedRarities = new List<CardRarity>();
+
+            if (LevelManager.Instance != null && LevelManager.Instance.CurrentNode != null)
+            {
+                LevelNode node = LevelManager.Instance.CurrentNode;
+                if (node.type == LevelType.Boss)
+                {
+                    allowedRarities.Add(CardRarity.Rare);
+                }
+                else if (node.number == 1 || node.number == 2 || node.number == 7 || node.number == 8)
+                {
+                    allowedRarities.Add(CardRarity.Common);
+                    allowedRarities.Add(CardRarity.Uncommon);
+                }
+                else if (node.number == 3 || node.number == 4 || node.number == 9 || node.number == 10)
+                {
+                    // 25% 概率允许 Rare 优质卡，否则为普通或良好
+                    if (NextFloat() < 0.25f)
+                    {
+                        allowedRarities.Add(CardRarity.Rare);
+                    }
+                    else
+                    {
+                        allowedRarities.Add(CardRarity.Common);
+                        allowedRarities.Add(CardRarity.Uncommon);
+                    }
+                }
+                else
+                {
+                    // 默认全部稀有度
+                    allowedRarities.Add(CardRarity.Common);
+                    allowedRarities.Add(CardRarity.Uncommon);
+                    allowedRarities.Add(CardRarity.Rare);
+                }
+            }
+            else
+            {
+                // 默认全部稀有度
+                allowedRarities.Add(CardRarity.Common);
+                allowedRarities.Add(CardRarity.Uncommon);
+                allowedRarities.Add(CardRarity.Rare);
+            }
+
+            // 3. 过滤候选卡牌
+            List<CardInfo> candidates = new List<CardInfo>();
+            foreach (var card in pool)
+            {
+                if (allowedRarities.Contains(card.GetCardRarity()))
+                {
+                    candidates.Add(card);
+                }
+            }
+
+            // 安全防崩
+            if (candidates.Count == 0)
+            {
+                candidates = pool;
+            }
+
+            // 4. 抽取非重复卡牌
+            int actualCount = Mathf.Min(rewardCount, candidates.Count);
+            List<int> chosenIndices = new List<int>();
+
+            while (chosenIndices.Count < actualCount)
+            {
+                int randIndex = localRandom.Next(candidates.Count);
+                if (!chosenIndices.Contains(randIndex))
+                {
+                    chosenIndices.Add(randIndex);
+                    rewardList.Add(candidates[randIndex]);
+                }
+            }
+
+            return rewardList;
+        }
+
+        /// <summary>
         /// 返回一个 0 到 maxExclusive 之间的随机整数。
         /// </summary>
         public static int Range(int min, int maxExclusive)
