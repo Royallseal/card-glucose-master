@@ -40,35 +40,24 @@ namespace CGM.UI
 
         public void OnPointerEnter(PointerEventData eventData)
         {
-            Debug.Log($"[BuffIconHover] OnPointerEnter on {gameObject.name} with buffId: {buffId}");
             var info = BuffDatabase.Get(buffId);
-            if (info == null)
-            {
-                Debug.LogWarning($"[BuffIconHover] Buff info is null for buffId: {buffId}");
-                return;
-            }
+            if (info == null) return;
 
             string content = $"<color={info.colorHex}><b>{info.name}</b></color>\n{info.description}";
 
             if (TooltipManager.Instance != null)
             {
-                Debug.Log($"[BuffIconHover] Showing tooltip via TooltipManager. Content: {content}");
                 TooltipManager.Instance.ShowTooltip(content, transform as RectTransform);
             }
-            else
+            else if (descPanel != null && descText != null)
             {
-                Debug.LogWarning("[BuffIconHover] TooltipManager.Instance is null! Falling back to local descPanel.");
-                if (descPanel != null && descText != null)
-                {
-                    descText.text = content;
-                    descPanel.SetActive(true);
-                }
+                descText.text = content;
+                descPanel.SetActive(true);
             }
         }
 
         public void OnPointerExit(PointerEventData eventData)
         {
-            Debug.Log($"[BuffIconHover] OnPointerExit on {gameObject.name}");
             if (TooltipManager.Instance != null)
             {
                 TooltipManager.Instance.HideTooltip();

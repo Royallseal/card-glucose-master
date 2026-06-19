@@ -5,26 +5,25 @@ using TMPro;
 namespace CGM.UI
 {
     /// <summary>
-    /// Global auto-adapting Tooltip manager.
-    /// Attached to a GameObject under the UI Canvas, referencing the CustomTooltip prefab.
+    /// 全局通用自适应 Tooltip (描述框) 管理器。
+    /// 挂载在 UI Canvas 下的任何 GameObject 上，并拖入 CustomTooltip 预制体引用。
     /// </summary>
     public class TooltipManager : MonoBehaviour
     {
         public static TooltipManager Instance { get; private set; }
 
-        [Header("Tooltip Prefab Settings")]
-        [Tooltip("CustomTooltip Prefab")]
+        [Header("描述框预制体设置")]
+        [Tooltip("CustomTooltip 预制体")]
         [SerializeField] private GameObject tooltipPrefab;
         
-        [Tooltip("TextMeshProUGUI component inside the prefab")]
+        [Tooltip("预制体内部挂载的 TextMeshPro 文本组件（如 BuffDescribeText）")]
         [SerializeField] private TextMeshProUGUI textComponent;
 
-        [Tooltip("Safety padding between tooltip and hovered UI")]
+        [Tooltip("描述框与被悬停 UI 的安全间距")]
         [SerializeField] private float padding = 15f;
 
         private GameObject _tooltipInstance;
         private RectTransform _tooltipRect;
-        private CanvasGroup _tooltipCanvasGroup;
 
         private void Awake()
         {
@@ -42,30 +41,34 @@ namespace CGM.UI
         {
             if (tooltipPrefab == null)
             {
-                Debug.LogError("[TooltipManager] Error: Tooltip Prefab is not assigned in the Inspector!");
+                Debug.LogError("[TooltipManager] 未在 Inspector 中指定 Tooltip Prefab.");
                 return;
             }
 
-            // Instantiate the tooltip prefab as a child of TooltipManager
+            // 实例化描述框为 TooltipManager 的子物体
             _tooltipInstance = Instantiate(tooltipPrefab, transform);
             _tooltipRect = _tooltipInstance.GetComponent<RectTransform>();
-            _tooltipCanvasGroup = _tooltipInstance.GetComponent<CanvasGroup>();
 
-            // Automatically find TMPro text component if not assigned
+            // 自动配置 Canvas 组件，以保证描述框始终叠在最前层（高于卡牌 Hover 时的层级 30/35）
+            Canvas canvas = _tooltipInstance.GetComponent<Canvas>();
+            if (canvas == null)
+            {
+                canvas = _tooltipInstance.AddComponent<Canvas>();
+            }
+            canvas.overrideSorting = true;
+            canvas.sortingOrder = 100;
+
+            // 自动检索文本组件（如果未在 Inspector 中显式指定）
             if (textComponent == null)
             {
                 textComponent = _tooltipInstance.GetComponentInChildren<TextMeshProUGUI>();
                 if (textComponent == null)
                 {
-                    Debug.LogError("[TooltipManager] Error: Cannot find TextMeshProUGUI in Tooltip Prefab children!");
-                }
-                else
-                {
-                    Debug.Log($"[TooltipManager] Auto-retrieved and bound text component: {textComponent.name}");
+                    Debug.LogError("[TooltipManager] 无法在 Tooltip Prefab 的子节点中找到 TextMeshProUGUI 组件.");
                 }
             }
 
-            // Force anchor and pivot to (0.5, 0.5) to simplify math calculations
+            // 强行重置锚点和 Pivot 为 (0.5, 0.5) 居中对齐，方便定位数学运算
             if (_tooltipRect != null)
             {
                 _tooltipRect.anchorMin = new Vector2(0.5f, 0.5f);
@@ -74,127 +77,91 @@ namespace CGM.UI
             }
 
             _tooltipInstance.SetActive(false);
-            Debug.Log("[TooltipManager] Initialization completed successfully.");
         }
 
         /// <summary>
-        /// Show the tooltip with automatic positioning and screen clamping.
+        /// 显示描述框，自动计算侧边防遮挡定位和屏幕边缘 Clamp。
         /// </summary>
-        /// <param name="content">Rich text content for the tooltip</param>
-        /// <param name="targetRect">RectTransform of the hovered UI element</param>
+        /// <param name="content">填入描述框的富文本内容</param>
+        /// <param name="targetRect">被悬停 UI 物体的 RectTransform</param>
         public void ShowTooltip(string content, RectTransform targetRect)
         {
-            Debug.Log($"[TooltipManager] ShowTooltip requested. Target: {(targetRect != null ? targetRect.name : "null")}, Content: {content}");
-
-            // Move TooltipManager to the bottom of the Canvas hierarchy so it renders on top of everything else
+            // 强制将 TooltipManager 移到 Canvas 的最前方渲染
             transform.SetAsLastSibling();
 
-            if (_tooltipInstance == null)
+            if (_tooltipInstance == null || textComponent == null || targetRect == null)
             {
-                Debug.LogError("[TooltipManager] Error: _tooltipInstance is null!");
-                return;
-            }
-            if (textComponent == null)
-            {
-                Debug.LogError("[TooltipManager] Error: textComponent is null!");
-                return;
-            }
-            if (targetRect == null)
-            {
-                Debug.LogError("[TooltipManager] Error: targetRect is null!");
                 return;
             }
 
-            // Set text and activate instance
+            // 填充文字并激活
             textComponent.text = content;
             _tooltipInstance.SetActive(true);
 
-            // Print scale and group settings
-            if (_tooltipCanvasGroup != null)
-            {
-                Debug.Log($"[TooltipManager] Tooltip CanvasGroup found. Alpha: {_tooltipCanvasGroup.alpha}, Interactable: {_tooltipCanvasGroup.interactable}");
-            }
-            else
-            {
-                Debug.Log("[TooltipManager] No CanvasGroup found on tooltip instance.");
-            }
-
-            // Force layout rebuild to get correct dimensions
+            // 强制重新计算排版，使 Content Size Fitter 立即计算出真实的长宽
             Canvas.ForceUpdateCanvases();
             LayoutRebuilder.ForceRebuildLayoutImmediate(_tooltipRect);
 
-            // Check Canvas render mode and associated camera
+            // 获取 Canvas 以及对应的渲染 Camera（Screen Space Camera 模式下必不可少）
             Canvas canvas = targetRect.GetComponentInParent<Canvas>();
             Camera uiCamera = null;
             if (canvas != null && canvas.renderMode != RenderMode.ScreenSpaceOverlay)
             {
                 uiCamera = canvas.worldCamera;
             }
-            Debug.Log($"[TooltipManager] Canvas: {(canvas != null ? canvas.name : "null")}, RenderMode: {(canvas != null ? canvas.renderMode.ToString() : "null")}, Camera: {(uiCamera != null ? uiCamera.name : "null")}");
 
-            // Get target corners in world coordinates
+            // 获取悬停目标的四个世界坐标点
             Vector3[] targetWorldCorners = new Vector3[4];
             targetRect.GetWorldCorners(targetWorldCorners);
-            Debug.Log($"[TooltipManager] Target world corners: BL={targetWorldCorners[0]}, TL={targetWorldCorners[1]}, TR={targetWorldCorners[2]}, BR={targetWorldCorners[3]}");
 
-            // Convert world corners to screen space coordinates
+            // 将目标的四个点转换为统一的 Screen Point（像素空间）
             Vector2[] targetScreenCorners = new Vector2[4];
             for (int i = 0; i < 4; i++)
             {
                 targetScreenCorners[i] = RectTransformUtility.WorldToScreenPoint(uiCamera, targetWorldCorners[i]);
             }
-            Debug.Log($"[TooltipManager] Target screen corners: BL={targetScreenCorners[0]}, TL={targetScreenCorners[1]}, TR={targetScreenCorners[2]}, BR={targetScreenCorners[3]}");
 
-            // Target center in screen space
+            // 目标物体的中心点（像素空间）
             Vector2 targetCenterScreen = (targetScreenCorners[0] + targetScreenCorners[2]) / 2f;
 
-            // Calculate tooltip dimensions in screen pixels
+            // 计算描述框实际大小（像素空间）
             float tooltipWidth = _tooltipRect.rect.width * _tooltipRect.lossyScale.x;
             float tooltipHeight = _tooltipRect.rect.height * _tooltipRect.lossyScale.y;
-            Debug.Log($"[TooltipManager] Tooltip dimensions: Scale={_tooltipRect.lossyScale}, RectSize={_tooltipRect.rect.width}x{_tooltipRect.rect.height}, ScreenSize={tooltipWidth}x{tooltipHeight}");
 
-            // Position to the right of target by default
+            // 默认位置：放置在目标的右侧（像素空间）
             Vector2 screenPos = targetCenterScreen;
             screenPos.x = targetScreenCorners[2].x + (tooltipWidth / 2f) + padding;
 
-            // Check if it overflows the right edge of the screen
+            // 检测右侧是否溢出屏幕
             if (screenPos.x + (tooltipWidth / 2f) > Screen.width)
             {
-                // Flip to the left side
+                // 如果右侧放不下，翻转到目标的左侧
                 screenPos.x = targetScreenCorners[0].x - (tooltipWidth / 2f) - padding;
-                Debug.Log($"[TooltipManager] Tooltip overflows right edge. Flipped to left side.");
             }
 
-            // Clamp vertical position within screen bounds
+            // 垂直方向限制：防止描述框顶部或底部飞出屏幕边缘
             float minY = (tooltipHeight / 2f) + padding;
             float maxY = Screen.height - (tooltipHeight / 2f) - padding;
             screenPos.y = Mathf.Clamp(screenPos.y, minY, maxY);
 
-            // Clamp horizontal position as a fallback safety measure
+            // 水平方向保底限制：绝对不允许描述框超出屏幕边界
             float minX = (tooltipWidth / 2f) + padding;
             float maxX = Screen.width - (tooltipWidth / 2f) - padding;
             screenPos.x = Mathf.Clamp(screenPos.x, minX, maxX);
-            Debug.Log($"[TooltipManager] Final calculated screen position: {screenPos}. Resolution: {Screen.width}x{Screen.height}");
 
-            // Convert screen position back to world space and apply
+            // 将计算好的 Screen Pos 转换回 World Pos 赋值给描述框的 Transform
             Vector3 worldPos;
             if (RectTransformUtility.ScreenPointToWorldPointInRectangle(_tooltipRect, screenPos, uiCamera, out worldPos))
             {
                 _tooltipRect.position = worldPos;
-                Debug.Log($"[TooltipManager] Tooltip positioned successfully! World Position: {worldPos}, ActiveInHierarchy: {_tooltipInstance.activeInHierarchy}");
-            }
-            else
-            {
-                Debug.LogError("[TooltipManager] Error: ScreenPointToWorldPointInRectangle failed to convert screen position to world position!");
             }
         }
 
         /// <summary>
-        /// Hide the tooltip.
+        /// 关闭/隐藏描述框
         /// </summary>
         public void HideTooltip()
         {
-            Debug.Log("[TooltipManager] HideTooltip called.");
             if (_tooltipInstance != null)
             {
                 _tooltipInstance.SetActive(false);

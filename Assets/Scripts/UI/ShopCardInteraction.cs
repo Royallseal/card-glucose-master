@@ -128,12 +128,7 @@ namespace CGM.UI
 
         public void OnPointerEnter(PointerEventData eventData)
         {
-            Debug.Log($"[ShopCardInteraction] OnPointerEnter on card: {(CardInfo != null ? CardInfo.name : "null")}");
-            if (!isAffordable)
-            {
-                Debug.Log("[ShopCardInteraction] Hover ignored: not affordable.");
-                return;
-            }
+            if (!isAffordable) return;
 
             isHovered = true;
             if (!isSelected)
@@ -152,7 +147,6 @@ namespace CGM.UI
 
         public void OnPointerExit(PointerEventData eventData)
         {
-            Debug.Log($"[ShopCardInteraction] OnPointerExit on card: {(CardInfo != null ? CardInfo.name : "null")}");
             if (!isAffordable) return;
 
             isHovered = false;
@@ -197,22 +191,7 @@ namespace CGM.UI
 
         private void TryShowTooltip()
         {
-            Debug.Log($"[ShopCardInteraction] TryShowTooltip for card: {(CardInfo != null ? CardInfo.name : "null")}");
-            if (TooltipManager.Instance == null)
-            {
-                Debug.LogWarning("[ShopCardInteraction] TooltipManager.Instance is null!");
-                return;
-            }
-            if (CardInfo == null)
-            {
-                Debug.LogWarning("[ShopCardInteraction] CardInfo is null!");
-                return;
-            }
-            if (CardInfo.effects == null)
-            {
-                Debug.LogWarning("[ShopCardInteraction] CardInfo.effects is null!");
-                return;
-            }
+            if (TooltipManager.Instance == null || CardInfo == null || CardInfo.effects == null) return;
 
             System.Text.StringBuilder sb = new System.Text.StringBuilder();
             int count = 0;
@@ -231,26 +210,14 @@ namespace CGM.UI
                             sb.Append($"<color={buffInfo.colorHex}><b>{buffInfo.name}</b></color>\n{buffInfo.description}");
                             count++;
                         }
-                        else
-                        {
-                            Debug.LogWarning($"[ShopCardInteraction] BuffDatabase has no entry for buffId: {buffId}");
-                        }
                     }
-                    catch (System.Exception ex)
-                    {
-                        Debug.LogError($"[ShopCardInteraction] Exception parsing effect buff: {ex.Message}");
-                    }
+                    catch (System.Exception) { }
                 }
             }
 
-            Debug.Log($"[ShopCardInteraction] Buff/Debuff effect count: {count}");
             if (count > 0)
             {
                 TooltipManager.Instance.ShowTooltip(sb.ToString(), transform as RectTransform);
-            }
-            else
-            {
-                Debug.Log("[ShopCardInteraction] Card has no apply_buff/debuff effects. No tooltip will be shown.");
             }
         }
     }

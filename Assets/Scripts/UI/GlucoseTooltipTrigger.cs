@@ -19,16 +19,10 @@ namespace CGM.UI
 
         public void OnPointerEnter(PointerEventData eventData)
         {
-            Debug.Log($"[GlucoseTooltipTrigger] OnPointerEnter called on {gameObject.name}");
-            if (TooltipManager.Instance == null)
-            {
-                Debug.LogWarning("[GlucoseTooltipTrigger] TooltipManager.Instance is null! Cannot show tooltip.");
-                return;
-            }
+            if (TooltipManager.Instance == null) return;
 
             // 获取当前血糖值（若未加载出 PlayerStats，则使用默认健康值 5.7）
             float glucose = _playerStats != null ? _playerStats.CurrentGlucose : 5.7f;
-            Debug.Log($"[GlucoseTooltipTrigger] Current Glucose: {glucose}");
 
             string desc = GetGlucoseStateDescription(glucose);
             TooltipManager.Instance.ShowTooltip(desc, transform as RectTransform);
@@ -36,7 +30,6 @@ namespace CGM.UI
 
         public void OnPointerExit(PointerEventData eventData)
         {
-            Debug.Log($"[GlucoseTooltipTrigger] OnPointerExit called on {gameObject.name}");
             if (TooltipManager.Instance != null)
             {
                 TooltipManager.Instance.HideTooltip();

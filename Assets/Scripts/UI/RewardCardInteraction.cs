@@ -47,7 +47,6 @@ namespace CGM.UI
 
         public void OnPointerEnter(PointerEventData eventData)
         {
-            Debug.Log($"[RewardCardInteraction] OnPointerEnter on card: {(CardInfo != null ? CardInfo.name : "null")}");
             if (isSelected) return;
             StartScaleLerp(originalScale * HoverScale);
             
@@ -70,7 +69,6 @@ namespace CGM.UI
 
         public void OnPointerExit(PointerEventData eventData)
         {
-            Debug.Log($"[RewardCardInteraction] OnPointerExit on card: {(CardInfo != null ? CardInfo.name : "null")}");
             if (isSelected) return;
             StartScaleLerp(originalScale);
 
@@ -141,22 +139,7 @@ namespace CGM.UI
 
         private void TryShowTooltip()
         {
-            Debug.Log($"[RewardCardInteraction] TryShowTooltip for card: {(CardInfo != null ? CardInfo.name : "null")}");
-            if (TooltipManager.Instance == null)
-            {
-                Debug.LogWarning("[RewardCardInteraction] TooltipManager.Instance is null!");
-                return;
-            }
-            if (CardInfo == null)
-            {
-                Debug.LogWarning("[RewardCardInteraction] CardInfo is null!");
-                return;
-            }
-            if (CardInfo.effects == null)
-            {
-                Debug.LogWarning("[RewardCardInteraction] CardInfo.effects is null!");
-                return;
-            }
+            if (TooltipManager.Instance == null || CardInfo == null || CardInfo.effects == null) return;
 
             System.Text.StringBuilder sb = new System.Text.StringBuilder();
             int count = 0;
@@ -175,26 +158,14 @@ namespace CGM.UI
                             sb.Append($"<color={buffInfo.colorHex}><b>{buffInfo.name}</b></color>\n{buffInfo.description}");
                             count++;
                         }
-                        else
-                        {
-                            Debug.LogWarning($"[RewardCardInteraction] BuffDatabase has no entry for buffId: {buffId}");
-                        }
                     }
-                    catch (System.Exception ex)
-                    {
-                        Debug.LogError($"[RewardCardInteraction] Exception parsing effect buff: {ex.Message}");
-                    }
+                    catch (System.Exception) { }
                 }
             }
 
-            Debug.Log($"[RewardCardInteraction] Buff/Debuff effect count: {count}");
             if (count > 0)
             {
                 TooltipManager.Instance.ShowTooltip(sb.ToString(), transform as RectTransform);
-            }
-            else
-            {
-                Debug.Log("[RewardCardInteraction] Card has no apply_buff/debuff effects. No tooltip will be shown.");
             }
         }
     }
