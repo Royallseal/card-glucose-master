@@ -105,6 +105,11 @@ namespace CGM.UI
             if (!_battleController.CanPlayCard(_cardInfo)) return;
             if (_handDisplay != null && _handDisplay.IsAnimating) return;
 
+            if (TooltipManager.Instance != null)
+            {
+                TooltipManager.Instance.HideTooltip();
+            }
+
             // 如果正在 Hover，瞬间还原并停止动效，避免把 Hover 的状态带入拖拽克隆
             if (_isHovered)
             {
@@ -293,21 +298,53 @@ namespace CGM.UI
 
         public void OnHoverEnter(PointerEventData eventData)
         {
-            if (IsAnyCardDragging) return; // 如果有任何卡牌正在被拖拽，屏蔽 Hover
-            if (_isDragging || _cardInfo == null) return;
+            Debug.Log($"[CardDragHandler] OnHoverEnter on card: {(_cardInfo != null ? _cardInfo.name : "null")} (isDisplayOnly: {isDisplayOnly})");
+            if (IsAnyCardDragging)
+            {
+                Debug.Log("[CardDragHandler] Hover ignored: another card is dragging.");
+                return;
+            }
+            if (_isDragging)
+            {
+                Debug.Log("[CardDragHandler] Hover ignored: this card is dragging.");
+                return;
+            }
+            if (_cardInfo == null)
+            {
+                Debug.LogWarning("[CardDragHandler] Hover ignored: _cardInfo is null.");
+                return;
+            }
 
             if (!isDisplayOnly)
             {
-                if (_battleController == null || !_battleController.CanPlayCard(_cardInfo)) return;
+                if (_battleController == null)
+                {
+                    Debug.LogWarning("[CardDragHandler] Hover ignored: _battleController is null.");
+                    return;
+                }
+                if (!_battleController.CanPlayCard(_cardInfo))
+                {
+                    Debug.Log("[CardDragHandler] Hover ignored: Cannot play card.");
+                    return;
+                }
             }
 
             // 动画中（如抽牌/弃牌飞入飞出时）禁止 Hover
             var anim = GetComponent<CardAnimator>();
-            if (anim != null && anim.IsAnimating) return;
-            if (_handDisplay != null && _handDisplay.IsAnimating) return;
+            if (anim != null && anim.IsAnimating)
+            {
+                Debug.Log("[CardDragHandler] Hover ignored: CardAnimator is animating.");
+                return;
+            }
+            if (_handDisplay != null && _handDisplay.IsAnimating)
+            {
+                Debug.Log("[CardDragHandler] Hover ignored: BattleHandDisplay is animating.");
+                return;
+            }
 
             InitDefaultY();
             _isHovered = true;
+            Debug.Log($"[CardDragHandler] Card hovered successfully. Name: {_cardInfo.name}");
 
             // 播放卡牌 Hover 音效
             AudioClip cardHoverSound = Resources.Load<AudioClip>("Audio/Card_Hover");
@@ -325,10 +362,12 @@ namespace CGM.UI
             }
 
             StartHoverAnimation(HoverScale, _defaultY + HoverYOffset);
+            TryShowTooltip();
         }
 
         public void OnHoverExit(PointerEventData eventData)
         {
+            Debug.Log($"[CardDragHandler] OnHoverExit on card: {(_cardInfo != null ? _cardInfo.name : "null")}");
             if (!_isHovered) return;
             _isHovered = false;
 
@@ -339,6 +378,11 @@ namespace CGM.UI
                     _canvasComponent.overrideSorting = false;
                 }
             });
+
+            if (TooltipManager.Instance != null)
+            {
+                TooltipManager.Instance.HideTooltip();
+            }
         }
 
         private void StartHoverAnimation(float targetScale, float targetY, System.Action onComplete = null)
@@ -378,6 +422,65 @@ namespace CGM.UI
 
             onComplete?.Invoke();
             _hoverCoroutine = null;
+        }
+
+        private void TryShowTooltip()
+        {
+            Debug.Log($"[CardDragHandler] TryShowTooltip for card: {(_cardInfo != null ? _cardInfo.name : "null")}");
+            if (TooltipManager.Instance == null)
+            {
+                Debug.LogWarning("[CardDragHandler] TooltipManager.Instance is null!");
+                return;
+            }
+            if (_cardInfo == null)
+            {
+                Debug.LogWarning("[CardDragHandler] _cardInfo is null!");
+                return;
+            }
+            if (_cardInfo.effects == null)
+            {
+                Debug.LogWarning("[CardDragHandler] _cardInfo.effects is null!");
+                return;
+            }
+
+            System.Text.StringBuilder sb = new System.Text.StringBuilder();
+            int count = 0;
+
+            foreach (var effect in _cardInfo.effects)
+            {
+                if (effect.effectType == "apply_buff" || effect.effectType == "apply_debuff")
+                {
+                    try
+                    {
+                        BuffId buffId = effect.GetBuffId();
+                        var buffInfo = BuffDatabase.Get(buffId);
+                        if (buffInfo != null)
+                        {
+                            if (count > 0) sb.Append("\n\n");
+                            sb.Append($"<color={buffInfo.colorHex}><b>{buffInfo.name}</b></color>\n{buffInfo.description}");
+                            count++;
+                        }
+                        else
+                        {
+                            Debug.LogWarning($"[CardDragHandler] BuffDatabase has no entry for buffId: {buffId}");
+                        }
+                    }
+                    catch (System.Exception ex)
+                    {
+                        Debug.LogError($"[CardDragHandler] Exception parsing effect buff: {ex.Message}");
+                    }
+                }
+            }
+
+            Debug.Log($"[CardDragHandler] Buff/Debuff effect count found: {count}");
+            if (count > 0)
+            {
+                TooltipManager.Instance.ShowTooltip(sb.ToString(), transform as RectTransform);
+            }
+            else
+            {
+                Debug.Log("[CardDragHandler] This card does not have any apply_buff or apply_debuff effects. No tooltip will be shown.");
+            }
         }
     }
 }

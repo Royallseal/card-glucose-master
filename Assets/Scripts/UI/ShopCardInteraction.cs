@@ -128,7 +128,12 @@ namespace CGM.UI
 
         public void OnPointerEnter(PointerEventData eventData)
         {
-            if (!isAffordable) return;
+            Debug.Log($"[ShopCardInteraction] OnPointerEnter on card: {(CardInfo != null ? CardInfo.name : "null")}");
+            if (!isAffordable)
+            {
+                Debug.Log("[ShopCardInteraction] Hover ignored: not affordable.");
+                return;
+            }
 
             isHovered = true;
             if (!isSelected)
@@ -141,16 +146,24 @@ namespace CGM.UI
             {
                 AudioSource.PlayClipAtPoint(hoverSound, Camera.main.transform.position);
             }
+
+            TryShowTooltip();
         }
 
         public void OnPointerExit(PointerEventData eventData)
         {
+            Debug.Log($"[ShopCardInteraction] OnPointerExit on card: {(CardInfo != null ? CardInfo.name : "null")}");
             if (!isAffordable) return;
 
             isHovered = false;
             if (!isSelected)
             {
                 targetScale = 1.0f;
+            }
+
+            if (TooltipManager.Instance != null)
+            {
+                TooltipManager.Instance.HideTooltip();
             }
         }
 
@@ -164,6 +177,11 @@ namespace CGM.UI
                 AudioSource.PlayClipAtPoint(clickSound, Camera.main.transform.position);
             }
 
+            if (TooltipManager.Instance != null)
+            {
+                TooltipManager.Instance.HideTooltip();
+            }
+
             // 回调通知总控
             onClickCallback?.Invoke(this);
         }
@@ -175,6 +193,65 @@ namespace CGM.UI
                 return color;
             }
             return defaultColor;
+        }
+
+        private void TryShowTooltip()
+        {
+            Debug.Log($"[ShopCardInteraction] TryShowTooltip for card: {(CardInfo != null ? CardInfo.name : "null")}");
+            if (TooltipManager.Instance == null)
+            {
+                Debug.LogWarning("[ShopCardInteraction] TooltipManager.Instance is null!");
+                return;
+            }
+            if (CardInfo == null)
+            {
+                Debug.LogWarning("[ShopCardInteraction] CardInfo is null!");
+                return;
+            }
+            if (CardInfo.effects == null)
+            {
+                Debug.LogWarning("[ShopCardInteraction] CardInfo.effects is null!");
+                return;
+            }
+
+            System.Text.StringBuilder sb = new System.Text.StringBuilder();
+            int count = 0;
+
+            foreach (var effect in CardInfo.effects)
+            {
+                if (effect.effectType == "apply_buff" || effect.effectType == "apply_debuff")
+                {
+                    try
+                    {
+                        BuffId buffId = effect.GetBuffId();
+                        var buffInfo = BuffDatabase.Get(buffId);
+                        if (buffInfo != null)
+                        {
+                            if (count > 0) sb.Append("\n\n");
+                            sb.Append($"<color={buffInfo.colorHex}><b>{buffInfo.name}</b></color>\n{buffInfo.description}");
+                            count++;
+                        }
+                        else
+                        {
+                            Debug.LogWarning($"[ShopCardInteraction] BuffDatabase has no entry for buffId: {buffId}");
+                        }
+                    }
+                    catch (System.Exception ex)
+                    {
+                        Debug.LogError($"[ShopCardInteraction] Exception parsing effect buff: {ex.Message}");
+                    }
+                }
+            }
+
+            Debug.Log($"[ShopCardInteraction] Buff/Debuff effect count: {count}");
+            if (count > 0)
+            {
+                TooltipManager.Instance.ShowTooltip(sb.ToString(), transform as RectTransform);
+            }
+            else
+            {
+                Debug.Log("[ShopCardInteraction] Card has no apply_buff/debuff effects. No tooltip will be shown.");
+            }
         }
     }
 }

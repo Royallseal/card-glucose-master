@@ -47,6 +47,7 @@ namespace CGM.UI
 
         public void OnPointerEnter(PointerEventData eventData)
         {
+            Debug.Log($"[RewardCardInteraction] OnPointerEnter on card: {(CardInfo != null ? CardInfo.name : "null")}");
             if (isSelected) return;
             StartScaleLerp(originalScale * HoverScale);
             
@@ -63,10 +64,13 @@ namespace CGM.UI
                 Vector3 pos = Camera.main != null ? Camera.main.transform.position : transform.position;
                 AudioSource.PlayClipAtPoint(cardHoverSound, pos, 0.8f);
             }
+
+            TryShowTooltip();
         }
 
         public void OnPointerExit(PointerEventData eventData)
         {
+            Debug.Log($"[RewardCardInteraction] OnPointerExit on card: {(CardInfo != null ? CardInfo.name : "null")}");
             if (isSelected) return;
             StartScaleLerp(originalScale);
 
@@ -74,11 +78,22 @@ namespace CGM.UI
             {
                 canvasComponent.overrideSorting = false;
             }
+
+            if (TooltipManager.Instance != null)
+            {
+                TooltipManager.Instance.HideTooltip();
+            }
         }
 
         public void OnPointerClick(PointerEventData eventData)
         {
             if (isSelected) return;
+
+            if (TooltipManager.Instance != null)
+            {
+                TooltipManager.Instance.HideTooltip();
+            }
+
             onClickCallback?.Invoke(this);
         }
 
@@ -122,6 +137,65 @@ namespace CGM.UI
             }
             transform.localScale = target;
             scaleCoroutine = null;
+        }
+
+        private void TryShowTooltip()
+        {
+            Debug.Log($"[RewardCardInteraction] TryShowTooltip for card: {(CardInfo != null ? CardInfo.name : "null")}");
+            if (TooltipManager.Instance == null)
+            {
+                Debug.LogWarning("[RewardCardInteraction] TooltipManager.Instance is null!");
+                return;
+            }
+            if (CardInfo == null)
+            {
+                Debug.LogWarning("[RewardCardInteraction] CardInfo is null!");
+                return;
+            }
+            if (CardInfo.effects == null)
+            {
+                Debug.LogWarning("[RewardCardInteraction] CardInfo.effects is null!");
+                return;
+            }
+
+            System.Text.StringBuilder sb = new System.Text.StringBuilder();
+            int count = 0;
+
+            foreach (var effect in CardInfo.effects)
+            {
+                if (effect.effectType == "apply_buff" || effect.effectType == "apply_debuff")
+                {
+                    try
+                    {
+                        BuffId buffId = effect.GetBuffId();
+                        var buffInfo = BuffDatabase.Get(buffId);
+                        if (buffInfo != null)
+                        {
+                            if (count > 0) sb.Append("\n\n");
+                            sb.Append($"<color={buffInfo.colorHex}><b>{buffInfo.name}</b></color>\n{buffInfo.description}");
+                            count++;
+                        }
+                        else
+                        {
+                            Debug.LogWarning($"[RewardCardInteraction] BuffDatabase has no entry for buffId: {buffId}");
+                        }
+                    }
+                    catch (System.Exception ex)
+                    {
+                        Debug.LogError($"[RewardCardInteraction] Exception parsing effect buff: {ex.Message}");
+                    }
+                }
+            }
+
+            Debug.Log($"[RewardCardInteraction] Buff/Debuff effect count: {count}");
+            if (count > 0)
+            {
+                TooltipManager.Instance.ShowTooltip(sb.ToString(), transform as RectTransform);
+            }
+            else
+            {
+                Debug.Log("[RewardCardInteraction] Card has no apply_buff/debuff effects. No tooltip will be shown.");
+            }
         }
     }
 }
