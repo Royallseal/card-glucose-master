@@ -1,4 +1,4 @@
-﻿{
+{
     "tooltips": [
         {
             "id": "vitality",
@@ -6,7 +6,7 @@
             "description": "每层使打出的攻击卡伤害 +1（可为负数）。",
             "colorHex": "#4EC9B0",
             "isDebuff": false,
-            "spritePath": "Sprites/UI/Icons/buff_vitality"
+            "spritePath": "UI/Icons/buff_vitality"
         },
         {
             "id": "endurance",
@@ -14,31 +14,31 @@
             "description": "每层使打出的防守卡格挡值 +1（可为负数）。",
             "colorHex": "#4EC9B0",
             "isDebuff": false,
-            "spritePath": "Sprites/UI/Icons/buff_endurance"
+            "spritePath": "UI/Icons/buff_endurance"
         },
         {
             "id": "fragility",
             "name": "脆弱",
-            "description": "受到伤害时，受到的伤害提升 50%。每回合结束层数 -1。",
+            "description": "受到伤害时受到的伤害提升 50%。每回合结束层数 -1。",
             "colorHex": "#FF6B6B",
             "isDebuff": true,
-            "spritePath": "Sprites/UI/Icons/debuff_fragility"
+            "spritePath": "UI/Icons/debuff_fragility"
         },
         {
             "id": "lethargy",
             "name": "乏力",
-            "description": "造成伤害时，输出的伤害降低 25%。每回合结束层数 -1。",
+            "description": "造成伤害时输出的伤害降低 25%。每回合结束层数 -1。",
             "colorHex": "#FF6B6B",
             "isDebuff": true,
-            "spritePath": "Sprites/UI/Icons/debuff_lethargy"
+            "spritePath": "UI/Icons/debuff_lethargy"
         },
         {
             "id": "stiffness",
             "name": "僵硬",
-            "description": "获得格挡时，获得的格挡值降低 25%。每回合结束层数 -1。",
+            "description": "获得格挡时获得的格挡值降低 25%。每回合结束层数 -1。",
             "colorHex": "#FF6B6B",
             "isDebuff": true,
-            "spritePath": "Sprites/UI/Icons/debuff_stiffness"
+            "spritePath": "UI/Icons/debuff_stiffness"
         },
         {
             "id": "slow_release",
@@ -46,7 +46,7 @@
             "description": "抵消下一张膳食卡的血糖上升效果。触发后消耗 1 层。",
             "colorHex": "#FFAD1F",
             "isDebuff": false,
-            "spritePath": "Sprites/UI/Icons/buff_slow_release"
+            "spritePath": "UI/Icons/buff_slow_release"
         },
         {
             "id": "sensitivity",
@@ -54,31 +54,31 @@
             "description": "使下一张药物卡的降糖效果翻倍。触发后消耗 1 层。",
             "colorHex": "#FFAD1F",
             "isDebuff": false,
-            "spritePath": "Sprites/UI/Icons/buff_sensitivity"
+            "spritePath": "UI/Icons/buff_sensitivity"
         },
         {
             "id": "glucose_low",
             "name": "低血糖",
-            "description": "血糖值：{0:F1} (< {1:F1})\\n\\n无伤害与格挡修正。若血糖低于 <color=#FF6B6B><b>{2:F1}</b></color>，将因血糖缺失而立即死亡！",
+            "description": "无伤害与格挡修正。若血糖过低将因血糖缺失而立即死亡！",
             "colorHex": "#FFAD1F",
             "isDebuff": false,
-            "spritePath": "Sprites/UI/Icons/intent_status"
+            "spritePath": "UI/Icons/intent_status"
         },
         {
             "id": "glucose_healthy",
             "name": "血糖健康",
-            "description": "血糖值：{0:F1} ({1:F1} - {2:F1})\\n\\n<color=#4EC9B0><b>打出的所有卡牌伤害与格挡值 +25%</b></color>。",
+            "description": "打出的所有卡牌伤害与格挡值提升 25%。",
             "colorHex": "#4EC9B0",
             "isDebuff": false,
-            "spritePath": "Sprites/UI/Icons/intent_status"
+            "spritePath": "UI/Icons/intent_status"
         },
         {
             "id": "glucose_high",
             "name": "高血糖",
-            "description": "血糖值：{0:F1} (> {1:F1})\\n\\n打出的所有卡牌伤害与格挡值 <color=#FF6B6B><b>-25%</b></color>，且卡牌带来的血糖变化幅度 <color=#FFAD1F><b>翻倍 (x2.0)</b></color>！\\n若血糖高于 <color=#FF6B6B><b>{2:F1}</b></color>，将因高血糖危象而立即死亡！",
+            "description": "打出的所有卡牌伤害与格挡值降低 25%。卡牌带来的血糖变化幅度翻倍。若血糖过高将因高血糖危象而立即死亡！",
             "colorHex": "#FF6B6B",
             "isDebuff": true,
-            "spritePath": "Sprites/UI/Icons/intent_status"
+            "spritePath": "UI/Icons/intent_status"
         }
     ]
 }

@@ -33,7 +33,7 @@ namespace CGM.UI
 
         [Header("动画参数")]
         [SerializeField] private float _cardAnimDuration = 0.6f;
-        [SerializeField] private float _initialDelay = 0.3f;
+        [SerializeField] private float _initialDelay = 0f;
 
         // 缓存每张卡牌的最终 anchored position 和 rotation
         private Vector2[] _targetPositions;

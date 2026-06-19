@@ -143,7 +143,9 @@ namespace CGM.Data
             {
                 _rawTooltips[t.id] = t;
 
-                if (System.Enum.TryParse<BuffId>(t.id, true, out var buffId))
+                // 去除下划线以匹配 PascalCase 枚举（如 slow_release → SlowRelease）
+                string enumKey = t.id.Replace("_", "");
+                if (System.Enum.TryParse<BuffId>(enumKey, true, out var buffId))
                 {
                     _registry[buffId] = new BuffInfo(buffId, t.name, t.description, t.colorHex, t.isDebuff);
                     _nameToIdMap[t.name] = buffId;
@@ -208,22 +210,29 @@ namespace CGM.Data
         public static string GetSpritePath(BuffId id)
         {
             LoadIfNeeded();
-            string key = id.ToString().ToLower();
-            if (_rawTooltips != null && _rawTooltips.TryGetValue(key, out var t) && !string.IsNullOrEmpty(t.spritePath))
+            // 先用去除下划线的小写 key 查找 JSON 数据，再尝试原始带下划线 key
+            string enumKey = id.ToString().ToLower();
+            if (_rawTooltips != null && _rawTooltips.TryGetValue(enumKey, out var t) && !string.IsNullOrEmpty(t.spritePath))
             {
                 return t.spritePath;
+            }
+            // 将 PascalCase 转为 snake_case 再尝试一次（如 SlowRelease → slow_release）
+            string snakeKey = System.Text.RegularExpressions.Regex.Replace(id.ToString(), "(?<!^)([A-Z])", "_$1").ToLower();
+            if (snakeKey != enumKey && _rawTooltips != null && _rawTooltips.TryGetValue(snakeKey, out var t2) && !string.IsNullOrEmpty(t2.spritePath))
+            {
+                return t2.spritePath;
             }
 
             switch (id)
             {
-                case BuffId.Vitality:    return "Sprites/UI/Icons/buff_vitality";
-                case BuffId.Endurance:   return "Sprites/UI/Icons/buff_endurance";
-                case BuffId.Fragility:   return "Sprites/UI/Icons/debuff_fragility";
-                case BuffId.Lethargy:    return "Sprites/UI/Icons/debuff_lethargy";
-                case BuffId.Stiffness:   return "Sprites/UI/Icons/debuff_stiffness";
-                case BuffId.SlowRelease: return "Sprites/UI/Icons/buff_slow_release";
-                case BuffId.Sensitivity: return "Sprites/UI/Icons/buff_sensitivity";
-                default:                 return "Sprites/UI/Icons/intent_status";
+                case BuffId.Vitality:    return "UI/Icons/buff_vitality";
+                case BuffId.Endurance:   return "UI/Icons/buff_endurance";
+                case BuffId.Fragility:   return "UI/Icons/debuff_fragility";
+                case BuffId.Lethargy:    return "UI/Icons/debuff_lethargy";
+                case BuffId.Stiffness:   return "UI/Icons/debuff_stiffness";
+                case BuffId.SlowRelease: return "UI/Icons/buff_slow_release";
+                case BuffId.Sensitivity: return "UI/Icons/buff_sensitivity";
+                default:                 return "UI/Icons/intent_status";
             }
         }
     }

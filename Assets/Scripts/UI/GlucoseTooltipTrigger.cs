@@ -38,27 +38,18 @@ namespace CGM.UI
 
         private string GetGlucoseStateDescription(float glucose)
         {
+            string rawId;
             if (glucose < BattleConstants.HealthyGlucoseMin)
-            {
-                var info = CGM.Data.BuffDatabase.GetRawTooltip("glucose_low");
-                if (info == null) return "";
-                string descBody = string.Format(info.description, glucose, BattleConstants.HealthyGlucoseMin, BattleConstants.GlucoseDeathMin);
-                return $"<color={BattleConstants.ColorOrange}><b>当前状态：{info.name}</b></color>\n" + descBody;
-            }
+                rawId = "glucose_low";
             else if (glucose <= BattleConstants.HealthyGlucoseMax)
-            {
-                var info = CGM.Data.BuffDatabase.GetRawTooltip("glucose_healthy");
-                if (info == null) return "";
-                string descBody = string.Format(info.description, glucose, BattleConstants.HealthyGlucoseMin, BattleConstants.HealthyGlucoseMax);
-                return $"<color={BattleConstants.ColorGreen}><b>当前状态：{info.name}</b></color>\n" + descBody;
-            }
+                rawId = "glucose_healthy";
             else
-            {
-                var info = CGM.Data.BuffDatabase.GetRawTooltip("glucose_high");
-                if (info == null) return "";
-                string descBody = string.Format(info.description, glucose, BattleConstants.HealthyGlucoseMax, BattleConstants.GlucoseDeathMax);
-                return $"<color={BattleConstants.ColorRed}><b>当前状态：{info.name}</b></color>\n" + descBody;
-            }
+                rawId = "glucose_high";
+
+            var info = CGM.Data.BuffDatabase.GetRawTooltip(rawId);
+            if (info == null) return "";
+
+            return $"<color={info.colorHex}><b>当前状态：{info.name}</b></color>\n{info.description}";
         }
     }
 }

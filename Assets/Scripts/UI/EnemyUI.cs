@@ -160,7 +160,7 @@ namespace CGM.UI
             switch (intent.actionType)
             {
                 case "attack":
-                    intentIcon.sprite = Resources.Load<Sprite>("Sprites/UI/Icons/intent_attack");
+                    intentIcon.sprite = Resources.Load<Sprite>("UI/Icons/intent_attack");
                     // 实时计算攻击意图数值：综合敌人自身 Buff（活力/乏力）、玩家 Debuff（脆弱）、血糖修正、回合强度缩放
                     int baseDmg = intent.GetValue();
                     int scaledDmg = Mathf.CeilToInt(baseDmg * _enemyStats.TurnScaling);
@@ -170,7 +170,7 @@ namespace CGM.UI
                     break;
 
                 case "block":
-                    intentIcon.sprite = Resources.Load<Sprite>("Sprites/UI/Icons/intent_block");
+                    intentIcon.sprite = Resources.Load<Sprite>("UI/Icons/intent_block");
                     // 实时计算格挡意图数值：综合敌人自身 Buff（耐力/僵硬）、血糖修正、回合强度缩放
                     int baseBlk = intent.GetValue();
                     int scaledBlk = Mathf.CeilToInt(baseBlk * _enemyStats.TurnScaling);
@@ -181,7 +181,7 @@ namespace CGM.UI
 
                 case "buff":
                 case "debuff":
-                    intentIcon.sprite = Resources.Load<Sprite>("Sprites/UI/Icons/intent_status");
+                    intentIcon.sprite = Resources.Load<Sprite>("UI/Icons/intent_status");
                     intentValueText.gameObject.SetActive(false);
                     break;
 
