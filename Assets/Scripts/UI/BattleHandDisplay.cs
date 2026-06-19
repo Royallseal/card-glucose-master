@@ -68,6 +68,11 @@ namespace CGM.UI
         private bool isDrawingCards = false;
         private int activeDiscardAnimations = 0;
 
+        /// <summary>
+        /// 当前手牌区是否正在播放抽牌或弃牌动画。
+        /// </summary>
+        public bool IsAnimating => isDrawingCards || activeDiscardAnimations > 0;
+
         private void Awake()
         {
             // 清理 HandContainer 下的所有初始子物体（设计时占位符），在 Awake 中完成以确保在 StartBattle 之前
@@ -200,6 +205,26 @@ namespace CGM.UI
                     battleController.PlayerStats.OnGlucoseChanged -= RefreshHandCardVisualsWithGlucose;
                 }
             }
+        }
+
+        private void Update()
+        {
+            UpdateEndTurnButton();
+            RefreshHandInteractable();
+        }
+
+        /// <summary>
+        /// 统一根据当前回合阶段、战斗特效、以及手牌动画状态，动态更新结束回合按钮的 interactable。
+        /// </summary>
+        private void UpdateEndTurnButton()
+        {
+            if (endTurnButton == null) return;
+
+            bool isPlayerTurn = battleController != null && battleController.Phase == BattleTurnPhase.PlayerTurn;
+            bool effectLocked = effectController != null && effectController.IsPlayingEffect;
+            bool animating = IsAnimating;
+
+            endTurnButton.interactable = isPlayerTurn && !effectLocked && !animating;
         }
 
         // =========================================================================
@@ -448,12 +473,7 @@ namespace CGM.UI
             }
 
             // 只有玩家回合且不在播特效时才能点结束回合
-            bool isPlayerTurn = phase == BattleTurnPhase.PlayerTurn;
-            bool effectLocked = effectController != null && effectController.IsPlayingEffect;
-            if (endTurnButton != null)
-            {
-                endTurnButton.interactable = isPlayerTurn && !effectLocked;
-            }
+            UpdateEndTurnButton();
 
             // 更新回合计数（TurnNumber 表示当前第几个玩家回合，即第几回合）
             if (roundCountText != null && battleController != null &&
@@ -574,8 +594,11 @@ namespace CGM.UI
         {
             if (battleController == null || card == null) return;
 
-            // 特效播放期间禁用卡牌交互
+            // 特效播放期间或动画播放期间禁用卡牌交互
             if (effectController != null && effectController.IsPlayingEffect)
+                return;
+
+            if (IsAnimating)
                 return;
 
             if (!battleController.CanPlayCard(card))
@@ -598,6 +621,11 @@ namespace CGM.UI
         {
             if (battleController != null)
             {
+                if (IsAnimating) return;
+
+                bool effectLocked = effectController != null && effectController.IsPlayingEffect;
+                if (effectLocked) return;
+
                 battleController.EndPlayerTurn();
             }
         }
@@ -607,23 +635,29 @@ namespace CGM.UI
         // =========================================================================
 
         /// <summary>
-        /// 根据当前能量和阶段，刷新所有手牌按钮的可交互状态。
+        /// 根据当前能量和阶段，以及抽弃牌动画状态，刷新所有手牌按钮的可交互状态。
         /// </summary>
         private void RefreshHandInteractable()
         {
             bool effectLocked = effectController != null && effectController.IsPlayingEffect;
+            bool animating = IsAnimating;
+
+            bool baseCanPlay = !effectLocked && !animating
+                               && battleController.Phase == BattleTurnPhase.PlayerTurn;
 
             foreach (var go in handObjects)
             {
+                if (go == null) continue;
                 Button btn = go.GetComponent<Button>();
                 if (btn == null) continue;
 
                 CardUI cardUI = go.GetComponent<CardUI>();
                 if (cardUI == null) continue;
 
-                bool canPlay = !effectLocked
-                               && battleController.Phase == BattleTurnPhase.PlayerTurn
-                               && battleController.CurrentEnergy > 0;
+                var dragHandler = go.GetComponent<CardDragHandler>();
+                CardInfo card = dragHandler != null ? dragHandler.CardInfo : null;
+
+                bool canPlay = baseCanPlay && card != null && battleController.CanPlayCard(card);
                 btn.interactable = canPlay;
             }
         }

@@ -28,6 +28,7 @@ namespace CGM.UI
         private PlayerStats _playerStats;
         private EnemyStats _enemyStats;
         private BattleSessionController _battleController;
+        private BattleHandDisplay _handDisplay;
 
         private GameObject _dragClone;
         private RectTransform _dragCloneRect;
@@ -83,6 +84,7 @@ namespace CGM.UI
             _playerStats = FindObjectOfType<PlayerStats>();
             _enemyStats = FindObjectOfType<EnemyStats>();
             _battleController = FindObjectOfType<BattleSessionController>();
+            _handDisplay = FindObjectOfType<BattleHandDisplay>();
 
             var go = GameObject.Find("Enemy_Stat");
             if (go != null) _enemyDetectRect = go.GetComponent<RectTransform>();
@@ -101,6 +103,7 @@ namespace CGM.UI
             if (isDisplayOnly) return;
             if (_cardInfo == null || _battleController == null) return;
             if (!_battleController.CanPlayCard(_cardInfo)) return;
+            if (_handDisplay != null && _handDisplay.IsAnimating) return;
 
             // 如果正在 Hover，瞬间还原并停止动效，避免把 Hover 的状态带入拖拽克隆
             if (_isHovered)
@@ -301,6 +304,7 @@ namespace CGM.UI
             // 动画中（如抽牌/弃牌飞入飞出时）禁止 Hover
             var anim = GetComponent<CardAnimator>();
             if (anim != null && anim.IsAnimating) return;
+            if (_handDisplay != null && _handDisplay.IsAnimating) return;
 
             InitDefaultY();
             _isHovered = true;
