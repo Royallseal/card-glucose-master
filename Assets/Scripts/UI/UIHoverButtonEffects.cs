@@ -1,6 +1,7 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using CGM.Core;
 
 namespace CGM.UI
 {
@@ -10,55 +11,55 @@ namespace CGM.UI
     public class UIHoverButtonEffects : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
     {
         [Header("Hover 缩放特效")]
-        [SerializeField] private float hoverScale = 1.05f;
-        [SerializeField] private float duration = 0.1f;
+        [SerializeField] private float _hoverScale = 1.05f;
+        [SerializeField] private float _duration = 0.1f;
 
         [Header("Hover 音效")]
-        [SerializeField] private AudioClip hoverSound;
+        [SerializeField] private AudioClip _hoverSound;
         [Range(0f, 1f)]
-        [SerializeField] private float volume = 0.8f;
+        [SerializeField] private float _volume = 0.8f;
 
         [Header("目标 Transform (默认自身)")]
-        [SerializeField] private Transform targetTransform;
+        [SerializeField] private Transform _targetTransform;
 
-        private Vector3 originalScale;
-        private Coroutine scaleCoroutine;
+        private Vector3 _originalScale;
+        private Coroutine _scaleCoroutine;
 
         private void Start()
         {
-            if (targetTransform == null)
+            if (_targetTransform == null)
             {
-                targetTransform = transform;
+                _targetTransform = transform;
             }
-            originalScale = targetTransform.localScale;
+            _originalScale = _targetTransform.localScale;
 
             // UI 按钮统一使用 Button_Hover 音效
-            if (hoverSound == null)
+            if (_hoverSound == null)
             {
-                hoverSound = Resources.Load<AudioClip>("Audio/Button_Hover");
+                _hoverSound = Resources.Load<AudioClip>("Audio/Button_Hover");
             }
         }
 
         public void SetTargetTransform(Transform target)
         {
-            targetTransform = target;
-            if (targetTransform != null)
+            _targetTransform = target;
+            if (_targetTransform != null)
             {
-                originalScale = targetTransform.localScale;
+                _originalScale = _targetTransform.localScale;
             }
         }
 
         private void OnDisable()
         {
             // 确保组件禁用时还原状态
-            if (scaleCoroutine != null)
+            if (_scaleCoroutine != null)
             {
-                StopCoroutine(scaleCoroutine);
-                scaleCoroutine = null;
+                StopCoroutine(_scaleCoroutine);
+                _scaleCoroutine = null;
             }
-            if (targetTransform != null)
+            if (_targetTransform != null)
             {
-                targetTransform.localScale = originalScale;
+                _targetTransform.localScale = _originalScale;
             }
         }
 
@@ -68,7 +69,7 @@ namespace CGM.UI
             var btn = GetComponent<UnityEngine.UI.Button>();
             if (btn != null && !btn.interactable) return;
 
-            StartScaleLerp(originalScale * hoverScale);
+            StartScaleLerp(_originalScale * _hoverScale);
             PlayHoverSound();
         }
 
@@ -77,7 +78,7 @@ namespace CGM.UI
             var btn = GetComponent<UnityEngine.UI.Button>();
             if (btn != null && !btn.interactable) return;
 
-            StartScaleLerp(originalScale);
+            StartScaleLerp(_originalScale);
         }
 
         /// <summary>
@@ -85,53 +86,53 @@ namespace CGM.UI
         /// </summary>
         public void ResetScale()
         {
-            if (scaleCoroutine != null)
+            if (_scaleCoroutine != null)
             {
-                StopCoroutine(scaleCoroutine);
-                scaleCoroutine = null;
+                StopCoroutine(_scaleCoroutine);
+                _scaleCoroutine = null;
             }
-            if (targetTransform != null)
+            if (_targetTransform != null)
             {
-                targetTransform.localScale = originalScale;
+                _targetTransform.localScale = _originalScale;
             }
         }
 
         private void StartScaleLerp(Vector3 target)
         {
-            if (scaleCoroutine != null)
+            if (_scaleCoroutine != null)
             {
-                StopCoroutine(scaleCoroutine);
+                StopCoroutine(_scaleCoroutine);
             }
-            scaleCoroutine = StartCoroutine(ScaleRoutine(target));
+            _scaleCoroutine = StartCoroutine(ScaleRoutine(target));
         }
 
         private IEnumerator ScaleRoutine(Vector3 target)
         {
-            Vector3 start = targetTransform != null ? targetTransform.localScale : transform.localScale;
+            Vector3 start = _targetTransform != null ? _targetTransform.localScale : transform.localScale;
             float elapsed = 0f;
-            while (elapsed < duration)
+            while (elapsed < _duration)
             {
                 elapsed += Time.deltaTime;
-                if (targetTransform != null)
+                if (_targetTransform != null)
                 {
-                    targetTransform.localScale = Vector3.Lerp(start, target, elapsed / duration);
+                    _targetTransform.localScale = Vector3.Lerp(start, target, elapsed / _duration);
                 }
                 yield return null;
             }
-            if (targetTransform != null)
+            if (_targetTransform != null)
             {
-                targetTransform.localScale = target;
+                _targetTransform.localScale = target;
             }
-            scaleCoroutine = null;
+            _scaleCoroutine = null;
         }
 
         private void PlayHoverSound()
         {
-            if (hoverSound != null)
+            if (_hoverSound != null)
             {
-                // 使用 PlayClipAtPoint 在相机位置播放音效，实现全局 UI 点击/悬停音效反馈
                 Vector3 pos = Camera.main != null ? Camera.main.transform.position : transform.position;
-                AudioSource.PlayClipAtPoint(hoverSound, pos, volume);
+                float finalVolume = _volume * (AudioManager.Instance != null ? AudioManager.Instance.SfxVolume : 1f);
+                AudioSource.PlayClipAtPoint(_hoverSound, pos, finalVolume);
             }
         }
 
@@ -140,8 +141,8 @@ namespace CGM.UI
         /// </summary>
         public void Setup(AudioClip sound, float scale = 1.05f)
         {
-            hoverSound = sound;
-            hoverScale = scale;
+            _hoverSound = sound;
+            _hoverScale = scale;
         }
     }
 }

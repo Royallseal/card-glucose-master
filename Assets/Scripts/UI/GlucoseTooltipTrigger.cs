@@ -38,25 +38,26 @@ namespace CGM.UI
 
         private string GetGlucoseStateDescription(float glucose)
         {
-            // 组合并高亮展示血糖说明
             if (glucose < BattleConstants.HealthyGlucoseMin)
             {
-                return $"<color={BattleConstants.ColorOrange}><b>当前状态：低血糖</b></color>\n" +
-                       $"血糖值：{glucose:F1} (< {BattleConstants.HealthyGlucoseMin:F1})\n\n" +
-                       $"无伤害与格挡修正。若血糖低于 <color={BattleConstants.ColorRed}><b>{BattleConstants.GlucoseDeathMin:F1}</b></color>，将因血糖缺失而立即死亡！";
+                var info = CGM.Data.BuffDatabase.GetRawTooltip("glucose_low");
+                if (info == null) return "";
+                string descBody = string.Format(info.description, glucose, BattleConstants.HealthyGlucoseMin, BattleConstants.GlucoseDeathMin);
+                return $"<color={BattleConstants.ColorOrange}><b>当前状态：{info.name}</b></color>\n" + descBody;
             }
             else if (glucose <= BattleConstants.HealthyGlucoseMax)
             {
-                return $"<color={BattleConstants.ColorGreen}><b>当前状态：血糖健康</b></color>\n" +
-                       $"血糖值：{glucose:F1} ({BattleConstants.HealthyGlucoseMin:F1} - {BattleConstants.HealthyGlucoseMax:F1})\n\n" +
-                       $"<color={BattleConstants.ColorGreen}><b>打出的所有卡牌伤害与格挡值 +25%</b></color>。";
+                var info = CGM.Data.BuffDatabase.GetRawTooltip("glucose_healthy");
+                if (info == null) return "";
+                string descBody = string.Format(info.description, glucose, BattleConstants.HealthyGlucoseMin, BattleConstants.HealthyGlucoseMax);
+                return $"<color={BattleConstants.ColorGreen}><b>当前状态：{info.name}</b></color>\n" + descBody;
             }
             else
             {
-                return $"<color={BattleConstants.ColorRed}><b>当前状态：高血糖</b></color>\n" +
-                       $"血糖值：{glucose:F1} (> {BattleConstants.HealthyGlucoseMax:F1})\n\n" +
-                       $"打出的所有卡牌伤害与格挡值 <color={BattleConstants.ColorRed}><b>-25%</b></color>，且卡牌带来的血糖变化幅度 <color={BattleConstants.ColorOrange}><b>翻倍 (x2.0)</b></color>！\n" +
-                       $"若血糖高于 <color={BattleConstants.ColorRed}><b>{BattleConstants.GlucoseDeathMax:F1}</b></color>，将因高血糖危象而立即死亡！";
+                var info = CGM.Data.BuffDatabase.GetRawTooltip("glucose_high");
+                if (info == null) return "";
+                string descBody = string.Format(info.description, glucose, BattleConstants.HealthyGlucoseMax, BattleConstants.GlucoseDeathMax);
+                return $"<color={BattleConstants.ColorRed}><b>当前状态：{info.name}</b></color>\n" + descBody;
             }
         }
     }

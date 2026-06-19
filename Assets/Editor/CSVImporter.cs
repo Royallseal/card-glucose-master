@@ -23,9 +23,11 @@ namespace CGM.Editor
         private const string EffectsCsvRelativePath = "data/initial_card_effects.csv";
         private const string ColorsCsvRelativePath = "data/initial_card_colors.csv";
         private const string EnemiesCsvRelativePath = "data/initial_enemies_data.csv";
+        private const string TooltipsCsvRelativePath = "data/initial_tooltips_data.csv";
         private const string OutputDirectory = "Assets/Resources/Configs";
         private const string OutputFilePath = "Assets/Resources/Configs/cards.json";
         private const string EnemiesOutputFilePath = "Assets/Resources/Configs/enemies.json";
+        private const string TooltipsOutputFilePath = "Assets/Resources/Configs/tooltips.json";
 
         /// <summary>
         /// 编译卡牌数据的菜单入口。
@@ -368,6 +370,81 @@ namespace CGM.Editor
             }
 
             return enemies;
+        }
+
+        /// <summary>
+        /// 编译描述框数据的菜单入口。
+        /// </summary>
+        [MenuItem("Tools/CGM/编译描述框数据")]
+        public static void ImportTooltipData()
+        {
+            string projectRoot = Path.GetDirectoryName(Application.dataPath);
+            string tooltipsCsvPath = Path.Combine(projectRoot, TooltipsCsvRelativePath);
+
+            if (!File.Exists(tooltipsCsvPath))
+            {
+                Debug.LogError($"[CSVImporter] 描述框数据表文件未找到：{tooltipsCsvPath}");
+                return;
+            }
+
+            List<TooltipInfo> tooltips = ParseTooltipsCSV(tooltipsCsvPath);
+
+            TooltipDataWrapper wrapper = new TooltipDataWrapper { tooltips = tooltips };
+            string json = JsonUtility.ToJson(wrapper, true);
+
+            string outputFullPath = Path.Combine(projectRoot, TooltipsOutputFilePath);
+            string outputDirFullPath = Path.Combine(projectRoot, OutputDirectory);
+
+            if (!Directory.Exists(outputDirFullPath))
+            {
+                Directory.CreateDirectory(outputDirFullPath);
+            }
+
+            File.WriteAllText(outputFullPath, json, Encoding.UTF8);
+            AssetDatabase.Refresh();
+
+            Debug.Log($"<color=#4EC9B0>[CSVImporter]</color> 描述框数据编译完成：共 <b>{tooltips.Count}</b> 条记录。输出至 {TooltipsOutputFilePath}");
+        }
+
+        private static List<TooltipInfo> ParseTooltipsCSV(string path)
+        {
+            List<TooltipInfo> tooltips = new List<TooltipInfo>();
+            string content = File.ReadAllText(path, Encoding.UTF8);
+            string[] lines = content.Split('\n');
+
+            for (int i = 1; i < lines.Length; i++)
+            {
+                string line = lines[i].Trim();
+                if (string.IsNullOrEmpty(line)) continue;
+
+                List<string> fields = ParseCSVLine(line);
+                if (fields.Count < 6)
+                {
+                    Debug.LogWarning($"[CSVImporter] 描述框表第 {i + 1} 行字段不足（期望 6，实际 {fields.Count}），已跳过：{line}");
+                    continue;
+                }
+
+                try
+                {
+                    TooltipInfo tooltip = new TooltipInfo
+                    {
+                        id = fields[0].Trim(),
+                        name = fields[1].Trim(),
+                        description = fields[2].Trim(),
+                        colorHex = fields[3].Trim(),
+                        isDebuff = bool.Parse(fields[4].Trim()),
+                        spritePath = fields[5].Trim()
+                    };
+
+                    tooltips.Add(tooltip);
+                }
+                catch (System.Exception e)
+                {
+                    Debug.LogError($"[CSVImporter] 描述框表第 {i + 1} 行解析失败：{e.Message}\n原始行：{line}");
+                }
+            }
+
+            return tooltips;
         }
     }
 }

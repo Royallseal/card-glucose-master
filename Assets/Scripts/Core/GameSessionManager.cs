@@ -686,7 +686,7 @@ namespace CGM.Core
             // 播放金币点击音效
             if (clickAudioClip != null && Camera.main != null)
             {
-                AudioSource.PlayClipAtPoint(clickAudioClip, Camera.main.transform.position);
+                AudioManager.PlaySfxStatic(clickAudioClip, Camera.main.transform.position);
             }
 
             // 上方 UI 增加金币并刷新
@@ -713,7 +713,7 @@ namespace CGM.Core
             // 播放点击音效
             if (clickAudioClip != null && Camera.main != null)
             {
-                AudioSource.PlayClipAtPoint(clickAudioClip, Camera.main.transform.position);
+                AudioManager.PlaySfxStatic(clickAudioClip, Camera.main.transform.position);
             }
 
             // 取消之前选中的卡牌特效
@@ -779,7 +779,7 @@ namespace CGM.Core
             // 播放飞入/点击音效
             if (clickAudioClip != null && Camera.main != null)
             {
-                AudioSource.PlayClipAtPoint(clickAudioClip, Camera.main.transform.position);
+                AudioManager.PlaySfxStatic(clickAudioClip, Camera.main.transform.position);
             }
 
             // 寻找到 UItop 卡组的目标位置

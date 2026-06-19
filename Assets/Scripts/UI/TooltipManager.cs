@@ -167,5 +167,42 @@ namespace CGM.UI
                 _tooltipInstance.SetActive(false);
             }
         }
+
+        /// <summary>
+        /// 显示卡牌所含 Buff/Debuff 的描述框悬停提示。
+        /// </summary>
+        /// <param name="cardInfo">卡牌数据</param>
+        /// <param name="targetRect">被悬停 UI 物体的 RectTransform</param>
+        public void ShowCardEffectsTooltip(CGM.Data.CardInfo cardInfo, RectTransform targetRect)
+        {
+            if (cardInfo == null || cardInfo.effects == null) return;
+
+            System.Text.StringBuilder sb = new System.Text.StringBuilder();
+            int count = 0;
+
+            foreach (var effect in cardInfo.effects)
+            {
+                if (effect.effectType == "apply_buff" || effect.effectType == "apply_debuff")
+                {
+                    try
+                    {
+                        CGM.Data.BuffId buffId = effect.GetBuffId();
+                        var buffInfo = CGM.Data.BuffDatabase.Get(buffId);
+                        if (buffInfo != null)
+                        {
+                            if (count > 0) sb.Append("\n\n");
+                            sb.Append($"<color={buffInfo.colorHex}><b>{buffInfo.name}</b></color>\n{buffInfo.description}");
+                            count++;
+                        }
+                    }
+                    catch (System.Exception) { }
+                }
+            }
+
+            if (count > 0)
+            {
+                ShowTooltip(sb.ToString(), targetRect);
+            }
+        }
     }
 }

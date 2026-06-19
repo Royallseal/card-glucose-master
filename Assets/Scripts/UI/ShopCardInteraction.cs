@@ -4,6 +4,7 @@ using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using TMPro;
 using CGM.Data;
+using CGM.Core;
 
 namespace CGM.UI
 {
@@ -15,36 +16,36 @@ namespace CGM.UI
         public CardInfo CardInfo { get; private set; }
         public int Price { get; private set; }
 
-        private bool isSelected = false;
-        private bool isHovered = false;
-        private bool isAffordable = true;
+        private bool _isSelected = false;
+        private bool _isHovered = false;
+        private bool _isAffordable = true;
 
-        private float targetScale = 1.0f;
-        private float currentScale = 1.0f;
+        private float _targetScale = 1.0f;
+        private float _currentScale = 1.0f;
         private const float LerpSpeed = 12f;
 
-        private Action<ShopCardInteraction> onClickCallback;
-        private AudioClip hoverSound;
-        private AudioClip clickSound;
-        private CanvasGroup canvasGroup;
-        private TextMeshProUGUI priceText;
+        private Action<ShopCardInteraction> _onClickCallback;
+        private AudioClip _hoverSound;
+        private AudioClip _clickSound;
+        private CanvasGroup _canvasGroup;
+        private TextMeshProUGUI _priceText;
 
         public void Initialize(CardInfo card, int price, Action<ShopCardInteraction> clickCallback, AudioClip hoverClip, AudioClip clickClip)
         {
             CardInfo = card;
             Price = price;
-            onClickCallback = clickCallback;
-            clickSound = clickClip;
+            _onClickCallback = clickCallback;
+            _clickSound = clickClip;
 
             // 统一配置卡牌 Hover 音效为 Card_Hover
-            hoverSound = Resources.Load<AudioClip>("Audio/Card_Hover");
-            if (hoverSound == null)
+            _hoverSound = Resources.Load<AudioClip>("Audio/Card_Hover");
+            if (_hoverSound == null)
             {
-                hoverSound = hoverClip;
+                _hoverSound = hoverClip;
             }
 
             // 确保卡牌有独立的 Canvas + GraphicRaycaster，供 ShopCardInteraction 独占处理所有指针事件。
-            // 同时移除可能冲突的 CardDragHandler，避免双重 hover/click 响应。
+            // 同时移除可能冲突 durable CardDragHandler，避免双重 hover/click 响应。
             var cardCanvas = GetComponent<Canvas>();
             if (cardCanvas == null)
             {
@@ -63,48 +64,48 @@ namespace CGM.UI
                 Destroy(dragHandler);
             }
 
-            canvasGroup = GetComponent<CanvasGroup>();
-            if (canvasGroup == null)
+            _canvasGroup = GetComponent<CanvasGroup>();
+            if (_canvasGroup == null)
             {
-                canvasGroup = gameObject.AddComponent<CanvasGroup>();
+                _canvasGroup = gameObject.AddComponent<CanvasGroup>();
             }
 
             // 寻找价格文字组件
             Transform priceTextTrans = transform.Find("GoldValue/Gold/Gold_Value");
             if (priceTextTrans != null)
             {
-                priceText = priceTextTrans.GetComponent<TextMeshProUGUI>();
+                _priceText = priceTextTrans.GetComponent<TextMeshProUGUI>();
             }
 
             // 重置状态
-            isSelected = false;
-            isHovered = false;
-            targetScale = 1.0f;
-            currentScale = 1.0f;
+            _isSelected = false;
+            _isHovered = false;
+            _targetScale = 1.0f;
+            _currentScale = 1.0f;
             transform.localScale = Vector3.one;
         }
 
         public void SetAffordable(bool affordable)
         {
-            isAffordable = affordable;
+            _isAffordable = affordable;
 
-            if (canvasGroup != null)
+            if (_canvasGroup != null)
             {
                 // 金币不够时，卡牌半透明且无法阻挡射线（禁止一切交互）
-                canvasGroup.alpha = affordable ? 1.0f : 0.6f;
-                canvasGroup.blocksRaycasts = affordable;
+                _canvasGroup.alpha = affordable ? 1.0f : 0.6f;
+                _canvasGroup.blocksRaycasts = affordable;
             }
 
-            if (priceText != null)
+            if (_priceText != null)
             {
                 // 买得起显示绿色，买不起显示红色
-                priceText.color = affordable 
+                _priceText.color = affordable 
                     ? TryParseColor("#4EC9B0", Color.green) 
                     : TryParseColor("#FF6B6B", Color.red);
             }
 
             // 如果原本处于选中状态但突然买不起了，立即退选
-            if (!affordable && isSelected)
+            if (!affordable && _isSelected)
             {
                 SetSelected(false);
             }
@@ -112,34 +113,34 @@ namespace CGM.UI
 
         public void SetSelected(bool selected)
         {
-            isSelected = selected;
-            targetScale = selected ? 1.12f : (isHovered ? 1.06f : 1.0f);
+            _isSelected = selected;
+            _targetScale = selected ? 1.12f : (_isHovered ? 1.06f : 1.0f);
         }
 
         private void Update()
         {
             // 平滑缩放插值，金币框会作为子物体随之一同缩放
-            if (Mathf.Abs(currentScale - targetScale) > 0.001f)
+            if (Mathf.Abs(_currentScale - _targetScale) > 0.001f)
             {
-                currentScale = Mathf.Lerp(currentScale, targetScale, Time.deltaTime * LerpSpeed);
-                transform.localScale = Vector3.one * currentScale;
+                _currentScale = Mathf.Lerp(_currentScale, _targetScale, Time.deltaTime * LerpSpeed);
+                transform.localScale = Vector3.one * _currentScale;
             }
         }
 
         public void OnPointerEnter(PointerEventData eventData)
         {
-            if (!isAffordable) return;
+            if (!_isAffordable) return;
 
-            isHovered = true;
-            if (!isSelected)
+            _isHovered = true;
+            if (!_isSelected)
             {
-                targetScale = 1.06f;
+                _targetScale = 1.06f;
             }
 
             // 播放悬停音效
-            if (hoverSound != null && Camera.main != null)
+            if (_hoverSound != null && Camera.main != null)
             {
-                AudioSource.PlayClipAtPoint(hoverSound, Camera.main.transform.position);
+                AudioManager.PlaySfxStatic(_hoverSound, Camera.main.transform.position);
             }
 
             TryShowTooltip();
@@ -147,12 +148,12 @@ namespace CGM.UI
 
         public void OnPointerExit(PointerEventData eventData)
         {
-            if (!isAffordable) return;
+            if (!_isAffordable) return;
 
-            isHovered = false;
-            if (!isSelected)
+            _isHovered = false;
+            if (!_isSelected)
             {
-                targetScale = 1.0f;
+                _targetScale = 1.0f;
             }
 
             if (TooltipManager.Instance != null)
@@ -163,12 +164,12 @@ namespace CGM.UI
 
         public void OnPointerClick(PointerEventData eventData)
         {
-            if (!isAffordable) return;
+            if (!_isAffordable) return;
 
             // 播放点击/选中音效
-            if (clickSound != null && Camera.main != null)
+            if (_clickSound != null && Camera.main != null)
             {
-                AudioSource.PlayClipAtPoint(clickSound, Camera.main.transform.position);
+                AudioManager.PlaySfxStatic(_clickSound, Camera.main.transform.position);
             }
 
             if (TooltipManager.Instance != null)
@@ -177,7 +178,7 @@ namespace CGM.UI
             }
 
             // 回调通知总控
-            onClickCallback?.Invoke(this);
+            _onClickCallback?.Invoke(this);
         }
 
         private Color TryParseColor(string hex, Color defaultColor)
@@ -191,33 +192,9 @@ namespace CGM.UI
 
         private void TryShowTooltip()
         {
-            if (TooltipManager.Instance == null || CardInfo == null || CardInfo.effects == null) return;
-
-            System.Text.StringBuilder sb = new System.Text.StringBuilder();
-            int count = 0;
-
-            foreach (var effect in CardInfo.effects)
+            if (TooltipManager.Instance != null && CardInfo != null)
             {
-                if (effect.effectType == "apply_buff" || effect.effectType == "apply_debuff")
-                {
-                    try
-                    {
-                        BuffId buffId = effect.GetBuffId();
-                        var buffInfo = BuffDatabase.Get(buffId);
-                        if (buffInfo != null)
-                        {
-                            if (count > 0) sb.Append("\n\n");
-                            sb.Append($"<color={buffInfo.colorHex}><b>{buffInfo.name}</b></color>\n{buffInfo.description}");
-                            count++;
-                        }
-                    }
-                    catch (System.Exception) { }
-                }
-            }
-
-            if (count > 0)
-            {
-                TooltipManager.Instance.ShowTooltip(sb.ToString(), transform as RectTransform);
+                TooltipManager.Instance.ShowCardEffectsTooltip(CardInfo, transform as RectTransform);
             }
         }
     }

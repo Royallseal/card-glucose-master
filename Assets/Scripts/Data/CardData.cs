@@ -6,6 +6,7 @@
 
 using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace CGM.Data
 {
@@ -80,34 +81,109 @@ namespace CGM.Data
     }
 
     /// <summary>
+    /// 描述框数据实体定义（对应 tooltips.json 中的单个对象）。
+    /// </summary>
+    [System.Serializable]
+    public class TooltipInfo
+    {
+        public string id;
+        public string name;
+        public string description;
+        public string colorHex;
+        public bool isDebuff;
+        public string spritePath;
+    }
+
+    /// <summary>
+    /// 描述框数据包装类。
+    /// </summary>
+    [System.Serializable]
+    public class TooltipDataWrapper
+    {
+        public List<TooltipInfo> tooltips = new List<TooltipInfo>();
+    }
+
+    /// <summary>
     /// 状态静态数据库，定义所有 Buff/Debuff 的名称、说明及高亮颜色。
     /// </summary>
     public static class BuffDatabase
     {
-        private static readonly Dictionary<BuffId, BuffInfo> Registry = new Dictionary<BuffId, BuffInfo>
-        {
-            { BuffId.Vitality, new BuffInfo(BuffId.Vitality, "活力", "每层使打出的攻击卡伤害 +1（可为负数）。", "#4EC9B0", false) },
-            { BuffId.Endurance, new BuffInfo(BuffId.Endurance, "耐力", "每层使打出的防守卡格挡值 +1（可为负数）。", "#4EC9B0", false) },
-            { BuffId.Fragility, new BuffInfo(BuffId.Fragility, "脆弱", "受到伤害时，受到的伤害提升 50%。每回合结束层数 -1。", "#FF6B6B", true) },
-            { BuffId.Lethargy, new BuffInfo(BuffId.Lethargy, "乏力", "造成伤害时，输出的伤害降低 25%。每回合结束层数 -1。", "#FF6B6B", true) },
-            { BuffId.Stiffness, new BuffInfo(BuffId.Stiffness, "僵硬", "获得格挡时，获得的格挡值降低 25%。每回合结束层数 -1。", "#FF6B6B", true) },
-            { BuffId.SlowRelease, new BuffInfo(BuffId.SlowRelease, "缓释", "抵消下一张膳食卡的血糖上升效果。触发后消耗 1 层。", "#FFAD1F", false) },
-            { BuffId.Sensitivity, new BuffInfo(BuffId.Sensitivity, "敏化", "使下一张药物卡的降糖效果翻倍。触发后消耗 1 层。", "#FFAD1F", false) }
-        };
+        private static Dictionary<BuffId, BuffInfo> _registry;
+        private static Dictionary<string, TooltipInfo> _rawTooltips;
+        private static readonly Dictionary<string, BuffId> _nameToIdMap = new Dictionary<string, BuffId>();
 
-        private static readonly Dictionary<string, BuffId> NameToIdMap = new Dictionary<string, BuffId>();
-
-        static BuffDatabase()
+        /// <summary>
+        /// 懒加载配置的 JSON 状态描述数据。
+        /// </summary>
+        public static void LoadIfNeeded()
         {
-            foreach (var kvp in Registry)
+            if (_registry != null) return;
+
+            _registry = new Dictionary<BuffId, BuffInfo>();
+            _rawTooltips = new Dictionary<string, TooltipInfo>();
+            _nameToIdMap.Clear();
+
+            TextAsset jsonAsset = UnityEngine.Resources.Load<TextAsset>("Configs/tooltips");
+            if (jsonAsset == null)
             {
-                NameToIdMap[kvp.Value.name] = kvp.Key;
+                UnityEngine.Debug.LogError("[BuffDatabase] 未找到描述框数据文件 Resources/Configs/tooltips.json，使用硬编码兜底。");
+                LoadFallbackRegistry();
+                return;
+            }
+
+            TooltipDataWrapper wrapper = UnityEngine.JsonUtility.FromJson<TooltipDataWrapper>(jsonAsset.text);
+            if (wrapper == null || wrapper.tooltips == null)
+            {
+                UnityEngine.Debug.LogError("[BuffDatabase] 描述框数据反序列化失败，使用硬编码兜底。");
+                LoadFallbackRegistry();
+                return;
+            }
+
+            foreach (var t in wrapper.tooltips)
+            {
+                _rawTooltips[t.id] = t;
+
+                if (System.Enum.TryParse<BuffId>(t.id, true, out var buffId))
+                {
+                    _registry[buffId] = new BuffInfo(buffId, t.name, t.description, t.colorHex, t.isDebuff);
+                    _nameToIdMap[t.name] = buffId;
+                }
+            }
+        }
+
+        private static void LoadFallbackRegistry()
+        {
+            _registry = new Dictionary<BuffId, BuffInfo>
+            {
+                { BuffId.Vitality, new BuffInfo(BuffId.Vitality, "活力", "每层使打出的攻击卡伤害 +1（可为负数）。", "#4EC9B0", false) },
+                { BuffId.Endurance, new BuffInfo(BuffId.Endurance, "耐力", "每层使打出的防守卡格挡值 +1（可为负数）。", "#4EC9B0", false) },
+                { BuffId.Fragility, new BuffInfo(BuffId.Fragility, "脆弱", "受到伤害时，受到的伤害提升 50%。每回合结束层数 -1。", "#FF6B6B", true) },
+                { BuffId.Lethargy, new BuffInfo(BuffId.Lethargy, "乏力", "造成伤害时，输出的伤害降低 25%。每回合结束层数 -1。", "#FF6B6B", true) },
+                { BuffId.Stiffness, new BuffInfo(BuffId.Stiffness, "僵硬", "获得格挡时，获得的格挡值降低 25%。每回合结束层数 -1。", "#FF6B6B", true) },
+                { BuffId.SlowRelease, new BuffInfo(BuffId.SlowRelease, "缓释", "抵消下一张膳食卡的血糖上升效果。触发后消耗 1 层。", "#FFAD1F", false) },
+                { BuffId.Sensitivity, new BuffInfo(BuffId.Sensitivity, "敏化", "使下一张药物卡的降糖效果翻倍。触发后消耗 1 层。", "#FFAD1F", false) }
+            };
+
+            foreach (var kvp in _registry)
+            {
+                _nameToIdMap[kvp.Value.name] = kvp.Key;
             }
         }
 
         public static BuffInfo Get(BuffId id)
         {
-            if (Registry.TryGetValue(id, out var info))
+            LoadIfNeeded();
+            if (_registry.TryGetValue(id, out var info))
+            {
+                return info;
+            }
+            return null;
+        }
+
+        public static TooltipInfo GetRawTooltip(string rawId)
+        {
+            LoadIfNeeded();
+            if (_rawTooltips != null && _rawTooltips.TryGetValue(rawId, out var info))
             {
                 return info;
             }
@@ -116,12 +192,14 @@ namespace CGM.Data
 
         public static bool TryGetIdByName(string name, out BuffId id)
         {
-            return NameToIdMap.TryGetValue(name, out id);
+            LoadIfNeeded();
+            return _nameToIdMap.TryGetValue(name, out id);
         }
 
         public static IEnumerable<BuffInfo> GetAllBuffs()
         {
-            return Registry.Values;
+            LoadIfNeeded();
+            return _registry.Values;
         }
 
         /// <summary>
@@ -129,6 +207,13 @@ namespace CGM.Data
         /// </summary>
         public static string GetSpritePath(BuffId id)
         {
+            LoadIfNeeded();
+            string key = id.ToString().ToLower();
+            if (_rawTooltips != null && _rawTooltips.TryGetValue(key, out var t) && !string.IsNullOrEmpty(t.spritePath))
+            {
+                return t.spritePath;
+            }
+
             switch (id)
             {
                 case BuffId.Vitality:    return "Sprites/UI/Icons/buff_vitality";

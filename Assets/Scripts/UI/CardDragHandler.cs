@@ -40,7 +40,7 @@ namespace CGM.UI
         private bool _isDragging;
 
         // Hover 悬停动效配置
-        private static bool IsAnyCardDragging = false; // 静态全局变量，用于在任何卡牌处于拖拽时屏蔽其他卡牌的 Hover
+        private static bool _isAnyCardDragging = false; // 静态全局变量，用于在任何卡牌处于拖拽时屏蔽其他卡牌的 Hover
         private Canvas _canvasComponent;
         private bool _isHovered;
         private bool _hasInitializedDefaultY;
@@ -51,10 +51,10 @@ namespace CGM.UI
         private const float HoverDuration = 0.15f;   // 缓动时间 (0.15秒)
 
         [Header("展示专用模式")]
-        [SerializeField] private bool isDisplayOnly = false;
+        [SerializeField] private bool _isDisplayOnly = false;
 
-        public void SetDisplayOnly(bool val) { isDisplayOnly = val; }
-        public bool IsDisplayOnly => isDisplayOnly;
+        public void SetDisplayOnly(bool val) { _isDisplayOnly = val; }
+        public bool IsDisplayOnly => _isDisplayOnly;
         public CardInfo CardInfo => _cardInfo;
         public void SetCardInfo(CardInfo card) { _cardInfo = card; }
 
@@ -100,7 +100,7 @@ namespace CGM.UI
 
         public void OnBeginDrag(PointerEventData eventData)
         {
-            if (isDisplayOnly) return;
+            if (_isDisplayOnly) return;
             if (_cardInfo == null || _battleController == null) return;
             if (!_battleController.CanPlayCard(_cardInfo)) return;
             if (_handDisplay != null && _handDisplay.IsAnimating) return;
@@ -122,7 +122,7 @@ namespace CGM.UI
             }
 
             _isDragging = true;
-            IsAnyCardDragging = true;
+            _isAnyCardDragging = true;
             _originalPosition = _rectTransform.anchoredPosition;
             _originalParent = _rectTransform.parent;
             _originalSiblingIndex = _rectTransform.GetSiblingIndex();
@@ -143,7 +143,7 @@ namespace CGM.UI
 
         public void OnDrag(PointerEventData eventData)
         {
-            if (isDisplayOnly) return;
+            if (_isDisplayOnly) return;
             if (_dragCloneRect == null) return;
             RectTransformUtility.ScreenPointToLocalPointInRectangle(
                 _canvas.transform as RectTransform, eventData.position, _canvas.worldCamera, out Vector2 localPos);
@@ -167,10 +167,10 @@ namespace CGM.UI
 
         public void OnEndDrag(PointerEventData eventData)
         {
-            if (isDisplayOnly) return;
+            if (_isDisplayOnly) return;
             if (!_isDragging) return;
             _isDragging = false;
-            IsAnyCardDragging = false;
+            _isAnyCardDragging = false;
 
             // 保存克隆引用，稍后决定动画
             var clone = _dragClone;
@@ -298,10 +298,10 @@ namespace CGM.UI
 
         public void OnHoverEnter(PointerEventData eventData)
         {
-            if (IsAnyCardDragging) return;
+            if (_isAnyCardDragging) return;
             if (_isDragging || _cardInfo == null) return;
 
-            if (!isDisplayOnly)
+            if (!_isDisplayOnly)
             {
                 if (_battleController == null || !_battleController.CanPlayCard(_cardInfo)) return;
             }
@@ -319,7 +319,7 @@ namespace CGM.UI
             if (cardHoverSound != null)
             {
                 Vector3 pos = Camera.main != null ? Camera.main.transform.position : transform.position;
-                AudioSource.PlayClipAtPoint(cardHoverSound, pos, 0.8f);
+                CGM.Core.AudioManager.PlaySfxStatic(cardHoverSound, pos);
             }
 
             // 启用渲染层置顶，利用 Sub-Canvas 的 overrideSorting 保证它叠在左右邻近卡牌上方而不影响 Layout 排版顺序
@@ -394,33 +394,9 @@ namespace CGM.UI
 
         private void TryShowTooltip()
         {
-            if (TooltipManager.Instance == null || _cardInfo == null || _cardInfo.effects == null) return;
-
-            System.Text.StringBuilder sb = new System.Text.StringBuilder();
-            int count = 0;
-
-            foreach (var effect in _cardInfo.effects)
+            if (TooltipManager.Instance != null && _cardInfo != null)
             {
-                if (effect.effectType == "apply_buff" || effect.effectType == "apply_debuff")
-                {
-                    try
-                    {
-                        BuffId buffId = effect.GetBuffId();
-                        var buffInfo = BuffDatabase.Get(buffId);
-                        if (buffInfo != null)
-                        {
-                            if (count > 0) sb.Append("\n\n");
-                            sb.Append($"<color={buffInfo.colorHex}><b>{buffInfo.name}</b></color>\n{buffInfo.description}");
-                            count++;
-                        }
-                    }
-                    catch (System.Exception) { }
-                }
-            }
-
-            if (count > 0)
-            {
-                TooltipManager.Instance.ShowTooltip(sb.ToString(), transform as RectTransform);
+                TooltipManager.Instance.ShowCardEffectsTooltip(_cardInfo, transform as RectTransform);
             }
         }
     }

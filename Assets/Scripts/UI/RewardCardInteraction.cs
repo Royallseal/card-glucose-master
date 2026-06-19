@@ -3,6 +3,7 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using CGM.Data;
+using CGM.Core;
 
 namespace CGM.UI
 {
@@ -12,32 +13,33 @@ namespace CGM.UI
     public class RewardCardInteraction : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerClickHandler
     {
         public CardInfo CardInfo { get; private set; }
-        private bool isSelected = false;
-        private Vector3 originalScale;
-        private Coroutine scaleCoroutine;
-        private Action<RewardCardInteraction> onClickCallback;
+        
+        private bool _isSelected = false;
+        private Vector3 _originalScale;
+        private Coroutine _scaleCoroutine;
+        private Action<RewardCardInteraction> _onClickCallback;
 
         private const float HoverScale = 1.12f;
         private const float SelectedScale = 1.15f;
         private const float LerpDuration = 0.12f;
 
-        private Canvas canvasComponent;
+        private Canvas _canvasComponent;
 
         public void Initialize(CardInfo card, Action<RewardCardInteraction> onClick)
         {
             CardInfo = card;
-            onClickCallback = onClick;
-            isSelected = false;
-            originalScale = Vector3.one;
-            transform.localScale = originalScale;
+            _onClickCallback = onClick;
+            _isSelected = false;
+            _originalScale = Vector3.one;
+            transform.localScale = _originalScale;
 
             // 动态挂载 Sub-Canvas 确保层级置顶，表现同手卡 Hover 置顶效果一致
-            canvasComponent = GetComponent<Canvas>();
-            if (canvasComponent == null)
+            _canvasComponent = GetComponent<Canvas>();
+            if (_canvasComponent == null)
             {
-                canvasComponent = gameObject.AddComponent<Canvas>();
+                _canvasComponent = gameObject.AddComponent<Canvas>();
             }
-            canvasComponent.overrideSorting = false;
+            _canvasComponent.overrideSorting = false;
 
             if (GetComponent<UnityEngine.UI.GraphicRaycaster>() == null)
             {
@@ -47,13 +49,13 @@ namespace CGM.UI
 
         public void OnPointerEnter(PointerEventData eventData)
         {
-            if (isSelected) return;
-            StartScaleLerp(originalScale * HoverScale);
+            if (_isSelected) return;
+            StartScaleLerp(_originalScale * HoverScale);
             
-            if (canvasComponent != null)
+            if (_canvasComponent != null)
             {
-                canvasComponent.overrideSorting = true;
-                canvasComponent.sortingOrder = 35;
+                _canvasComponent.overrideSorting = true;
+                _canvasComponent.sortingOrder = 35;
             }
 
             // 播放卡牌 Hover 音效
@@ -61,7 +63,7 @@ namespace CGM.UI
             if (cardHoverSound != null)
             {
                 Vector3 pos = Camera.main != null ? Camera.main.transform.position : transform.position;
-                AudioSource.PlayClipAtPoint(cardHoverSound, pos, 0.8f);
+                AudioManager.PlaySfxStatic(cardHoverSound, pos);
             }
 
             TryShowTooltip();
@@ -69,12 +71,12 @@ namespace CGM.UI
 
         public void OnPointerExit(PointerEventData eventData)
         {
-            if (isSelected) return;
-            StartScaleLerp(originalScale);
+            if (_isSelected) return;
+            StartScaleLerp(_originalScale);
 
-            if (canvasComponent != null)
+            if (_canvasComponent != null)
             {
-                canvasComponent.overrideSorting = false;
+                _canvasComponent.overrideSorting = false;
             }
 
             if (TooltipManager.Instance != null)
@@ -85,42 +87,42 @@ namespace CGM.UI
 
         public void OnPointerClick(PointerEventData eventData)
         {
-            if (isSelected) return;
+            if (_isSelected) return;
 
             if (TooltipManager.Instance != null)
             {
                 TooltipManager.Instance.HideTooltip();
             }
 
-            onClickCallback?.Invoke(this);
+            _onClickCallback?.Invoke(this);
         }
 
         public void SetSelected(bool selected)
         {
-            isSelected = selected;
-            if (isSelected)
+            _isSelected = selected;
+            if (_isSelected)
             {
-                StartScaleLerp(originalScale * SelectedScale);
-                if (canvasComponent != null)
+                StartScaleLerp(_originalScale * SelectedScale);
+                if (_canvasComponent != null)
                 {
-                    canvasComponent.overrideSorting = true;
-                    canvasComponent.sortingOrder = 40; // 选中的卡片拥有最高绘制层级，盖在其它卡片上方
+                    _canvasComponent.overrideSorting = true;
+                    _canvasComponent.sortingOrder = 40; // 选中的卡片拥有最高绘制层级，盖在其它卡片上方
                 }
             }
             else
             {
-                StartScaleLerp(originalScale);
-                if (canvasComponent != null)
+                StartScaleLerp(_originalScale);
+                if (_canvasComponent != null)
                 {
-                    canvasComponent.overrideSorting = false;
+                    _canvasComponent.overrideSorting = false;
                 }
             }
         }
 
         private void StartScaleLerp(Vector3 target)
         {
-            if (scaleCoroutine != null) StopCoroutine(scaleCoroutine);
-            scaleCoroutine = StartCoroutine(ScaleRoutine(target));
+            if (_scaleCoroutine != null) StopCoroutine(_scaleCoroutine);
+            _scaleCoroutine = StartCoroutine(ScaleRoutine(target));
         }
 
         private IEnumerator ScaleRoutine(Vector3 target)
@@ -134,38 +136,14 @@ namespace CGM.UI
                 yield return null;
             }
             transform.localScale = target;
-            scaleCoroutine = null;
+            _scaleCoroutine = null;
         }
 
         private void TryShowTooltip()
         {
-            if (TooltipManager.Instance == null || CardInfo == null || CardInfo.effects == null) return;
-
-            System.Text.StringBuilder sb = new System.Text.StringBuilder();
-            int count = 0;
-
-            foreach (var effect in CardInfo.effects)
+            if (TooltipManager.Instance != null && CardInfo != null)
             {
-                if (effect.effectType == "apply_buff" || effect.effectType == "apply_debuff")
-                {
-                    try
-                    {
-                        BuffId buffId = effect.GetBuffId();
-                        var buffInfo = BuffDatabase.Get(buffId);
-                        if (buffInfo != null)
-                        {
-                            if (count > 0) sb.Append("\n\n");
-                            sb.Append($"<color={buffInfo.colorHex}><b>{buffInfo.name}</b></color>\n{buffInfo.description}");
-                            count++;
-                        }
-                    }
-                    catch (System.Exception) { }
-                }
-            }
-
-            if (count > 0)
-            {
-                TooltipManager.Instance.ShowTooltip(sb.ToString(), transform as RectTransform);
+                TooltipManager.Instance.ShowCardEffectsTooltip(CardInfo, transform as RectTransform);
             }
         }
     }
