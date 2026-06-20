@@ -26,6 +26,11 @@ namespace CGM.UI
         private RectTransform _tooltipRect;
         private RectTransform _currentOwner; // 当前拥有/显示该描述框的 UI 物体
 
+        private GameObject _loreTooltipInstance;
+        private RectTransform _loreTooltipRect;
+        private TextMeshProUGUI _loreTextComponent;
+        private RectTransform _currentLoreOwner;
+
         private void Awake()
         {
             if (Instance != null && Instance != this)
@@ -46,7 +51,7 @@ namespace CGM.UI
                 return;
             }
 
-            // 实例化描述框为 TooltipManager 的子物体
+            // 1. 实例化状态描述框为 TooltipManager 的子物体
             _tooltipInstance = Instantiate(tooltipPrefab, transform);
             _tooltipRect = _tooltipInstance.GetComponent<RectTransform>();
 
@@ -86,6 +91,36 @@ namespace CGM.UI
             }
 
             _tooltipInstance.SetActive(false);
+
+            // 2. 实例化卡牌介绍(Lore)描述框为 TooltipManager 的子物体
+            _loreTooltipInstance = Instantiate(tooltipPrefab, transform);
+            _loreTooltipRect = _loreTooltipInstance.GetComponent<RectTransform>();
+
+            Canvas canvas2 = _loreTooltipInstance.GetComponent<Canvas>();
+            if (canvas2 == null)
+            {
+                canvas2 = _loreTooltipInstance.AddComponent<Canvas>();
+            }
+            canvas2.overrideSorting = true;
+            canvas2.sortingOrder = 100;
+
+            CanvasGroup cg2 = _loreTooltipInstance.GetComponent<CanvasGroup>();
+            if (cg2 == null)
+            {
+                cg2 = _loreTooltipInstance.AddComponent<CanvasGroup>();
+            }
+            cg2.blocksRaycasts = false;
+
+            _loreTextComponent = _loreTooltipInstance.GetComponentInChildren<TextMeshProUGUI>();
+
+            if (_loreTooltipRect != null)
+            {
+                _loreTooltipRect.anchorMin = new Vector2(0.5f, 0.5f);
+                _loreTooltipRect.anchorMax = new Vector2(0.5f, 0.5f);
+                _loreTooltipRect.pivot = new Vector2(0.5f, 0.5f);
+            }
+
+            _loreTooltipInstance.SetActive(false);
         }
 
         /// <summary>
@@ -201,7 +236,19 @@ namespace CGM.UI
         /// <param name="targetRect">被悬停 UI 物体的 RectTransform</param>
         public void ShowCardEffectsTooltip(CGM.Data.CardInfo cardInfo, RectTransform targetRect)
         {
-            if (cardInfo == null || cardInfo.effects == null) return;
+            string statusText = GetCardEffectsTooltipText(cardInfo);
+            if (!string.IsNullOrEmpty(statusText))
+            {
+                ShowTooltip(statusText, targetRect);
+            }
+        }
+
+        /// <summary>
+        /// 获取卡牌所含 Buff/Debuff 的描述框富文本内容。
+        /// </summary>
+        public string GetCardEffectsTooltipText(CGM.Data.CardInfo cardInfo)
+        {
+            if (cardInfo == null || cardInfo.effects == null) return "";
 
             System.Text.StringBuilder sb = new System.Text.StringBuilder();
             int count = 0;
@@ -225,9 +272,215 @@ namespace CGM.UI
                 }
             }
 
-            if (count > 0)
+            return sb.ToString();
+        }
+
+        /// <summary>
+        /// 仅显示卡牌的 Lore/介绍描述框。
+        /// </summary>
+        public void ShowLoreTooltip(string content, RectTransform targetRect)
+        {
+            transform.SetAsLastSibling();
+
+            if (_loreTooltipInstance == null || _loreTextComponent == null || targetRect == null)
             {
-                ShowTooltip(sb.ToString(), targetRect);
+                return;
+            }
+
+            _currentLoreOwner = targetRect;
+            _loreTextComponent.text = content;
+            _loreTooltipInstance.SetActive(true);
+
+            Canvas.ForceUpdateCanvases();
+            LayoutRebuilder.ForceRebuildLayoutImmediate(_loreTooltipRect);
+
+            Canvas canvas = targetRect.GetComponentInParent<Canvas>();
+            Camera uiCamera = null;
+            if (canvas != null && canvas.renderMode != RenderMode.ScreenSpaceOverlay)
+            {
+                uiCamera = canvas.worldCamera;
+            }
+
+            Vector3[] targetWorldCorners = new Vector3[4];
+            targetRect.GetWorldCorners(targetWorldCorners);
+
+            Vector2[] targetScreenCorners = new Vector2[4];
+            for (int i = 0; i < 4; i++)
+            {
+                targetScreenCorners[i] = RectTransformUtility.WorldToScreenPoint(uiCamera, targetWorldCorners[i]);
+            }
+
+            Vector2 targetCenterScreen = (targetScreenCorners[0] + targetScreenCorners[2]) / 2f;
+            float tooltipWidth = _loreTooltipRect.rect.width * _loreTooltipRect.lossyScale.x;
+            float tooltipHeight = _loreTooltipRect.rect.height * _loreTooltipRect.lossyScale.y;
+
+            Vector2 screenPos = targetCenterScreen;
+            screenPos.x = targetScreenCorners[2].x + (tooltipWidth / 2f) + padding;
+
+            if (screenPos.x + (tooltipWidth / 2f) > Screen.width)
+            {
+                screenPos.x = targetScreenCorners[0].x - (tooltipWidth / 2f) - padding;
+            }
+
+            float minY = (tooltipHeight / 2f) + padding;
+            float maxY = Screen.height - (tooltipHeight / 2f) - padding;
+            screenPos.y = Mathf.Clamp(screenPos.y, minY, maxY);
+
+            float minX = (tooltipWidth / 2f) + padding;
+            float maxX = Screen.width - (tooltipWidth / 2f) - padding;
+            screenPos.x = Mathf.Clamp(screenPos.x, minX, maxX);
+
+            Vector3 worldPos;
+            if (RectTransformUtility.ScreenPointToWorldPointInRectangle(_loreTooltipRect, screenPos, uiCamera, out worldPos))
+            {
+                _loreTooltipRect.position = worldPos;
+            }
+        }
+
+        /// <summary>
+        /// 同时显示卡牌的 Lore/介绍描述框 与 Buff状态 描述框，并智能排版（优先同侧上下排列，若超出屏幕则左右分立）。
+        /// </summary>
+        public void ShowDualTooltips(string loreContent, string statusContent, RectTransform targetRect)
+        {
+            transform.SetAsLastSibling();
+
+            if (_tooltipInstance == null || textComponent == null ||
+                _loreTooltipInstance == null || _loreTextComponent == null || targetRect == null)
+            {
+                return;
+            }
+
+            _currentOwner = targetRect;
+            _currentLoreOwner = targetRect;
+
+            textComponent.text = statusContent;
+            _loreTextComponent.text = loreContent;
+
+            _tooltipInstance.SetActive(true);
+            _loreTooltipInstance.SetActive(true);
+
+            Canvas.ForceUpdateCanvases();
+            LayoutRebuilder.ForceRebuildLayoutImmediate(_tooltipRect);
+            LayoutRebuilder.ForceRebuildLayoutImmediate(_loreTooltipRect);
+
+            Canvas canvas = targetRect.GetComponentInParent<Canvas>();
+            Camera uiCamera = null;
+            if (canvas != null && canvas.renderMode != RenderMode.ScreenSpaceOverlay)
+            {
+                uiCamera = canvas.worldCamera;
+            }
+
+            Vector3[] targetWorldCorners = new Vector3[4];
+            targetRect.GetWorldCorners(targetWorldCorners);
+
+            Vector2[] targetScreenCorners = new Vector2[4];
+            for (int i = 0; i < 4; i++)
+            {
+                targetScreenCorners[i] = RectTransformUtility.WorldToScreenPoint(uiCamera, targetWorldCorners[i]);
+            }
+
+            Vector2 targetCenterScreen = (targetScreenCorners[0] + targetScreenCorners[2]) / 2f;
+
+            float w1 = _loreTooltipRect.rect.width * _loreTooltipRect.lossyScale.x;
+            float h1 = _loreTooltipRect.rect.height * _loreTooltipRect.lossyScale.y;
+
+            float w2 = _tooltipRect.rect.width * _tooltipRect.lossyScale.x;
+            float h2 = _tooltipRect.rect.height * _tooltipRect.lossyScale.y;
+
+            // 优先在右侧，放不下则放左侧
+            float maxW = Mathf.Max(w1, w2);
+            float preferredX;
+            bool isRight = true;
+
+            if (targetScreenCorners[2].x + maxW + padding > Screen.width)
+            {
+                preferredX = targetScreenCorners[0].x - padding;
+                isRight = false;
+            }
+            else
+            {
+                preferredX = targetScreenCorners[2].x + padding;
+            }
+
+            float totalHeight = h1 + h2 + padding;
+            float verticalAvailable = Screen.height - 2f * padding;
+
+            if (totalHeight <= verticalAvailable)
+            {
+                // === 方案 A：同侧上下排列（优先） ===
+                float gap = padding;
+                
+                float idealY1 = targetCenterScreen.y + h1 / 2f + gap / 2f;
+                float idealY2 = targetCenterScreen.y - h2 / 2f - gap / 2f;
+
+                if (idealY1 + h1 / 2f > Screen.height - padding)
+                {
+                    float overflow = (idealY1 + h1 / 2f) - (Screen.height - padding);
+                    idealY1 -= overflow;
+                    idealY2 -= overflow;
+                }
+                if (idealY2 - h2 / 2f < padding)
+                {
+                    float underflow = padding - (idealY2 - h2 / 2f);
+                    idealY1 += underflow;
+                    idealY2 += underflow;
+                }
+
+                float xOffset1 = isRight ? preferredX + w1 / 2f : preferredX - w1 / 2f;
+                float xOffset2 = isRight ? preferredX + w2 / 2f : preferredX - w2 / 2f;
+
+                Vector2 pos1 = new Vector2(xOffset1, idealY1);
+                Vector2 pos2 = new Vector2(xOffset2, idealY2);
+
+                Vector3 wpos1, wpos2;
+                if (RectTransformUtility.ScreenPointToWorldPointInRectangle(_loreTooltipRect, pos1, uiCamera, out wpos1))
+                {
+                    _loreTooltipRect.position = wpos1;
+                }
+                if (RectTransformUtility.ScreenPointToWorldPointInRectangle(_tooltipRect, pos2, uiCamera, out wpos2))
+                {
+                    _tooltipRect.position = wpos2;
+                }
+            }
+            else
+            {
+                // === 方案 B：左右分立排列（备选） ===
+                float x1 = targetScreenCorners[0].x - w1 / 2f - padding;
+                float x2 = targetScreenCorners[2].x + w2 / 2f + padding;
+
+                float y1 = Mathf.Clamp(targetCenterScreen.y, h1 / 2f + padding, Screen.height - h1 / 2f - padding);
+                float y2 = Mathf.Clamp(targetCenterScreen.y, h2 / 2f + padding, Screen.height - h2 / 2f - padding);
+
+                Vector2 pos1 = new Vector2(x1, y1);
+                Vector2 pos2 = new Vector2(x2, y2);
+
+                Vector3 wpos1, wpos2;
+                if (RectTransformUtility.ScreenPointToWorldPointInRectangle(_loreTooltipRect, pos1, uiCamera, out wpos1))
+                {
+                    _loreTooltipRect.position = wpos1;
+                }
+                if (RectTransformUtility.ScreenPointToWorldPointInRectangle(_tooltipRect, pos2, uiCamera, out wpos2))
+                {
+                    _tooltipRect.position = wpos2;
+                }
+            }
+        }
+
+        public void HideLoreTooltip()
+        {
+            if (_loreTooltipInstance != null)
+            {
+                _loreTooltipInstance.SetActive(false);
+                _currentLoreOwner = null;
+            }
+        }
+
+        public void HideLoreTooltip(RectTransform targetRect)
+        {
+            if (_loreTooltipInstance != null && _currentLoreOwner == targetRect)
+            {
+                _loreTooltipInstance.SetActive(false);
+                _currentLoreOwner = null;
             }
         }
     }

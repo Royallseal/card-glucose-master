@@ -291,7 +291,7 @@ namespace CGM.UI
                     desc = desc.Replace("{DP}", _battleController.DiscardPile.Count.ToString());
                 }
             }
-            else if (tooltipId == "hp")
+            else if (tooltipId == "hp" || tooltipId == "enemy_hp")
             {
                 EntityStats entity = GetComponentInParent<EntityStats>();
                 if (entity != null)

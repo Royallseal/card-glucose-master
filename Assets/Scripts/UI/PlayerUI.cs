@@ -145,6 +145,7 @@ namespace CGM.UI
                 // 应用状态对应颜色
                 if (img != null)
                 {
+                    img.raycastTarget = true; // 确保可被射线检测以触发悬停
                     var info = BuffDatabase.Get(id);
                     if (info != null && ColorUtility.TryParseHtmlString(info.colorHex, out Color c))
                         img.color = c;

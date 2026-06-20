@@ -69,6 +69,15 @@ namespace CGM.UI
             var btn = GetComponent<UnityEngine.UI.Button>();
             if (btn != null && !btn.interactable) return;
 
+            // 动态捕获当前非零缩放，防止入场动画/缩放过程中缓存错误（0 缩放）
+            if (_scaleCoroutine == null && _targetTransform != null)
+            {
+                if (_targetTransform.localScale != Vector3.zero)
+                {
+                    _originalScale = _targetTransform.localScale;
+                }
+            }
+
             StartScaleLerp(_originalScale * _hoverScale);
             PlayHoverSound();
         }
@@ -143,6 +152,14 @@ namespace CGM.UI
         {
             _hoverSound = sound;
             _hoverScale = scale;
+            if (_targetTransform == null)
+            {
+                _targetTransform = transform;
+            }
+            if (_targetTransform != null && _targetTransform.localScale != Vector3.zero)
+            {
+                _originalScale = _targetTransform.localScale;
+            }
         }
     }
 }

@@ -115,6 +115,14 @@ namespace CGM.UI
                 trigger.Setup("hp");
             }
 
+            if (goldValueText != null)
+            {
+                goldValueText.raycastTarget = true;
+                var trigger = goldValueText.gameObject.GetComponent<GameplayTooltipTrigger>();
+                if (trigger == null) trigger = goldValueText.gameObject.AddComponent<GameplayTooltipTrigger>();
+                trigger.Setup("gold");
+            }
+
             // 初始化 UI 显示
             UpdateAllUI();
         }

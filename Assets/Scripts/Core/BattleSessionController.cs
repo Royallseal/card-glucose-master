@@ -86,6 +86,7 @@ namespace CGM.Core
         public int CurrentEnergy { get; private set; }
         public int MaxEnergy => startingEnergy;
         public int TurnNumber { get; private set; }
+        public string DefeatReason { get; private set; } = "";
         public IReadOnlyList<CardInfo> Hand => cardPile.Hand;
         public IReadOnlyList<CardInfo> DrawPile => cardPile.DrawPile;
         public IReadOnlyList<CardInfo> DiscardPile => cardPile.DiscardPile;
@@ -168,6 +169,20 @@ namespace CGM.Core
                         Debug.Log($"[Debug] 按 F 键强行抽满并溢出。需抽数: {needed}");
                     }
                 }
+                // 按向上键强行增加血糖 1.0 
+                if (Input.GetKeyDown(KeyCode.UpArrow) && playerStats != null)
+                {
+                    playerStats.SetGlucose(playerStats.CurrentGlucose + 1.0f);
+                    Debug.Log($"[Debug] 按向上方向键强行增加当前血糖 1.0。当前血糖: {playerStats.CurrentGlucose:F1}");
+                    CheckBattleEnd();
+                }
+                // 按向下键强行降低血糖 1.0
+                if (Input.GetKeyDown(KeyCode.DownArrow) && playerStats != null)
+                {
+                    playerStats.SetGlucose(playerStats.CurrentGlucose - 1.0f);
+                    Debug.Log($"[Debug] 按向下方向键强行降低当前血糖 1.0。当前血糖: {playerStats.CurrentGlucose:F1}");
+                    CheckBattleEnd();
+                }
             }
         }
 
@@ -232,6 +247,7 @@ namespace CGM.Core
             cardPile.Reset(startingDeck);
 
             battleEnded = false;
+            DefeatReason = "";
             TurnNumber = 1;
             CurrentEnergy = startingEnergy;
             Phase = BattleTurnPhase.PlayerTurn;
@@ -439,16 +455,18 @@ namespace CGM.Core
             if (playerStats != null)
             {
                 float glucose = playerStats.CurrentGlucose;
-                if (glucose < BattleConstants.GlucoseDeathMin)
+                if (glucose <= BattleConstants.GlucoseDeathMin)
                 {
-                    LogCombat($"[BattleSession] 血糖过低 {glucose:F1} < {BattleConstants.GlucoseDeathMin} —— 血糖缺失！");
+                    DefeatReason = "血糖过低";
+                    LogCombat($"[BattleSession] 血糖过低 {glucose:F1} <= {BattleConstants.GlucoseDeathMin} —— 血糖缺失！");
                     OnStateWarning?.Invoke("血糖过低，生命垂危！");
                     FinishBattle(BattleOutcome.Defeat);
                     return true;
                 }
-                if (glucose > BattleConstants.GlucoseDeathMax)
+                if (glucose >= BattleConstants.GlucoseDeathMax)
                 {
-                    LogCombat($"[BattleSession] 血糖过高 {glucose:F1} > {BattleConstants.GlucoseDeathMax} —— 高血糖危象！");
+                    DefeatReason = "血糖过高";
+                    LogCombat($"[BattleSession] 血糖过高 {glucose:F1} >= {BattleConstants.GlucoseDeathMax} —— 高血糖危象！");
                     OnStateWarning?.Invoke("血糖过高，高血糖危象！");
                     FinishBattle(BattleOutcome.Defeat);
                     return true;
@@ -457,6 +475,7 @@ namespace CGM.Core
 
             if (playerStats != null && playerStats.IsDead)
             {
+                DefeatReason = "血量过低";
                 FinishBattle(BattleOutcome.Defeat);
                 return true;
             }

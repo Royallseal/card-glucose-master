@@ -292,6 +292,9 @@ namespace CGM.UI
                 }
                 dragHandler.SetDisplayOnly(true);
                 dragHandler.SetCardInfo(card);
+                
+                CardsMapMode currentMode = modeHistory.Count > 0 ? modeHistory.Peek() : CardsMapMode.PlayerDeck;
+                dragHandler.ShowLoreTooltip = (currentMode == CardsMapMode.CardLibrary);
 
                 Button cardBtn = cardGo.GetComponent<Button>();
                 if (cardBtn != null)

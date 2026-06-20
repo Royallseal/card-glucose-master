@@ -54,6 +54,7 @@ namespace CGM.UI
 
         [Header("展示专用模式")]
         [SerializeField] private bool _isDisplayOnly = false;
+        public bool ShowLoreTooltip { get; set; }
 
         public void SetDisplayOnly(bool val) { _isDisplayOnly = val; }
         public bool IsDisplayOnly => _isDisplayOnly;
@@ -445,6 +446,7 @@ namespace CGM.UI
             {
                 // 仅在自己是描述框当前的拥有者时，才执行关闭隐藏，防止相互踩踏
                 TooltipManager.Instance.HideTooltip(transform as RectTransform);
+                TooltipManager.Instance.HideLoreTooltip(transform as RectTransform);
             }
         }
 
@@ -527,9 +529,28 @@ namespace CGM.UI
 
         private void TryShowTooltip()
         {
-            if (TooltipManager.Instance != null && _cardInfo != null)
+            if (TooltipManager.Instance == null || _cardInfo == null) return;
+
+            string statusText = TooltipManager.Instance.GetCardEffectsTooltipText(_cardInfo);
+            bool hasStatus = !string.IsNullOrEmpty(statusText);
+
+            if (ShowLoreTooltip && !string.IsNullOrEmpty(_cardInfo.loreDescription))
             {
-                TooltipManager.Instance.ShowCardEffectsTooltip(_cardInfo, transform as RectTransform);
+                string loreTitle = $"<color=#8C5200><b>{_cardInfo.name}</b></color>";
+                string loreContent = $"{loreTitle}\n{_cardInfo.loreDescription}";
+
+                if (hasStatus)
+                {
+                    TooltipManager.Instance.ShowDualTooltips(loreContent, statusText, transform as RectTransform);
+                }
+                else
+                {
+                    TooltipManager.Instance.ShowLoreTooltip(loreContent, transform as RectTransform);
+                }
+            }
+            else if (hasStatus)
+            {
+                TooltipManager.Instance.ShowTooltip(statusText, transform as RectTransform);
             }
         }
     }

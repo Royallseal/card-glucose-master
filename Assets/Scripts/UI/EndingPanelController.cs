@@ -72,7 +72,22 @@ namespace CGM.UI
                     txt = go.GetComponentInChildren<TextMeshProUGUI>();
 
                 if (txt != null)
-                    txt.text = $"<color={line.colorHex}>{line.label}</color>：{line.value}";
+                {
+                    txt.richText = true;
+                    // 强制对齐为 Left，使 <align=right> 标记能将数值推到右边界分栏对齐
+                    txt.alignment = TextAlignmentOptions.Left;
+
+                    if (string.IsNullOrEmpty(line.value))
+                    {
+                        // 这是一个分类小标题或空行
+                        txt.text = line.label;
+                    }
+                    else
+                    {
+                        // 标签靠左，数值靠右，高亮颜色并且加粗显示
+                        txt.text = $"{line.label} <align=right><color={line.colorHex}><b>{line.value}</b></color></align>";
+                    }
+                }
             }
         }
 

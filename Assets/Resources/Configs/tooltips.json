@@ -3,7 +3,7 @@
         {
             "id": "vitality",
             "name": "活力",
-            "description": "每层使打出的攻击卡伤害 +1（可为负数）。",
+            "description": "每层使打出的攻击卡伤害 +1。",
             "colorHex": "#4EC9B0",
             "isDebuff": false,
             "spritePath": "UI/Icons/buff_vitality"
@@ -11,7 +11,7 @@
         {
             "id": "endurance",
             "name": "耐力",
-            "description": "每层使打出的防守卡格挡值 +1（可为负数）。",
+            "description": "每层使打出的防守卡格挡值 +1。",
             "colorHex": "#4EC9B0",
             "isDebuff": false,
             "spritePath": "UI/Icons/buff_endurance"
@@ -19,7 +19,7 @@
         {
             "id": "fragility",
             "name": "脆弱",
-            "description": "受到伤害时，\\n受到的伤害提升 50%。\\n每回合结束层数 -1。",
+            "description": "受到伤害时，\n受到的伤害提升 50%。\n每回合结束层数 -1。",
             "colorHex": "#FF6B6B",
             "isDebuff": true,
             "spritePath": "UI/Icons/debuff_fragility"
@@ -27,7 +27,7 @@
         {
             "id": "lethargy",
             "name": "乏力",
-            "description": "造成伤害时，\\n输出的伤害降低 25%。\\n每回合结束层数 -1。",
+            "description": "造成伤害时，\n输出的伤害降低 25%。\n每回合结束层数 -1。",
             "colorHex": "#FF6B6B",
             "isDebuff": true,
             "spritePath": "UI/Icons/debuff_lethargy"
@@ -35,7 +35,7 @@
         {
             "id": "stiffness",
             "name": "僵硬",
-            "description": "获得格挡时，\\n获得的格挡值降低 25%。\\n每回合结束层数 -1。",
+            "description": "获得格挡时，\n获得的格挡值降低 25%。\n每回合结束层数 -1。",
             "colorHex": "#FF6B6B",
             "isDebuff": true,
             "spritePath": "UI/Icons/debuff_stiffness"
@@ -59,7 +59,7 @@
         {
             "id": "glucose_low",
             "name": "低血糖",
-            "description": "无伤害与格挡修正。\\n若血糖过低将因血糖缺失而立即死亡！",
+            "description": "无伤害与格挡修正。\n若血糖过低将因血糖缺失而立即死亡！",
             "colorHex": "#FFAD1F",
             "isDebuff": false,
             "spritePath": "UI/Icons/intent_status"
@@ -75,7 +75,7 @@
         {
             "id": "glucose_high",
             "name": "高血糖",
-            "description": "打出的所有卡牌伤害与格挡值降低 25%。\\n卡牌带来的血糖变化幅度翻倍。\\n若血糖过高将因高血糖危象而立即死亡！",
+            "description": "打出的所有卡牌伤害与格挡值降低 25%。\n卡牌带来的血糖变化幅度翻倍。\n若血糖过高将因高血糖危象而立即死亡！",
             "colorHex": "#FF6B6B",
             "isDebuff": true,
             "spritePath": "UI/Icons/intent_status"
@@ -91,7 +91,7 @@
         {
             "id": "block_intent",
             "name": "准备防守",
-            "description": "敌人本回合正在防守。\\n下一回合将获得 {B} 点格挡值。",
+            "description": "敌人本回合正在防守。\n下一回合将获得 {B} 点格挡值。",
             "colorHex": "#4EC9B0",
             "isDebuff": false,
             "spritePath": "UI/Icons/intent_block"
@@ -107,7 +107,7 @@
         {
             "id": "glucose_controller",
             "name": "控糖师",
-            "description": "身体生理机能的守护者。\\n作为一名控糖师，致力于在起伏不定的糖分战役中，\\n通过合理膳食、规律运动和药物治疗来维持体内的血糖平衡。",
+            "description": "身体生理机能的守护者。\n作为一名控糖师，致力于在起伏不定的糖分战役中，通过合理膳食、规律运动和药物治疗来维持体内的血糖平衡。",
             "colorHex": "#4EC9B0",
             "isDebuff": false,
             "spritePath": "UI/Icons/player_avatar"
@@ -115,7 +115,7 @@
         {
             "id": "current_block",
             "name": "格挡",
-            "description": "当前拥有的格挡值。\\n在受到伤害时，会优先扣除等额的格挡值。\\n该数值在每个自己的回合开始时会自动清零。",
+            "description": "当前拥有的格挡值。\n在受到伤害时，会优先扣除等额的格挡值。\n该数值在每个自己的回合开始时会自动清零。",
             "colorHex": "#4EC9B0",
             "isDebuff": false,
             "spritePath": "UI/Icons/block_icon"
@@ -123,7 +123,7 @@
         {
             "id": "energy",
             "name": "能量",
-            "description": "当前可支配的能量：{E} / {M} 点。\\n打出卡牌会消耗对应的能量。\\n每回合开始时会重置至上限。",
+            "description": "当前可支配的能量：{E} / {M} 点。\n打出卡牌会消耗对应的能量。\n每回合开始时会重置至上限。",
             "colorHex": "#FFD700",
             "isDebuff": false,
             "spritePath": "UI/Icons/energy_icon"
@@ -131,7 +131,7 @@
         {
             "id": "end_turn",
             "name": "结束回合",
-            "description": "点击结束当前回合的行动。\\n你将弃置所有未使用的手牌，并将行动权移交给敌人。",
+            "description": "点击结束当前回合的行动。\n你将弃置所有未使用的手牌，并将行动权移交给敌人。",
             "colorHex": "#FFAD1F",
             "isDebuff": false,
             "spritePath": "UI/Icons/end_turn"
@@ -139,7 +139,7 @@
         {
             "id": "draw_pile",
             "name": "抽牌堆",
-            "description": "战斗中等待抽入手的卡牌堆。\\n每当需要抽牌时，卡牌将从该牌堆顶部移入手牌。\\n当前剩余卡牌数：{D} 张。\\n当前手牌：{H}/{C} 张。\\n若手牌已满，溢出的卡牌将自动进入弃牌堆。",
+            "description": "战斗中等待抽入手的卡牌堆。\n每当需要抽牌时，卡牌将从该牌堆顶部移入手牌。\n当前剩余卡牌数：{D} 张。\n当前手牌：{H}/{C} 张。\n若手牌已满，溢出的卡牌将自动进入弃牌堆。",
             "colorHex": "#7EC8F8",
             "isDebuff": false,
             "spritePath": "UI/Icons/draw_pile"
@@ -147,7 +147,7 @@
         {
             "id": "discard_pile",
             "name": "弃牌堆",
-            "description": "存放本回合已使用或弃置卡牌的牌堆。\\n当抽牌堆清空时，弃牌堆的卡牌将重新洗匀并放入抽牌堆。\\n当前剩余卡牌数：{DP} 张。",
+            "description": "存放本回合已使用或弃置卡牌的牌堆。\n当抽牌堆清空时，弃牌堆的卡牌将重新洗匀并放入抽牌堆。\n当前剩余卡牌数：{DP} 张。",
             "colorHex": "#FF7676",
             "isDebuff": false,
             "spritePath": "UI/Icons/discard_pile"
@@ -155,7 +155,15 @@
         {
             "id": "hp",
             "name": "生命值",
-            "description": "当前血量：{H} / {M}。\\n当生命值归零时，本次战斗失败。",
+            "description": "当前血量：{H} / {M}。\n当生命值归零时，本次战斗失败。",
+            "colorHex": "#FF6B6B",
+            "isDebuff": false,
+            "spritePath": "UI/Icons/hp_bar"
+        },
+        {
+            "id": "enemy_hp",
+            "name": "生命值",
+            "description": "当前血量：{H} / {M}。\n当敌人的生命值归零时，你将获得本次战斗的胜利。",
             "colorHex": "#FF6B6B",
             "isDebuff": false,
             "spritePath": "UI/Icons/hp_bar"
@@ -175,6 +183,22 @@
             "colorHex": "#FFAD1F",
             "isDebuff": false,
             "spritePath": "UI/Icons/settings_button"
+        },
+        {
+            "id": "gold",
+            "name": "金币",
+            "description": "金币可以在商店中购买更强力的卡牌。",
+            "colorHex": "#FFD700",
+            "isDebuff": false,
+            "spritePath": "UI/Icons/gold_icon"
+        },
+        {
+            "id": "turn",
+            "name": "回合",
+            "description": "战斗以回合制进行。\n一个完整的回合包含你的行动回合以及敌人的行动回合。\n在你的回合中可以规划并打出卡牌，结束回合后轮到敌人行动。",
+            "colorHex": "#FFAD1F",
+            "isDebuff": false,
+            "spritePath": "UI/Icons/end_turn"
         }
     ]
 }

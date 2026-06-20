@@ -69,7 +69,7 @@ namespace CGM.UI
             {
                 var trigger = hpSlider.gameObject.GetComponent<GameplayTooltipTrigger>();
                 if (trigger == null) trigger = hpSlider.gameObject.AddComponent<GameplayTooltipTrigger>();
-                trigger.Setup("hp");
+                trigger.Setup("enemy_hp");
             }
             if (blockContainer != null)
             {
@@ -189,6 +189,20 @@ namespace CGM.UI
                     "debuff" => "status_intent",
                     _ => ""
                 });
+                
+                // 确保意图元素接收射线以触发悬停
+                if (intentIcon != null) intentIcon.raycastTarget = true;
+                
+                var containerImg = intentContainer.GetComponent<Image>();
+                if (containerImg == null)
+                {
+                    // 动态添加透明的 Image，确保整个意图容器可以响应射线从而显示描述框
+                    containerImg = intentContainer.AddComponent<Image>();
+                    containerImg.color = new Color(0f, 0f, 0f, 0f);
+                }
+                containerImg.raycastTarget = true;
+                
+                if (intentValueText != null) intentValueText.raycastTarget = true;
             }
 
             switch (intent.actionType)
@@ -265,6 +279,7 @@ namespace CGM.UI
                 // 应用状态对应颜色
                 if (img != null)
                 {
+                    img.raycastTarget = true; // 确保可被射线检测以触发悬停
                     var info = BuffDatabase.Get(id);
                     if (info != null && ColorUtility.TryParseHtmlString(info.colorHex, out Color c))
                         img.color = c;

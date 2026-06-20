@@ -207,6 +207,13 @@ namespace CGM.UI
                 if (trigger == null) trigger = endTurnButton.gameObject.AddComponent<GameplayTooltipTrigger>();
                 trigger.Setup("end_turn");
             }
+            if (roundCountText != null)
+            {
+                roundCountText.raycastTarget = true;
+                var trigger = roundCountText.gameObject.GetComponent<GameplayTooltipTrigger>();
+                if (trigger == null) trigger = roundCountText.gameObject.AddComponent<GameplayTooltipTrigger>();
+                trigger.Setup("turn");
+            }
 
             // 初始刷新一次（如果战斗已经开始）
             OnPhaseChanged(battleController.Phase);
