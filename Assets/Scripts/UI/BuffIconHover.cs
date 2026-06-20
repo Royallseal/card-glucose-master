@@ -24,7 +24,7 @@ namespace CGM.UI
         {
             buffId = id;
             if (descPanel != null) descPanel.SetActive(false);
-            if (TooltipManager.Instance != null) TooltipManager.Instance.HideTooltip();
+            if (TooltipManager.Instance != null) TooltipManager.Instance.HideTooltip(transform as RectTransform);
         }
 
         private void Awake()
@@ -60,7 +60,7 @@ namespace CGM.UI
         {
             if (TooltipManager.Instance != null)
             {
-                TooltipManager.Instance.HideTooltip();
+                TooltipManager.Instance.HideTooltip(transform as RectTransform);
             }
             else if (descPanel != null)
             {

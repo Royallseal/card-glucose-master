@@ -32,7 +32,7 @@ namespace CGM.UI
         {
             if (TooltipManager.Instance != null)
             {
-                TooltipManager.Instance.HideTooltip();
+                TooltipManager.Instance.HideTooltip(transform as RectTransform);
             }
         }
 

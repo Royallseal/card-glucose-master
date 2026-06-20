@@ -19,6 +19,7 @@ namespace CGM.UI
         private Canvas _canvas;
         private CanvasGroup _canvasGroup;
         private RectTransform _rectTransform;
+        private RectTransform _hoverDetectorRect; // Hover 判定区 RectTransform
         private CardUI _cardUI;
         private Vector2 _originalPosition;
         private Transform _originalParent;
@@ -66,6 +67,17 @@ namespace CGM.UI
             _cardUI = GetComponent<CardUI>();
             // 查找父级 Canvas（跳过卡牌自身的 Sub-Canvas）
             _canvas = transform.parent != null ? transform.parent.GetComponentInParent<Canvas>() : GetComponentInParent<Canvas>();
+
+            // 查找专门的 Hover 判定区域 HoverDetector（其大小更接近卡牌的真实视觉边界，避免因外围透明 padding 导致判定重叠）
+            Transform detectorTrans = transform.Find("HoverDetector");
+            if (detectorTrans != null)
+            {
+                _hoverDetectorRect = detectorTrans.GetComponent<RectTransform>();
+            }
+            else
+            {
+                _hoverDetectorRect = _rectTransform;
+            }
         }
 
         private void Start()
@@ -102,6 +114,46 @@ namespace CGM.UI
                 if (c != null) Destroy(c);
                 var gr = GetComponent<GraphicRaycaster>();
                 if (gr != null) Destroy(gr);
+            }
+
+            // 确保 HoverDetector 成为唯一的射线拦截目标，阻止父级大透明框拦截导致误进入 Hover
+            if (_hoverDetectorRect != null && _hoverDetectorRect != _rectTransform)
+            {
+                // 1. 关闭除 HoverDetector（及其子物体）之外的所有 Image/TextMeshProUGUI 的 raycastTarget
+                var images = GetComponentsInChildren<Image>(true);
+                foreach (var img in images)
+                {
+                    if (img.transform == _hoverDetectorRect || img.transform.IsChildOf(_hoverDetectorRect))
+                    {
+                        img.raycastTarget = true;
+                    }
+                    else
+                    {
+                        img.raycastTarget = false;
+                    }
+                }
+
+                var texts = GetComponentsInChildren<TMPro.TextMeshProUGUI>(true);
+                foreach (var txt in texts)
+                {
+                    if (txt.transform == _hoverDetectorRect || txt.transform.IsChildOf(_hoverDetectorRect))
+                    {
+                        txt.raycastTarget = true;
+                    }
+                    else
+                    {
+                        txt.raycastTarget = false;
+                    }
+                }
+
+                // 2. 确保 HoverDetector 本身可以接收射线
+                var hdImage = _hoverDetectorRect.GetComponent<Image>();
+                if (hdImage == null)
+                {
+                    hdImage = _hoverDetectorRect.gameObject.AddComponent<Image>();
+                    hdImage.color = new Color(0, 0, 0, 0);
+                }
+                hdImage.raycastTarget = true;
             }
         }
 
@@ -386,30 +438,30 @@ namespace CGM.UI
 
         private bool IsMouseOverExtendedBounds()
         {
-            if (_canvas == null) return false;
+            if (_canvas == null || _hoverDetectorRect == null) return false;
 
             Vector2 mousePos = Input.mousePosition;
             Camera uiCamera = _canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : _canvas.worldCamera;
-            Vector2 localPosCard;
-            // 将屏幕坐标转换至卡牌自身的本地坐标空间内
-            if (RectTransformUtility.ScreenPointToLocalPointInRectangle(_rectTransform, mousePos, uiCamera, out localPosCard))
+            Vector2 localPosDetector;
+            // 将屏幕坐标转换至 HoverDetector 的本地坐标空间内
+            if (RectTransformUtility.ScreenPointToLocalPointInRectangle(_hoverDetectorRect, mousePos, uiCamera, out localPosDetector))
             {
-                // 边界判断需要乘以 HoverScale (1.15)，使判定边界与放大后的卡牌视觉边界完美契合
-                float scaleFactor = HoverScale;
-                float halfWidth = _rectTransform.rect.width * 0.5f * scaleFactor;
-                float halfHeight = _rectTransform.rect.height * 0.5f * scaleFactor;
+                float halfWidth = _hoverDetectorRect.rect.width * 0.5f;
+                float halfHeight = _hoverDetectorRect.rect.height * 0.5f;
 
                 // 当前 Y 轴相对于默认/静止本地 Y 的偏移量
                 float currentYOffset = _rectTransform.localPosition.y - _defaultLocalY;
+                // 将偏移量转换为相对于 HoverDetector (及卡牌) 缩放后的本地坐标空间偏移
+                float localYOffset = currentYOffset / _rectTransform.localScale.y;
 
-                // 允许的 X 范围就是卡牌当前宽度的范围（由于 localPosCard 已经在卡牌本地空间，所以无需再乘以 scale）
-                bool xOverlap = localPosCard.x >= -halfWidth && localPosCard.x <= halfWidth;
+                // 允许的 X 范围就是 HoverDetector 的宽度范围
+                bool xOverlap = localPosDetector.x >= -halfWidth && localPosDetector.x <= halfWidth;
 
-                // 允许的 Y 范围是：从静止时的最底部（-halfHeight - currentYOffset），到当前的最顶部（halfHeight）
-                float minY = -halfHeight - Mathf.Max(0f, currentYOffset);
-                float maxY = halfHeight - Mathf.Min(0f, currentYOffset);
+                // 允许的 Y 范围是：从静止时的最底部（-halfHeight - localYOffset），到当前的最顶部（halfHeight）
+                float minY = -halfHeight - Mathf.Max(0f, localYOffset);
+                float maxY = halfHeight - Mathf.Min(0f, localYOffset);
 
-                return xOverlap && localPosCard.y >= minY && localPosCard.y <= maxY;
+                return xOverlap && localPosDetector.y >= minY && localPosDetector.y <= maxY;
             }
             return false;
         }
