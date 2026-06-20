@@ -49,6 +49,27 @@ namespace CGM.UI
 
             // 血条只显示，不响应拖拽
             if (hpSlider != null) hpSlider.interactable = false;
+
+            // 绑定生命值、格挡和头像悬停提示
+            if (hpSlider != null)
+            {
+                var trigger = hpSlider.gameObject.GetComponent<GameplayTooltipTrigger>();
+                if (trigger == null) trigger = hpSlider.gameObject.AddComponent<GameplayTooltipTrigger>();
+                trigger.Setup("hp");
+            }
+            if (blockContainer != null)
+            {
+                var trigger = blockContainer.GetComponent<GameplayTooltipTrigger>();
+                if (trigger == null) trigger = blockContainer.AddComponent<GameplayTooltipTrigger>();
+                trigger.Setup("current_block");
+            }
+            Transform playerTrans = transform.Find("Player");
+            if (playerTrans != null)
+            {
+                var trigger = playerTrans.gameObject.GetComponent<GameplayTooltipTrigger>();
+                if (trigger == null) trigger = playerTrans.gameObject.AddComponent<GameplayTooltipTrigger>();
+                trigger.Setup("glucose_controller");
+            }
         }
 
         private void OnDestroy()
@@ -134,9 +155,9 @@ namespace CGM.UI
                 if (txt != null) txt.text = stacks.ToString();
 
                 // 悬停描述
-                var hover = iconGo.GetComponent<BuffIconHover>();
-                if (hover == null) hover = iconGo.AddComponent<BuffIconHover>();
-                hover.Setup(id);
+                var hover = iconGo.GetComponent<GameplayTooltipTrigger>();
+                if (hover == null) hover = iconGo.AddComponent<GameplayTooltipTrigger>();
+                hover.Setup($"buff:{id}");
             }
         }
 

@@ -63,6 +63,26 @@ namespace CGM.UI
             {
                 _cachedPlayer = FindObjectOfType<PlayerStats>();
             }
+
+            // 绑定生命值、格挡和头像悬停提示
+            if (hpSlider != null)
+            {
+                var trigger = hpSlider.gameObject.GetComponent<GameplayTooltipTrigger>();
+                if (trigger == null) trigger = hpSlider.gameObject.AddComponent<GameplayTooltipTrigger>();
+                trigger.Setup("hp");
+            }
+            if (blockContainer != null)
+            {
+                var trigger = blockContainer.GetComponent<GameplayTooltipTrigger>();
+                if (trigger == null) trigger = blockContainer.AddComponent<GameplayTooltipTrigger>();
+                trigger.Setup("current_block");
+            }
+            if (enemyImage != null)
+            {
+                var trigger = enemyImage.gameObject.GetComponent<GameplayTooltipTrigger>();
+                if (trigger == null) trigger = enemyImage.gameObject.AddComponent<GameplayTooltipTrigger>();
+                trigger.Setup("enemy_desc");
+            }
         }
 
         private void OnDestroy()
@@ -157,6 +177,20 @@ namespace CGM.UI
                 _cachedPlayer = FindObjectOfType<PlayerStats>();
             }
 
+            var intentTrigger = intentContainer.GetComponent<GameplayTooltipTrigger>();
+            if (intentTrigger == null) intentTrigger = intentContainer.AddComponent<GameplayTooltipTrigger>();
+            if (intentTrigger != null)
+            {
+                intentTrigger.Setup(intent.actionType switch
+                {
+                    "attack" => "attack_intent",
+                    "block" => "block_intent",
+                    "buff" => "status_intent",
+                    "debuff" => "status_intent",
+                    _ => ""
+                });
+            }
+
             switch (intent.actionType)
             {
                 case "attack":
@@ -245,9 +279,9 @@ namespace CGM.UI
                 }
 
                 // 悬停描述
-                var hover = iconGo.GetComponent<BuffIconHover>();
-                if (hover == null) hover = iconGo.AddComponent<BuffIconHover>();
-                hover.Setup(id);
+                var hover = iconGo.GetComponent<GameplayTooltipTrigger>();
+                if (hover == null) hover = iconGo.AddComponent<GameplayTooltipTrigger>();
+                hover.Setup($"buff:{id}");
             }
         }
 

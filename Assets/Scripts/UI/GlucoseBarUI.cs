@@ -31,6 +31,11 @@ namespace CGM.UI
 
             // 血糖条只显示，不响应拖拽
             if (glucoseSlider != null) glucoseSlider.interactable = false;
+
+            // 绑定血糖悬停提示
+            var trigger = gameObject.GetComponent<GameplayTooltipTrigger>();
+            if (trigger == null) trigger = gameObject.AddComponent<GameplayTooltipTrigger>();
+            trigger.Setup("glucose");
         }
 
         private void OnDestroy()

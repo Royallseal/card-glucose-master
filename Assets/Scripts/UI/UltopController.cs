@@ -64,6 +64,10 @@ namespace CGM.UI
                 var settingHover = settingButton.gameObject.GetComponent<UIHoverButtonEffects>();
                 if (settingHover == null) settingHover = settingButton.gameObject.AddComponent<UIHoverButtonEffects>();
                 settingHover.Setup(Resources.Load<AudioClip>("Audio/Button_Hover"), 1.1f);
+
+                var trigger = settingButton.gameObject.GetComponent<GameplayTooltipTrigger>();
+                if (trigger == null) trigger = settingButton.gameObject.AddComponent<GameplayTooltipTrigger>();
+                trigger.Setup("ui_settings");
             }
 
             // 统一配置卡组按钮的 Hover 特效和音效
@@ -73,6 +77,31 @@ namespace CGM.UI
                 var cardsHover = cardsButtonTrans.gameObject.GetComponent<UIHoverButtonEffects>();
                 if (cardsHover == null) cardsHover = cardsButtonTrans.gameObject.AddComponent<UIHoverButtonEffects>();
                 cardsHover.Setup(Resources.Load<AudioClip>("Audio/Button_Hover"), 1.05f);
+
+                var trigger = cardsButtonTrans.gameObject.GetComponent<GameplayTooltipTrigger>();
+                if (trigger == null) trigger = cardsButtonTrans.gameObject.AddComponent<GameplayTooltipTrigger>();
+                trigger.Setup("ui_deck");
+            }
+
+            if (currentLevelText != null)
+            {
+                var trigger = currentLevelText.gameObject.GetComponent<GameplayTooltipTrigger>();
+                if (trigger == null) trigger = currentLevelText.gameObject.AddComponent<GameplayTooltipTrigger>();
+                trigger.Setup("scene_desc");
+            }
+
+            if (nextLevelText != null)
+            {
+                var trigger = nextLevelText.gameObject.GetComponent<GameplayTooltipTrigger>();
+                if (trigger == null) trigger = nextLevelText.gameObject.AddComponent<GameplayTooltipTrigger>();
+                trigger.Setup("next_scene_desc");
+            }
+
+            if (cgmValueText != null)
+            {
+                var trigger = cgmValueText.gameObject.GetComponent<GameplayTooltipTrigger>();
+                if (trigger == null) trigger = cgmValueText.gameObject.AddComponent<GameplayTooltipTrigger>();
+                trigger.Setup("glucose");
             }
 
             // 初始化 UI 显示

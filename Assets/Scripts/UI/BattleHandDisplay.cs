@@ -180,12 +180,32 @@ namespace CGM.UI
                 var h = drawPileTarget.gameObject.GetComponent<UIHoverButtonEffects>();
                 if (h == null) h = drawPileTarget.gameObject.AddComponent<UIHoverButtonEffects>();
                 h.Setup(Resources.Load<AudioClip>("Audio/Button_Hover"), 1.05f);
+
+                var trigger = drawPileTarget.gameObject.GetComponent<GameplayTooltipTrigger>();
+                if (trigger == null) trigger = drawPileTarget.gameObject.AddComponent<GameplayTooltipTrigger>();
+                trigger.Setup("draw_pile");
             }
             if (discardPileTarget != null)
             {
                 var h = discardPileTarget.gameObject.GetComponent<UIHoverButtonEffects>();
                 if (h == null) h = discardPileTarget.gameObject.AddComponent<UIHoverButtonEffects>();
                 h.Setup(Resources.Load<AudioClip>("Audio/Button_Hover"), 1.05f);
+
+                var trigger = discardPileTarget.gameObject.GetComponent<GameplayTooltipTrigger>();
+                if (trigger == null) trigger = discardPileTarget.gameObject.AddComponent<GameplayTooltipTrigger>();
+                trigger.Setup("discard_pile");
+            }
+            if (energyText != null)
+            {
+                var trigger = energyText.gameObject.GetComponent<GameplayTooltipTrigger>();
+                if (trigger == null) trigger = energyText.gameObject.AddComponent<GameplayTooltipTrigger>();
+                trigger.Setup("energy");
+            }
+            if (endTurnButton != null)
+            {
+                var trigger = endTurnButton.gameObject.GetComponent<GameplayTooltipTrigger>();
+                if (trigger == null) trigger = endTurnButton.gameObject.AddComponent<GameplayTooltipTrigger>();
+                trigger.Setup("end_turn");
             }
 
             // 初始刷新一次（如果战斗已经开始）
