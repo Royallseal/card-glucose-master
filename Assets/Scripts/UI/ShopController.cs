@@ -260,7 +260,7 @@ namespace CGM.UI
         {
             // 寻找 UItop 卡组的目标位置
             Transform deckTarget = null;
-            var ultop = FindObjectOfType<UI.UltopController>();
+            var ultop = FindObjectOfType<UI.UltopController>(true);
             if (ultop != null)
             {
                 deckTarget = ultop.transform.Find("Icon_Line/Cards");

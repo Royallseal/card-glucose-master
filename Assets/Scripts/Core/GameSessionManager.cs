@@ -165,7 +165,7 @@ namespace CGM.Core
             // （若场景中无对应面板控制器，请将按钮引用挂到对应面板控制器上，而非此处。）
 
             // 绑定顶部 Ultop 牌组按钮点击事件，进入本人牌组界面
-            var ultop = FindObjectOfType<UI.UltopController>();
+            var ultop = GetUltopController();
             if (ultop != null)
             {
                 Transform cardsButtonTrans = ultop.transform.Find("Icon_Line/Cards");
@@ -255,7 +255,7 @@ namespace CGM.Core
             // startGameButton / restartGameButton 的绑定与解绑已由各面板控制器负责，此处不再处理
 
             // 清理动态绑定的卡组及抽弃牌堆点击事件
-            var ultop = FindObjectOfType<UI.UltopController>();
+            var ultop = GetUltopController();
             if (ultop != null)
             {
                 Transform cardsButtonTrans = ultop.transform.Find("Icon_Line/Cards");
@@ -459,7 +459,7 @@ namespace CGM.Core
             }
 
             // 通知顶部栏刷新
-            var ultop = FindObjectOfType<UI.UltopController>();
+            var ultop = GetUltopController();
             if (ultop != null)
             {
                 // 注入 PlayerStats（确保 UltopController 始终持有正确引用，不受面板显隐影响）
@@ -580,7 +580,7 @@ namespace CGM.Core
             selectedCard = null;
 
             // 3. 配置顶部 UI 可点击项 (设置与卡组) 的 Hover 特效与音效
-            var ultop = FindObjectOfType<UI.UltopController>();
+            var ultop = GetUltopController();
             if (ultop != null)
             {
                 Transform settingButtonTrans = ultop.transform.Find("Icon_Line/Setting");
@@ -784,7 +784,7 @@ namespace CGM.Core
 
             // 寻找到 UItop 卡组的目标位置
             Transform deckTarget = null;
-            var ultop = FindObjectOfType<UI.UltopController>();
+            var ultop = GetUltopController();
             if (ultop != null)
             {
                 deckTarget = ultop.transform.Find("Icon_Line/Cards");
@@ -1050,6 +1050,16 @@ namespace CGM.Core
                 GameObject amGo = new GameObject("[AudioManager]");
                 amGo.AddComponent<AudioManager>();
             }
+        }
+
+        private UI.UltopController GetUltopController()
+        {
+            if (ultopPanel != null)
+            {
+                var controller = ultopPanel.GetComponent<UI.UltopController>();
+                if (controller != null) return controller;
+            }
+            return FindObjectOfType<UI.UltopController>(true);
         }
 
 #if UNITY_EDITOR
