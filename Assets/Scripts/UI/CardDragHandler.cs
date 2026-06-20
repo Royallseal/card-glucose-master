@@ -191,11 +191,15 @@ namespace CGM.UI
                 TooltipManager.Instance.HideTooltip();
             }
 
-            // 如果正在 Hover，瞬间还原并停止动效，避免把 Hover 的状态带入拖拽克隆
-            if (_isHovered)
+            // 如果正在 Hover 或处于 Hover 动效中，瞬间还原并停止动效，避免把 Hover 的状态带入拖拽克隆
+            if (_isHovered || _hoverCoroutine != null)
             {
                 _isHovered = false;
-                if (_hoverCoroutine != null) StopCoroutine(_hoverCoroutine);
+                if (_hoverCoroutine != null)
+                {
+                    StopCoroutine(_hoverCoroutine);
+                    _hoverCoroutine = null;
+                }
                 _rectTransform.localScale = Vector3.one;
                 _rectTransform.anchoredPosition = new Vector2(_rectTransform.anchoredPosition.x, _defaultY);
                 if (_canvasComponent != null) _canvasComponent.overrideSorting = false;
@@ -433,6 +437,12 @@ namespace CGM.UI
             }
 
             _isHovered = false;
+
+            // 移出时立即将层级降低（如 10 级），使其低于其它处于 Hover（30 级）的卡牌，但仍高于默认卡牌（0 级）
+            if (!_isDisplayOnly && _canvasComponent != null)
+            {
+                _canvasComponent.sortingOrder = 10;
+            }
 
             StartHoverAnimation(1.0f, _defaultY, () => {
                 // 还原完毕后，释放排序权限归还默认层级，避免阻碍其他 UI 渲染
