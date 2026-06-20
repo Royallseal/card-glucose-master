@@ -68,10 +68,15 @@ namespace CGM.UI
         private bool isDrawingCards = false;
         private int activeDiscardAnimations = 0;
 
+        // 溢出爆牌排队系统
+        private readonly Queue<CardInfo> overflowQueue = new Queue<CardInfo>();
+        private bool isProcessingOverflow = false;
+        private int activeOverflowAnimations = 0;
+
         /// <summary>
         /// 当前手牌区是否正在播放抽牌或弃牌动画。
         /// </summary>
-        public bool IsAnimating => isDrawingCards || activeDiscardAnimations > 0;
+        public bool IsAnimating => isDrawingCards || activeDiscardAnimations > 0 || isProcessingOverflow || activeOverflowAnimations > 0;
 
         private void Awake()
         {
@@ -148,6 +153,9 @@ namespace CGM.UI
             // 状态警告 → 弹提示
             battleController.OnStateWarning += OnStateWarning;
 
+            // 摸牌溢出 → 播放爆牌动画
+            battleController.OnCardOverflowed += OnCardOverflowed;
+
             // 战斗日志 → Debug 输出
             battleController.OnCombatLog += OnCombatLog;
 
@@ -197,6 +205,7 @@ namespace CGM.UI
                 battleController.OnCardPlayed -= OnCardPlayed;
                 battleController.OnBattleEnded -= OnBattleEnded;
                 battleController.OnStateWarning -= OnStateWarning;
+                battleController.OnCardOverflowed -= OnCardOverflowed;
                 battleController.OnCombatLog -= OnCombatLog;
 
                 if (battleController.PlayerStats != null)
@@ -708,6 +717,118 @@ namespace CGM.UI
                 actualDamage - card.finalDamage,
                 actualBlock - card.finalBlock,
                 glucoseMultiplier);
+        }
+
+        private void OnCardOverflowed(CardInfo card)
+        {
+            overflowQueue.Enqueue(card);
+            if (!isProcessingOverflow)
+            {
+                StartCoroutine(ProcessOverflowQueueRoutine());
+            }
+        }
+
+        private IEnumerator ProcessOverflowQueueRoutine()
+        {
+            isProcessingOverflow = true;
+
+            while (overflowQueue.Count > 0)
+            {
+                CardInfo card = overflowQueue.Dequeue();
+                activeOverflowAnimations++;
+                StartCoroutine(OverflowSingleCardRoutine(card, () => {
+                    activeOverflowAnimations--;
+                }));
+                // 每次开始爆牌动画后，等待 0.15 秒再处理下一张，实现优雅的瀑布流效果
+                yield return new WaitForSeconds(0.15f);
+            }
+
+            while (activeOverflowAnimations > 0)
+            {
+                yield return null;
+            }
+
+            isProcessingOverflow = false;
+            CheckAndSyncCounters();
+        }
+
+        private IEnumerator OverflowSingleCardRoutine(CardInfo card, System.Action onComplete)
+        {
+            // 1. 起点：抽牌堆位置
+            Vector2 startPos = drawPileTarget != null
+                ? (Vector2)drawPileTarget.position
+                : new Vector2(Screen.width * 0.5f, -300f);
+
+            // 2. 终点：手牌区最右侧偏移位置（模拟飞到手里）
+            Vector2 endPos = handContainer.position;
+            if (handObjects.Count > 0 && handObjects[handObjects.Count - 1] != null)
+            {
+                endPos = handObjects[handObjects.Count - 1].GetComponent<RectTransform>().position + new Vector3(140f, 0f, 0f);
+            }
+
+            // 3. 实例化临时卡牌
+            GameObject cardGo = Instantiate(cardPrefab, handContainer);
+            cardGo.name = $"OverflowCard_{card.id}";
+
+            var cardUI = cardGo.GetComponent<CardUI>();
+            if (cardUI != null)
+            {
+                SetCardRealTimeValues(cardUI, card);
+            }
+
+            // 溢出卡牌不可交互和拖拽，直接清理其触发器组件
+            var dragHandler = cardGo.GetComponent<CardDragHandler>();
+            if (dragHandler != null) Destroy(dragHandler);
+            var btn = cardGo.GetComponent<Button>();
+            if (btn != null) Destroy(btn);
+
+            // 脱离 LayoutGroup 移动到 Canvas 根节点下播放飞行动画
+            var canvas = GetComponentInParent<Canvas>()?.rootCanvas;
+            var canvasRoot = canvas != null ? canvas.transform : transform.parent;
+            var cg = cardGo.GetComponent<CanvasGroup>();
+            if (cg == null) cg = cardGo.AddComponent<CanvasGroup>();
+            cg.alpha = 0f;
+            cardGo.transform.SetParent(canvasRoot, true);
+
+            var anim = cardGo.GetComponent<CardAnimator>();
+            if (anim == null) anim = cardGo.AddComponent<CardAnimator>();
+
+            // 4. 播放从抽牌堆飞入的摸牌动画
+            bool drawDone = false;
+            anim.PlayDrawAnimation(startPos, endPos, null, () => {
+                drawDone = true;
+            });
+
+            while (!drawDone) yield return null;
+
+            // 5. 稍微停留 0.25 秒供看清被爆掉的是什么牌
+            yield return new WaitForSeconds(0.25f);
+
+            // 6. 播放飞往弃牌堆的动画并自动销毁
+            if (discardPileTarget != null)
+            {
+                activeDiscardAnimations++;
+                bool discardDone = false;
+                anim.PlayDiscardAnimation(discardPileTarget.position, () => {
+                    activeDiscardAnimations--;
+                    discardDone = true;
+                    // 弃牌飞完时，视觉计数+1
+                    if (visualDiscardCount < targetDiscardCount)
+                    {
+                        visualDiscardCount++;
+                        UpdateCountTexts();
+                    }
+                    CheckAndSyncCounters();
+                });
+
+                while (!discardDone) yield return null;
+            }
+            else
+            {
+                Destroy(cardGo);
+            }
+
+            onComplete?.Invoke();
         }
     }
 }

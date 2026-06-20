@@ -77,6 +77,7 @@ namespace CGM.Core
         public event Action<BattleOutcome> OnBattleEnded;
         public event Action<string> OnCombatLog;
         public event Action<string> OnStateWarning;
+        public event Action<CardInfo> OnCardOverflowed;
 
         public PlayerStats PlayerStats => playerStats;
         public EnemyStats EnemyStats => enemyStats;
@@ -129,6 +130,72 @@ namespace CGM.Core
                 StartBattle();
             }
         }
+
+#if UNITY_EDITOR
+        private void Update()
+        {
+            if (Phase == BattleTurnPhase.PlayerTurn)
+            {
+                // 按 D 键抽 1 张牌
+                if (Input.GetKeyDown(KeyCode.D))
+                {
+                    EnsureAvailableCards(1);
+                    DrawCards(1);
+                    Debug.Log("[Debug] 按 D 键强行抽牌 1 张。");
+                }
+                // 按 J 键抽 2 张牌
+                if (Input.GetKeyDown(KeyCode.J))
+                {
+                    EnsureAvailableCards(2);
+                    DrawCards(2);
+                    Debug.Log("[Debug] 按 J 键强行抽牌 2 张。");
+                }
+                // 按 K 键抽 3 张牌
+                if (Input.GetKeyDown(KeyCode.K))
+                {
+                    EnsureAvailableCards(3);
+                    DrawCards(3);
+                    Debug.Log("[Debug] 按 K 键强行抽牌 3 张。");
+                }
+                // 按 F 键直接填满并溢出手牌 (填满并额外溢出 2 张)
+                if (Input.GetKeyDown(KeyCode.F))
+                {
+                    int needed = maximumHandSize - Hand.Count + 2;
+                    if (needed > 0)
+                    {
+                        EnsureAvailableCards(needed);
+                        DrawCards(needed);
+                        Debug.Log($"[Debug] 按 F 键强行抽满并溢出。需抽数: {needed}");
+                    }
+                }
+            }
+        }
+
+        private void EnsureAvailableCards(int count)
+        {
+            ResolveDependencies();
+            int currentAvailable = DrawPile.Count + DiscardPile.Count;
+            if (currentAvailable < count)
+            {
+                int toAdd = count - currentAvailable;
+                for (int i = 0; i < toAdd; i++)
+                {
+                    AddDummyCardToDrawPile();
+                }
+                NotifyPilesChanged();
+            }
+        }
+
+        private void AddDummyCardToDrawPile()
+        {
+            if (cardDatabase == null) return;
+            CardInfo card = cardDatabase.GetCardById("starter_rice");
+            if (card != null)
+            {
+                cardPile.AddToDrawPile(card);
+            }
+        }
+#endif
 
         /// <summary>
         /// 立即开始一场战斗。
@@ -344,10 +411,17 @@ namespace CGM.Core
                 return 0;
             }
 
-            List<CardInfo> drawnCards = cardPile.Draw(count, maximumHandSize);
+            List<CardInfo> drawnCards = cardPile.Draw(count, maximumHandSize, (overflowCard) => {
+                OnCardOverflowed?.Invoke(overflowCard);
+            });
+
             if (drawnCards.Count > 0)
             {
                 NotifyHandChanged();
+                NotifyPilesChanged();
+            }
+            else
+            {
                 NotifyPilesChanged();
             }
 

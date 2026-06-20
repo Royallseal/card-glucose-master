@@ -47,9 +47,20 @@ namespace CGM.Core
         }
 
         /// <summary>
+        /// 向抽牌堆底部或顶部添加卡牌（供调试及未来特殊机制使用）。
+        /// </summary>
+        public void AddToDrawPile(CardInfo card)
+        {
+            if (card != null)
+            {
+                drawPile.Add(card);
+            }
+        }
+
+        /// <summary>
         /// 从抽牌堆中摸牌，直到达到数量上限或手牌上限。
         /// </summary>
-        public List<CardInfo> Draw(int count, int maxHandSize)
+        public List<CardInfo> Draw(int count, int maxHandSize, System.Action<CardInfo> onOverflow = null)
         {
             List<CardInfo> drawnCards = new List<CardInfo>();
 
@@ -60,11 +71,6 @@ namespace CGM.Core
 
             for (int i = 0; i < count; i++)
             {
-                if (handPile.Count >= maxHandSize)
-                {
-                    break;
-                }
-
                 if (drawPile.Count == 0)
                 {
                     RefillDrawPileFromDiscardPile();
@@ -78,8 +84,17 @@ namespace CGM.Core
                 int lastIndex = drawPile.Count - 1;
                 CardInfo card = drawPile[lastIndex];
                 drawPile.RemoveAt(lastIndex);
-                handPile.Add(card);
-                drawnCards.Add(card);
+
+                if (handPile.Count >= maxHandSize)
+                {
+                    discardPile.Add(card);
+                    onOverflow?.Invoke(card);
+                }
+                else
+                {
+                    handPile.Add(card);
+                    drawnCards.Add(card);
+                }
             }
 
             return drawnCards;
