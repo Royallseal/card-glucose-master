@@ -19,6 +19,11 @@ namespace CGM.UI
         [Tooltip("金币数量文本 (Gold_Value)")]
         [SerializeField] private TextMeshProUGUI goldValueText;
 
+        /// <summary>
+        /// 提供给金币飞入动画作为终点的 Transform 引用 (金币数值文本所在位置)。
+        /// </summary>
+        public Transform GoldTargetTransform => goldValueText != null ? goldValueText.transform : transform;
+
         [Header("关卡 UI 引用")]
         [Tooltip("当前关卡文本 (Current_Levle_Value)")]
         [SerializeField] private TextMeshProUGUI currentLevelText;

@@ -696,21 +696,72 @@ namespace CGM.Core
                 AudioManager.PlaySfxStatic(clickAudioClip, Camera.main.transform.position);
             }
 
-            // 上方 UI 增加金币并刷新
-            if (playerStats != null)
+            // 启动金币飞入动画，并在飞完后增加入账数值
+            StartCoroutine(FlyGoldAnimationRoutine(() =>
             {
-                playerStats.ChangeGold(currentGoldReward);
+                if (playerStats != null)
+                {
+                    playerStats.ChangeGold(currentGoldReward);
+                }
+                Debug.Log($"[GameSessionManager] 玩家手动领取了金币奖励：+{currentGoldReward} 金币。");
+            }));
+        }
+
+        /// <summary>
+        /// 金币被点击/自动获取时，从原来位置（结算面板上金币图标）飞入顶部金币 UI 位置的动效协程
+        /// </summary>
+        private System.Collections.IEnumerator FlyGoldAnimationRoutine(System.Action onComplete)
+        {
+            var ultop = GetUltopController();
+            Transform targetTrans = ultop != null ? ultop.GoldTargetTransform : null;
+
+            if (targetTrans == null || goldIconGo == null)
+            {
+                // 如果找不到 UI 指引，则直接无动画回调
+                onComplete?.Invoke();
+                yield break;
             }
 
-            // 金币相关的组件（图标和文本，按钮）消失，背景框不消失
+            // 1. 克隆结算面板中的金币图标
+            GameObject flyCoin = Instantiate(goldIconGo, goldIconGo.transform.parent);
+            flyCoin.name = "FlyCoinClone";
+            flyCoin.SetActive(true);
+
+            // 确保具有 CanvasGroup 组件，控制淡出
+            CanvasGroup cg = flyCoin.GetComponent<CanvasGroup>();
+            if (cg == null) cg = flyCoin.AddComponent<CanvasGroup>();
+
+            // 2. 隐藏原位置的金币元素（防止重叠显示）
             if (goldIconGo != null) goldIconGo.SetActive(false);
             if (goldValueGo != null) goldValueGo.SetActive(false);
-            if (chooseGoldButton != null)
+            if (chooseGoldButton != null) chooseGoldButton.gameObject.SetActive(false);
+
+            // 3. 开始沿平滑曲线移动到顶部栏
+            RectTransform coinRect = flyCoin.GetComponent<RectTransform>();
+            Vector3 startPos = coinRect.position;
+            Vector3 startScale = coinRect.localScale;
+
+            float duration = 0.6f;
+            float elapsed = 0f;
+            while (elapsed < duration)
             {
-                chooseGoldButton.gameObject.SetActive(false);
+                elapsed += Time.deltaTime;
+                float p = Mathf.Clamp01(elapsed / duration);
+                float easedT = p * (2f - p); // Ease-out 平滑缓动
+
+                if (targetTrans != null)
+                {
+                    coinRect.position = Vector3.Lerp(startPos, targetTrans.position, easedT);
+                }
+                coinRect.localScale = Vector3.Lerp(startScale, Vector3.one * 0.5f, easedT);
+                cg.alpha = Mathf.Lerp(1.0f, 0.2f, easedT);
+
+                yield return null;
             }
 
-            Debug.Log($"[GameSessionManager] 玩家领取了金币奖励：+{currentGoldReward} 金币。");
+            // 4. 彻底飞达，清理垃圾克隆体，触发增额回调
+            Destroy(flyCoin);
+            onComplete?.Invoke();
         }
 
         private void OnRewardCardClicked(UI.RewardCardInteraction clickedInteraction)
@@ -995,12 +1046,35 @@ namespace CGM.Core
 
         private void OnSettlementExitClicked()
         {
-            // 若未手动领取金币，自动触发领取逻辑
+            // 若未手动领取金币，自动触发飞入领取逻辑，在飞入动效完成后才切换关卡
             if (!isGoldChosen)
             {
-                OnChooseGoldClicked();
-            }
+                isGoldChosen = true; // 锁定，防止重复操作
 
+                // 播放金币点击音效
+                if (clickAudioClip != null && Camera.main != null)
+                {
+                    AudioManager.PlaySfxStatic(clickAudioClip, Camera.main.transform.position);
+                }
+
+                StartCoroutine(FlyGoldAnimationRoutine(() =>
+                {
+                    if (playerStats != null)
+                    {
+                        playerStats.ChangeGold(currentGoldReward);
+                    }
+                    Debug.Log($"[GameSessionManager] 自动领取了金币奖励：+{currentGoldReward} 金币（由于未点击金币直接前往下一关）。");
+                    EnterNextLevelDirectly();
+                }));
+            }
+            else
+            {
+                EnterNextLevelDirectly();
+            }
+        }
+
+        private void EnterNextLevelDirectly()
+        {
             if (LevelManager.Instance != null)
             {
                 LevelManager.Instance.EnterNextLevel();
