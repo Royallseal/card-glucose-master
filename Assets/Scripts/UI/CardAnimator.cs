@@ -106,6 +106,48 @@ namespace CGM.UI
         }
 
         /// <summary>
+        /// 飞向指定目标点（如顶部卡组按钮）：平滑移动、缩放并渐隐，完成后销毁自身并执行回调。
+        /// </summary>
+        public void PlayFlyToTargetAnimation(Transform target, float duration = 0.75f, System.Action onComplete = null)
+        {
+            if (_rect == null) _rect = GetComponent<RectTransform>();
+            if (_canvasGroup == null) _canvasGroup = GetComponent<CanvasGroup>();
+            
+            StartCoroutine(FlyToTargetRoutine(target, duration, onComplete));
+        }
+
+        private IEnumerator FlyToTargetRoutine(Transform target, float duration, System.Action onComplete)
+        {
+            _animating = true;
+            Vector3 startPos = _rect.position;
+            Vector3 startScale = _rect.localScale;
+
+            float elapsed = 0f;
+            while (elapsed < duration)
+            {
+                elapsed += Time.deltaTime;
+                float p = Mathf.Clamp01(elapsed / duration);
+                float easedT = p * (2f - p); // Ease-out 缓动算法
+
+                if (target != null)
+                {
+                    _rect.position = Vector3.Lerp(startPos, target.position, easedT);
+                }
+                _rect.localScale = Vector3.Lerp(startScale, Vector3.one * 0.15f, easedT);
+                if (_canvasGroup != null)
+                {
+                    _canvasGroup.alpha = Mathf.Lerp(1.0f, 0f, easedT);
+                }
+
+                yield return null;
+            }
+
+            _animating = false;
+            onComplete?.Invoke();
+            Destroy(gameObject); // 动画播放完毕后，克隆体自我销毁
+        }
+
+        /// <summary>
         /// 立即销毁（无动画）。
         /// </summary>
         public void DestroyImmediate()

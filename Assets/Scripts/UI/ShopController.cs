@@ -268,15 +268,29 @@ namespace CGM.UI
 
             if (deckTarget != null)
             {
-                Canvas canvas = FindObjectOfType<Canvas>();
+                // 查找主 Canvas（跳过子 Canvas）
+                Canvas canvas = GetComponentInParent<Canvas>()?.rootCanvas;
+                if (canvas == null) canvas = FindObjectOfType<Canvas>();
+
                 GameObject flyClone = Instantiate(cardGo, canvas.transform);
                 flyClone.name = "FlyCardClone_" + cardId;
 
-                // 去除交互事件
+                // 去除交互与按钮事件
                 Destroy(flyClone.GetComponent<ShopCardInteraction>());
+                Destroy(flyClone.GetComponent<Button>());
+                
                 var cg = flyClone.GetComponent<CanvasGroup>();
                 if (cg == null) cg = flyClone.AddComponent<CanvasGroup>();
                 cg.blocksRaycasts = false;
+
+                // 确保克隆体置顶渲染且不受任何 Mask 裁剪
+                var cloneCanvas = flyClone.GetComponent<Canvas>();
+                if (cloneCanvas == null)
+                {
+                    cloneCanvas = flyClone.AddComponent<Canvas>();
+                }
+                cloneCanvas.overrideSorting = true;
+                cloneCanvas.sortingOrder = 99;
 
                 // 飞入时隐藏价格框
                 Transform goldValueSub = flyClone.transform.Find("GoldValue");
@@ -288,25 +302,17 @@ namespace CGM.UI
                 // 隐藏原商品
                 cardGo.SetActive(false);
 
-                Vector3 startPos = flyClone.transform.position;
-                Vector3 startScale = flyClone.transform.localScale;
-                float elapsed = 0f;
-                float duration = 0.75f;
+                // 播放飞行特效
+                var animator = flyClone.GetComponent<CardAnimator>();
+                if (animator == null) animator = flyClone.AddComponent<CardAnimator>();
 
-                while (elapsed < duration)
-                {
-                    elapsed += Time.deltaTime;
-                    float t = elapsed / duration;
-                    float easedT = t * (2 - t);
+                bool animationFinished = false;
+                animator.PlayFlyToTargetAnimation(deckTarget, 0.75f, () => {
+                    animationFinished = true;
+                });
 
-                    flyClone.transform.position = Vector3.Lerp(startPos, deckTarget.position, easedT);
-                    flyClone.transform.localScale = Vector3.Lerp(startScale, Vector3.one * 0.15f, easedT);
-                    cg.alpha = Mathf.Lerp(1.0f, 0f, easedT);
-
-                    yield return null;
-                }
-
-                Destroy(flyClone);
+                // 等待动画结束
+                yield return new WaitUntil(() => animationFinished);
             }
             else
             {

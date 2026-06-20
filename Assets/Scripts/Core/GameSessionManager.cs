@@ -792,17 +792,29 @@ namespace CGM.Core
 
             if (deckTarget != null)
             {
-                // 创建一个飞行的临时克隆卡牌挂在 Canvas 下
-                Canvas canvas = FindObjectOfType<Canvas>();
+                // 查找主 Canvas（跳过子 Canvas）
+                Canvas canvas = GetComponentInParent<Canvas>()?.rootCanvas;
+                if (canvas == null) canvas = FindObjectOfType<Canvas>();
+
                 GameObject flyClone = Instantiate(cardGo, canvas.transform);
                 flyClone.name = "FlyCardClone_" + cardId;
 
                 // 去除克隆体上的事件绑定与交互脚本，以免造成事件穿透
                 Destroy(flyClone.GetComponent<UI.RewardCardInteraction>());
                 Destroy(flyClone.GetComponent<Button>());
+
                 var cg = flyClone.GetComponent<CanvasGroup>();
                 if (cg == null) cg = flyClone.AddComponent<CanvasGroup>();
                 cg.blocksRaycasts = false;
+
+                // 确保克隆体置顶渲染且不受任何 Mask 裁剪
+                var cloneCanvas = flyClone.GetComponent<Canvas>();
+                if (cloneCanvas == null)
+                {
+                    cloneCanvas = flyClone.AddComponent<Canvas>();
+                }
+                cloneCanvas.overrideSorting = true;
+                cloneCanvas.sortingOrder = 99;
 
                 // 初始位置设为原卡牌的位置与大小
                 flyClone.transform.position = cardGo.transform.position;
@@ -811,26 +823,17 @@ namespace CGM.Core
                 // 隐藏原卡牌
                 cardGo.SetActive(false);
 
-                // 平滑插值动画
-                Vector3 startPos = flyClone.transform.position;
-                Vector3 startScale = flyClone.transform.localScale;
-                float elapsed = 0f;
-                float duration = 0.75f; // 0.75 秒飞行时间
+                // 播放飞行动画
+                var animator = flyClone.GetComponent<UI.CardAnimator>();
+                if (animator == null) animator = flyClone.AddComponent<UI.CardAnimator>();
 
-                while (elapsed < duration)
-                {
-                    elapsed += Time.deltaTime;
-                    float t = elapsed / duration;
-                    float easedT = t * (2 - t); // Ease Out 算法
+                bool animationFinished = false;
+                animator.PlayFlyToTargetAnimation(deckTarget, 0.75f, () => {
+                    animationFinished = true;
+                });
 
-                    flyClone.transform.position = Vector3.Lerp(startPos, deckTarget.position, easedT);
-                    flyClone.transform.localScale = Vector3.Lerp(startScale, Vector3.one * 0.15f, easedT); // 渐缩至 0.15 倍吸入
-                    cg.alpha = Mathf.Lerp(1.0f, 0f, easedT); // 渐隐
-
-                    yield return null;
-                }
-
-                Destroy(flyClone);
+                // 等待动画结束
+                yield return new WaitUntil(() => animationFinished);
             }
             else
             {
