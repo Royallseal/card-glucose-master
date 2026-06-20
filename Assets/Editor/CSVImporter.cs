@@ -190,7 +190,8 @@ namespace CGM.Editor
                         // 跳过 [6] damageWeight, [7] blockWeight, [8] effectVPCost
                         finalDamage = int.Parse(fields[9].Trim()),
                         finalBlock = int.Parse(fields[10].Trim()),
-                        description = fields[11].Trim()
+                        description = fields[11].Trim(),
+                        loreDescription = fields.Count > 12 ? fields[12].Trim() : ""
                     };
 
                     cards.Add(card);
@@ -358,7 +359,9 @@ namespace CGM.Editor
                         name = fields[1].Trim(),
                         maxHp = int.Parse(fields[2].Trim()),
                         intentPattern = fields[3].Trim(),
-                        levelName = fields[4].Trim()
+                        levelName = fields[4].Trim(),
+                        description = fields.Count > 5 ? fields[5].Trim() : "",
+                        levelDescription = fields.Count > 6 ? fields[6].Trim() : ""
                     };
 
                     enemies.Add(enemy);

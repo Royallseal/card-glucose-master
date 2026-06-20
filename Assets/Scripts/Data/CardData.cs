@@ -336,6 +336,7 @@ namespace CGM.Data
         public int finalDamage;
         public int finalBlock;
         public string description;
+        public string loreDescription; // 卡牌背景故事/功能介绍描述
         public string iconColor;
         public List<CardEffect> effects = new List<CardEffect>();
 

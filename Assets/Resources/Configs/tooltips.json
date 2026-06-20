@@ -1,4 +1,4 @@
-{
+﻿{
     "tooltips": [
         {
             "id": "vitality",
@@ -79,6 +79,102 @@
             "colorHex": "#FF6B6B",
             "isDebuff": true,
             "spritePath": "UI/Icons/intent_status"
+        },
+        {
+            "id": "attack_intent",
+            "name": "准备攻击",
+            "description": "敌人下一回合将对你造成 {D} 点伤害。",
+            "colorHex": "#FF6B6B",
+            "isDebuff": false,
+            "spritePath": "UI/Icons/intent_attack"
+        },
+        {
+            "id": "block_intent",
+            "name": "准备防守",
+            "description": "敌人正在防守。下一回合将获得 {B} 点格挡值。",
+            "colorHex": "#4EC9B0",
+            "isDebuff": false,
+            "spritePath": "UI/Icons/intent_block"
+        },
+        {
+            "id": "status_intent",
+            "name": "代谢干扰",
+            "description": "敌人下一回合将施加负面状态，或提升其自身的活性。",
+            "colorHex": "#FFAD1F",
+            "isDebuff": false,
+            "spritePath": "UI/Icons/intent_status"
+        },
+        {
+            "id": "glucose_controller",
+            "name": "控糖师",
+            "description": "身体生理机能的守护者。作为一名控糖师，致力于在起伏不定的糖分战役中，通过合理膳食、规律运动和药物治疗来维持体内的血糖平衡。",
+            "colorHex": "#4EC9B0",
+            "isDebuff": false,
+            "spritePath": "UI/Icons/player_avatar"
+        },
+        {
+            "id": "current_block",
+            "name": "格挡",
+            "description": "当前拥有的格挡值。在受到伤害时，会优先扣除等额的格挡值。该数值在每个自己的回合开始时会自动清零。",
+            "colorHex": "#4EC9B0",
+            "isDebuff": false,
+            "spritePath": "UI/Icons/block_icon"
+        },
+        {
+            "id": "energy",
+            "name": "能量",
+            "description": "当前可支配的能量：{E} / {M} 点。打出卡牌会消耗对应的能量。每回合开始时会重置至上限。",
+            "colorHex": "#FFD700",
+            "isDebuff": false,
+            "spritePath": "UI/Icons/energy_icon"
+        },
+        {
+            "id": "end_turn",
+            "name": "结束回合",
+            "description": "点击结束当前回合的行动。你将弃置所有未使用的手牌，并将行动权移交给敌人。",
+            "colorHex": "#FFAD1F",
+            "isDebuff": false,
+            "spritePath": "UI/Icons/end_turn"
+        },
+        {
+            "id": "draw_pile",
+            "name": "抽牌堆",
+            "description": "战斗中等待抽入手的卡牌堆。每当需要抽牌时，卡牌将从该牌堆顶部移入手牌。当前剩余卡牌数：{D} 张。当前手牌：{H}/{C} 张。若手牌已满，溢出的卡牌将自动进入弃牌堆。",
+            "colorHex": "#7EC8F8",
+            "isDebuff": false,
+            "spritePath": "UI/Icons/draw_pile"
+        },
+        {
+            "id": "discard_pile",
+            "name": "弃牌堆",
+            "description": "存放本回合已使用或弃置卡牌的牌堆。当抽牌堆清空时，弃牌堆的卡牌将重新洗匀并放入抽牌堆。当前剩余卡牌数：{DP} 张。",
+            "colorHex": "#FF7676",
+            "isDebuff": false,
+            "spritePath": "UI/Icons/discard_pile"
+        },
+        {
+            "id": "hp",
+            "name": "生命值",
+            "description": "当前血量：{H} / {M}。当生命值归零时，本次战斗失败。",
+            "colorHex": "#FF6B6B",
+            "isDebuff": false,
+            "spritePath": "UI/Icons/hp_bar"
+        },
+        {
+            "id": "ui_deck",
+            "name": "我的牌组",
+            "description": "点击查看当前卡组中的所有卡牌。",
+            "colorHex": "#7EC8F8",
+            "isDebuff": false,
+            "spritePath": "UI/Icons/deck_button"
+        },
+        {
+            "id": "ui_settings",
+            "name": "设置",
+            "description": "点击打开设置菜单。",
+            "colorHex": "#FFAD1F",
+            "isDebuff": false,
+            "spritePath": "UI/Icons/settings_button"
         }
     ]
 }

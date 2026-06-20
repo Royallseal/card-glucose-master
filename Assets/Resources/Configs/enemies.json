@@ -5,84 +5,108 @@
             "name": "炸鸡怪兽",
             "maxHp": 45,
             "intentPattern": "attack:6;block:4;attack:8",
-            "levelName": "油锅地狱"
+            "levelName": "油锅地狱",
+            "description": "浑身裹满油炸酥皮与高热量脂肪。其高脂攻击会加重代谢负担。",
+            "levelDescription": "油脂和高温炸油含量极高的区域，空气中弥漫着大量的饱和脂肪酸。"
         },
         {
             "id": "milk_tea_ghost",
             "name": "奶茶幽灵",
             "maxHp": 40,
             "intentPattern": "debuff:lethargy:1;attack:6;block:4;attack:8|attack:7;debuff:lethargy:1;attack:6",
-            "levelName": "甜蜜幻境"
+            "levelName": "甜蜜幻境",
+            "description": "游荡在甜润气味中的甜腻幽灵。会用过量的糖分使你感到困倦与乏力。",
+            "levelDescription": "由高浓度糖浆和糖分组成的区域，地表粘稠，前行时阻力极大。"
         },
         {
             "id": "couch_potato",
             "name": "久坐沙发",
             "maxHp": 62,
             "intentPattern": "attack:9;debuff:stiffness:1;block:6;attack:10|debuff:stiffness:2;attack:8;attack:11",
-            "levelName": "惰性沼泽"
+            "levelName": "惰性沼泽",
+            "description": "一张舒适而让人深陷的柔软沙发。会诱导你停止运动，从而大幅降低卡路里的消耗。",
+            "levelDescription": "因为长期缺乏运动而导致新陈代谢极其缓慢的粘滞区域。"
         },
         {
             "id": "stay_up_bat",
             "name": "熬夜蝙蝠",
             "maxHp": 60,
             "intentPattern": "debuff:lethargy:1;attack:8;block:5;attack:10|attack:9;block:5;attack:9;debuff:lethargy:1",
-            "levelName": "无眠荒野"
+            "levelName": "无眠荒野",
+            "description": "在黑夜中盘旋的蝙蝠。会剥夺你的睡眠与休息时间，使血糖上升。",
+            "levelDescription": "作息规律紊乱、缺乏休息而导致皮质醇异常升高的原野。"
         },
         {
             "id": "snack_demon",
             "name": "零食恶魔",
             "maxHp": 66,
             "intentPattern": "debuff:fragility:1;attack:8;block:5;attack:12|attack:10;debuff:fragility:1;attack:10",
-            "levelName": "深夜回廊"
+            "levelName": "深夜回廊",
+            "description": "在午夜诱导你进食高碳水零食的恶魔，会让血糖在静息状态下急速飙升。",
+            "levelDescription": "在人体理智减弱、食欲激素分泌过旺的夜深时刻出现的走廊。"
         },
         {
             "id": "fat_lord",
             "name": "肥胖领主",
             "maxHp": 150,
             "intentPattern": "debuff:lethargy:1;attack:12;block:12;buff:vitality:2;attack:16;attack:20",
-            "levelName": "脂质王座"
+            "levelName": "脂质王座",
+            "description": "体型巨大、防线厚重的肥胖领主。拥有极高的格挡与减伤能力，难以轻易击败。",
+            "levelDescription": "堆积了厚厚内脏脂肪的巨殿，新陈代谢已处于严重失衡的状态。"
         },
         {
             "id": "numb_assassin",
             "name": "麻木刺客",
             "maxHp": 78,
             "intentPattern": "debuff:stiffness:1;attack:10;block:6;attack:14|attack:12;debuff:stiffness:1;attack:12",
-            "levelName": "冰寒防线"
+            "levelName": "冰寒防线",
+            "description": "潜伏在循环末梢的刺客。会在攻击中夺走你的知觉，让你感到四肢发麻。",
+            "levelDescription": "因微循环不畅而极其冰冷的区域，甚至会让触觉变得迟钝。"
         },
         {
             "id": "floater_phantom",
             "name": "飞蚊幻影",
             "maxHp": 72,
             "intentPattern": "debuff:lethargy:1;attack:10;block:6;attack:13|attack:11;debuff:lethargy:1;attack:11",
-            "levelName": "重影深渊"
+            "levelName": "重影深渊",
+            "description": "在视野中闪烁飘忽的黑影。会干扰你的视线，让你很难看清眼前的行动。",
+            "levelDescription": "由于眼底微血管受损而出现重影的视觉模糊区域。"
         },
         {
             "id": "acid_storm",
             "name": "酸性风暴",
             "maxHp": 120,
             "intentPattern": "debuff:fragility:2;attack:13;block:8;attack:18|attack:15;debuff:fragility:2;attack:15",
-            "levelName": "失衡血海"
+            "levelName": "失衡血海",
+            "description": "因急性酮症酸中毒而生成的酸性风暴。呼啸的酸性物质会迅速酸化血液并引发严重的代谢紊乱，损害多系统机能。",
+            "levelDescription": "酮体堆积导致酸碱失衡的血液区域。"
         },
         {
             "id": "hardened_giant",
             "name": "硬化巨人",
             "maxHp": 140,
             "intentPattern": "block:14;buff:endurance:2;attack:14;block:10;attack:18",
-            "levelName": "凝固森林"
+            "levelName": "凝固森林",
+            "description": "由胆固醇与纤维增生堆积而成的石巨人。拥有极其坚固的体魄和高额格挡。",
+            "levelDescription": "血管壁失去弹性并逐渐硬化、增厚的森林。"
         },
         {
             "id": "high_sugar_golem",
             "name": "高糖傀儡",
             "maxHp": 125,
             "intentPattern": "buff:vitality:2;attack:14;debuff:stiffness:2;block:8;attack:18|attack:16;debuff:stiffness:2;buff:vitality:2;attack:14",
-            "levelName": "迷失禁区"
+            "levelName": "迷失禁区",
+            "description": "由高浓度葡萄糖驱动的结晶傀儡。其重击会迟滞你的反应。",
+            "levelDescription": "因长期高糖毒性导致神经髓鞘受损、神经传导发生阻滞的脑区。"
         },
         {
             "id": "general_complication",
             "name": "并发将军",
             "maxHp": 200,
             "intentPattern": "debuff:fragility:2;attack:18;debuff:stiffness:2;block:15;attack:24;buff:vitality:2;attack:28",
-            "levelName": "致命风眼"
+            "levelName": "致命风眼",
+            "description": "统帅着心血管病变、肾病等多种慢性并发症的终极将军。会多途径侵害各器官微血管与组织，全面破坏生理平衡。",
+            "levelDescription": "因多种长期并发症交织而面临全面代谢衰竭的核心风暴眼。"
         }
     ]
 }
