@@ -66,6 +66,14 @@ namespace CGM.Data
 
             foreach (var card in _allCards)
             {
+                if (card.description != null)
+                {
+                    card.description = card.description.Replace("\\n", "\n");
+                }
+                if (card.loreDescription != null)
+                {
+                    card.loreDescription = card.loreDescription.Replace("\\n", "\n");
+                }
                 if (_cardMap.ContainsKey(card.id))
                 {
                     Debug.LogWarning($"[CardDatabase] 发现重复卡牌 ID：{card.id}，后者将覆盖前者。");

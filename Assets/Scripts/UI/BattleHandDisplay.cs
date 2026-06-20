@@ -434,8 +434,6 @@ namespace CGM.UI
                 var btn = cardGo.GetComponent<Button>();
                 if (btn == null) btn = cardGo.AddComponent<Button>();
                 btn.onClick.RemoveAllListeners();
-                CardInfo captured = card;
-                btn.onClick.AddListener(() => OnCardClicked(captured));
                 btn.interactable = battleController.CanPlayCard(card);
 
                 handObjects.Add(cardGo);
@@ -621,26 +619,7 @@ namespace CGM.UI
         /// </summary>
         private void OnCardClicked(CardInfo card)
         {
-            if (battleController == null || card == null) return;
-
-            // 特效播放期间或动画播放期间禁用卡牌交互
-            if (effectController != null && effectController.IsPlayingEffect)
-                return;
-
-            if (IsAnimating)
-                return;
-
-            if (!battleController.CanPlayCard(card))
-            {
-                Debug.Log($"[BattleHandDisplay] 无法打出 {card.name}（能量不足或不在手牌中）");
-                return;
-            }
-
-            bool success = battleController.PlayCard(card);
-            if (success)
-            {
-                Debug.Log($"[BattleHandDisplay] 成功打出：{card.name}");
-            }
+            // 点击出牌已禁用，仅支持拖拽锁定目标打出
         }
 
         /// <summary>

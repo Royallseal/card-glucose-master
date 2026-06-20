@@ -57,6 +57,14 @@ namespace CGM.Data
 
             foreach (var enemy in _allEnemies)
             {
+                if (enemy.description != null)
+                {
+                    enemy.description = enemy.description.Replace("\\n", "\n");
+                }
+                if (enemy.levelDescription != null)
+                {
+                    enemy.levelDescription = enemy.levelDescription.Replace("\\n", "\n");
+                }
                 if (_enemyMap.ContainsKey(enemy.id))
                 {
                     Debug.LogWarning($"[EnemyDatabase] 发现重复敌人 ID：{enemy.id}，后者将覆盖前者。");

@@ -105,7 +105,12 @@ namespace CGM.Core
         /// </summary>
         public bool ContainsInHand(CardInfo card)
         {
-            return card != null && handPile.Contains(card);
+            if (card == null) return false;
+            foreach (var c in handPile)
+            {
+                if (c != null && c.id == card.id) return true;
+            }
+            return false;
         }
 
         /// <summary>
@@ -118,14 +123,15 @@ namespace CGM.Core
                 return false;
             }
 
-            int index = handPile.IndexOf(card);
-            if (index < 0)
+            for (int i = 0; i < handPile.Count; i++)
             {
-                return false;
+                if (handPile[i] != null && handPile[i].id == card.id)
+                {
+                    handPile.RemoveAt(i);
+                    return true;
+                }
             }
-
-            handPile.RemoveAt(index);
-            return true;
+            return false;
         }
 
         /// <summary>

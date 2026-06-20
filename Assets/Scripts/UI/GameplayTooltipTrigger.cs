@@ -132,7 +132,7 @@ namespace CGM.UI
 
                     if (node.type == LevelType.Shop)
                     {
-                        levelDesc = "补给与调整牌组的场所。可以使用金币购买强力卡牌或移除卡牌。";
+                        levelDesc = "补给与调整牌组的场所。\n可以使用金币购买强力卡牌或移除卡牌。";
                     }
                     else
                     {

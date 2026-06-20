@@ -1,23 +1,23 @@
 id,name,description,colorHex,isDebuff,spritePath
-vitality,活力,每层使打出的攻击卡伤害 +1（可为负数）。,#4EC9B0,false,UI/Icons/buff_vitality
-endurance,耐力,每层使打出的防守卡格挡值 +1（可为负数）。,#4EC9B0,false,UI/Icons/buff_endurance
-fragility,脆弱,受到伤害时受到的伤害提升 50%。每回合结束层数 -1。,#FF6B6B,true,UI/Icons/debuff_fragility
-lethargy,乏力,造成伤害时输出的伤害降低 25%。每回合结束层数 -1。,#FF6B6B,true,UI/Icons/debuff_lethargy
-stiffness,僵硬,获得格挡时获得的格挡值降低 25%。每回合结束层数 -1。,#FF6B6B,true,UI/Icons/debuff_stiffness
+vitality,活力,每层使打出的攻击卡伤害 +1。,#4EC9B0,false,UI/Icons/buff_vitality
+endurance,耐力,每层使打出的防守卡格挡值 +1。,#4EC9B0,false,UI/Icons/buff_endurance
+fragility,脆弱,"受到伤害时，\n受到的伤害提升 50%。\n每回合结束层数 -1。","#FF6B6B",true,UI/Icons/debuff_fragility
+lethargy,乏力,"造成伤害时，\n输出的伤害降低 25%。\n每回合结束层数 -1。","#FF6B6B",true,UI/Icons/debuff_lethargy
+stiffness,僵硬,"获得格挡时，\n获得的格挡值降低 25%。\n每回合结束层数 -1。","#FF6B6B",true,UI/Icons/debuff_stiffness
 slow_release,缓释,抵消下一张膳食卡的血糖上升效果。触发后消耗 1 层。,#FFAD1F,false,UI/Icons/buff_slow_release
 sensitivity,敏化,使下一张药物卡的降糖效果翻倍。触发后消耗 1 层。,#FFAD1F,false,UI/Icons/buff_sensitivity
-glucose_low,低血糖,无伤害与格挡修正。若血糖过低将因血糖缺失而立即死亡！,#FFAD1F,false,UI/Icons/intent_status
+glucose_low,低血糖,"无伤害与格挡修正。\n若血糖过低将因血糖缺失而立即死亡！",#FFAD1F,false,UI/Icons/intent_status
 glucose_healthy,血糖健康,打出的所有卡牌伤害与格挡值提升 25%。,#4EC9B0,false,UI/Icons/intent_status
-glucose_high,高血糖,打出的所有卡牌伤害与格挡值降低 25%。卡牌带来的血糖变化幅度翻倍。若血糖过高将因高血糖危象而立即死亡！,#FF6B6B,true,UI/Icons/intent_status
-attack_intent,准备攻击,敌人下一回合将对你造成 {D} 点伤害。,#FF6B6B,false,UI/Icons/intent_attack
-block_intent,准备防守,敌人正在防守。下一回合将获得 {B} 点格挡值。,#4EC9B0,false,UI/Icons/intent_block
-status_intent,代谢干扰,敌人下一回合将施加负面状态，或提升其自身的活性。,#FFAD1F,false,UI/Icons/intent_status
-glucose_controller,控糖师,身体生理机能的守护者。作为一名控糖师，致力于在起伏不定的糖分战役中，通过合理膳食、规律运动和药物治疗来维持体内的血糖平衡。,#4EC9B0,false,UI/Icons/player_avatar
-current_block,格挡,当前拥有的格挡值。在受到伤害时，会优先扣除等额的格挡值。该数值在每个自己的回合开始时会自动清零。,#4EC9B0,false,UI/Icons/block_icon
-energy,能量,当前可支配的能量：{E} / {M} 点。打出卡牌会消耗对应的能量。每回合开始时会重置至上限。,#FFD700,false,UI/Icons/energy_icon
-end_turn,结束回合,点击结束当前回合的行动。你将弃置所有未使用的手牌，并将行动权移交给敌人。,#FFAD1F,false,UI/Icons/end_turn
-draw_pile,抽牌堆,战斗中等待抽入手的卡牌堆。每当需要抽牌时，卡牌将从该牌堆顶部移入手牌。当前剩余卡牌数：{D} 张。当前手牌：{H}/{C} 张。若手牌已满，溢出的卡牌将自动进入弃牌堆。,#7EC8F8,false,UI/Icons/draw_pile
-discard_pile,弃牌堆,存放本回合已使用或弃置卡牌的牌堆。当抽牌堆清空时，弃牌堆的卡牌将重新洗匀并放入抽牌堆。当前剩余卡牌数：{DP} 张。,#FF7676,false,UI/Icons/discard_pile
-hp,生命值,当前血量：{H} / {M}。当生命值归零时，本次战斗失败。,#FF6B6B,false,UI/Icons/hp_bar
+glucose_high,高血糖,"打出的所有卡牌伤害与格挡值降低 25%。\n卡牌带来的血糖变化幅度翻倍。\n若血糖过高将因高血糖危象而立即死亡！",#FF6B6B,true,UI/Icons/intent_status
+attack_intent,准备攻击,敌人本回合将对你造成 {D} 点伤害。,#FF6B6B,false,UI/Icons/intent_attack
+block_intent,准备防守,"敌人本回合正在防守。\n下一回合将获得 {B} 点格挡值。 ",#4EC9B0,false,UI/Icons/intent_block
+status_intent,代谢干扰,"敌人本回合将施加某种状态。",#FFAD1F,false,UI/Icons/intent_status
+glucose_controller,控糖师,"身体生理机能的守护者。\n作为一名控糖师，致力于在起伏不定的糖分战役中，通过合理膳食、规律运动和药物治疗来维持体内的血糖平衡。 ",#4EC9B0,false,UI/Icons/player_avatar
+current_block,格挡,"当前拥有的格挡值。\n在受到伤害时，会优先扣除等额的格挡值。\n该数值在每个自己的回合开始时会自动清零。 ",#4EC9B0,false,UI/Icons/block_icon
+energy,能量,"当前可支配的能量：{E} / {M} 点。\n打出卡牌会消耗对应的能量。\n每回合开始时会重置至上限。 ",#FFD700,false,UI/Icons/energy_icon
+end_turn,结束回合,"点击结束当前回合的行动。\n你将弃置所有未使用的手牌，并将行动权移交给敌人。 ",#FFAD1F,false,UI/Icons/end_turn
+draw_pile,抽牌堆,"战斗中等待抽入手的卡牌堆。\n每当需要抽牌时，卡牌将从该牌堆顶部移入手牌。\n当前剩余卡牌数：{D} 张。\n当前手牌：{H}/{C} 张。\n若手牌已满，溢出的卡牌将自动进入弃牌堆。 ",#7EC8F8,false,UI/Icons/draw_pile
+discard_pile,弃牌堆,"存放本回合已使用或弃置卡牌的牌堆。\n当抽牌堆清空时，弃牌堆的卡牌将重新洗匀并放入抽牌堆。\n当前剩余卡牌数：{DP} 张。 ",#FF7676,false,UI/Icons/discard_pile
+hp,生命值,"当前血量：{H} / {M}。\n当生命值归零时，本次战斗失败。 ",#FF6B6B,false,UI/Icons/hp_bar
 ui_deck,我的牌组,点击查看当前卡组中的所有卡牌。,#7EC8F8,false,UI/Icons/deck_button
 ui_settings,设置,点击打开设置菜单。,#FFAD1F,false,UI/Icons/settings_button

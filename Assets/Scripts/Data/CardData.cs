@@ -141,6 +141,10 @@ namespace CGM.Data
 
             foreach (var t in wrapper.tooltips)
             {
+                if (t.description != null)
+                {
+                    t.description = t.description.Replace("\\n", "\n");
+                }
                 _rawTooltips[t.id] = t;
 
                 // 去除下划线以匹配 PascalCase 枚举（如 slow_release → SlowRelease）

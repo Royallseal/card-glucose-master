@@ -14,7 +14,7 @@ namespace CGM.UI
     public enum DragLockState { None, LockedOnEnemy, LockedOnPlayer }
 
     [RequireComponent(typeof(CanvasGroup))]
-    public class CardDragHandler : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler, IPointerEnterHandler, IPointerExitHandler
+    public class CardDragHandler : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler, IPointerEnterHandler, IPointerExitHandler, IPointerDownHandler
     {
         private Canvas _canvas;
         private CanvasGroup _canvasGroup;
@@ -92,7 +92,7 @@ namespace CGM.UI
             go = GameObject.Find("Player_Stat");
             if (go != null) _playerDetectRect = go.GetComponent<RectTransform>();
 
-            // 仅对非展示用的手牌初始化 Canvas/Raycaster，以便支持置顶
+            // 仅对非展示用的手牌初始化 Canvas，以便支持置顶
             if (!_isDisplayOnly)
             {
                 _canvasComponent = GetComponent<Canvas>();
@@ -102,9 +102,11 @@ namespace CGM.UI
                 }
                 _canvasComponent.overrideSorting = false;
 
-                if (GetComponent<GraphicRaycaster>() == null)
+                // 嵌套 Canvas 必须具有 GraphicRaycaster，否则其子物体无法接收 UGUI 事件系统射线拦截
+                var gr = GetComponent<GraphicRaycaster>();
+                if (gr == null)
                 {
-                    gameObject.AddComponent<GraphicRaycaster>();
+                    gr = gameObject.AddComponent<GraphicRaycaster>();
                 }
             }
             else
@@ -163,12 +165,25 @@ namespace CGM.UI
         private bool CanTargetSelf() =>
             _cardInfo != null && !CanTargetEnemy();
 
+        public void OnPointerDown(PointerEventData eventData)
+        {
+            Debug.Log($"[CardDragHandler] OnPointerDown called on card: {_cardInfo?.name ?? "null"}. button.interactable={GetComponent<Button>()?.interactable}");
+        }
+
         public void OnBeginDrag(PointerEventData eventData)
         {
-            if (_isDisplayOnly) return;
-            if (_cardInfo == null || _battleController == null) return;
-            if (!_battleController.CanPlayCard(_cardInfo)) return;
-            if (_handDisplay != null && _handDisplay.IsAnimating) return;
+            Debug.Log($"[CardDragHandler] OnBeginDrag called on card: {_cardInfo?.name ?? "null"}");
+            if (_isDisplayOnly) { Debug.Log("[CardDragHandler] Drag Blocked: _isDisplayOnly is true"); return; }
+            if (_cardInfo == null) { Debug.Log("[CardDragHandler] Drag Blocked: _cardInfo is null"); return; }
+            if (_battleController == null) { Debug.Log("[CardDragHandler] Drag Blocked: _battleController is null"); return; }
+            
+            bool canPlay = _battleController.CanPlayCard(_cardInfo);
+            Debug.Log($"[CardDragHandler] CanPlayCard check: {canPlay}. Phase={_battleController.Phase}, CurrentEnergy={_battleController.CurrentEnergy}, CardCost={_cardInfo.energyCost}");
+            if (!canPlay) return;
+
+            bool isHandDisplayAnimating = _handDisplay != null && _handDisplay.IsAnimating;
+            Debug.Log($"[CardDragHandler] HandDisplay IsAnimating check: {isHandDisplayAnimating}");
+            if (isHandDisplayAnimating) return;
 
             if (TooltipManager.Instance != null)
             {
@@ -287,6 +302,7 @@ namespace CGM.UI
             }
             else
             {
+                Debug.Log($"[CardDragHandler] OnEndDrag: Card not played. lockState={_lockState}, CanPlay={(_battleController != null && _cardInfo != null && _battleController.CanPlayCard(_cardInfo))}");
                 if (clone != null) Destroy(clone);
                 _rectTransform.SetParent(_originalParent);
                 _rectTransform.SetSiblingIndex(_originalSiblingIndex);
@@ -297,7 +313,8 @@ namespace CGM.UI
         private bool IsOver(RectTransform rect, Vector2 screenPos)
         {
             if (rect == null) return false;
-            return RectTransformUtility.RectangleContainsScreenPoint(rect, screenPos, _canvas.worldCamera);
+            Camera uiCamera = (_canvas != null && _canvas.renderMode == RenderMode.ScreenSpaceOverlay) ? null : _canvas.worldCamera;
+            return RectTransformUtility.RectangleContainsScreenPoint(rect, screenPos, uiCamera);
         }
 
         private void SetIndicator(DragLockState which, bool show)
@@ -355,19 +372,22 @@ namespace CGM.UI
 
         public void OnHoverEnter(PointerEventData eventData)
         {
-            if (_isAnyCardDragging) return;
-            if (_isDragging || _cardInfo == null) return;
+            Debug.Log($"[CardDragHandler] OnHoverEnter called on card: {_cardInfo?.name ?? "null"}");
+            if (_isAnyCardDragging) { Debug.Log("[CardDragHandler] Hover Blocked: _isAnyCardDragging is true"); return; }
+            if (_isDragging || _cardInfo == null) { Debug.Log("[CardDragHandler] Hover Blocked: _isDragging is true or _cardInfo is null"); return; }
             if (_isHovered) return;
 
             if (!_isDisplayOnly)
             {
-                if (_battleController == null || !_battleController.CanPlayCard(_cardInfo)) return;
+                bool canPlay = _battleController != null && _battleController.CanPlayCard(_cardInfo);
+                Debug.Log($"[CardDragHandler] Hover CanPlayCard check: {canPlay}. Phase={_battleController?.Phase}, CurrentEnergy={_battleController?.CurrentEnergy}, CardCost={_cardInfo?.energyCost}");
+                if (!canPlay) return;
             }
 
             // 动画中（如抽牌/弃牌飞入飞出时）禁止 Hover
             var anim = GetComponent<CardAnimator>();
-            if (anim != null && anim.IsAnimating) return;
-            if (_handDisplay != null && _handDisplay.IsAnimating) return;
+            if (anim != null && anim.IsAnimating) { Debug.Log("[CardDragHandler] Hover Blocked: CardAnimator.IsAnimating is true"); return; }
+            if (_handDisplay != null && _handDisplay.IsAnimating) { Debug.Log("[CardDragHandler] Hover Blocked: HandDisplay.IsAnimating is true"); return; }
 
             // 动态捕获当前无 Hover 状态下的锚点坐标与本地坐标，保证在布局变动后依然计算精准
             _defaultY = _rectTransform.anchoredPosition.y;

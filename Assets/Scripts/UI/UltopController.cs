@@ -85,6 +85,7 @@ namespace CGM.UI
 
             if (currentLevelText != null)
             {
+                currentLevelText.raycastTarget = true;
                 var trigger = currentLevelText.gameObject.GetComponent<GameplayTooltipTrigger>();
                 if (trigger == null) trigger = currentLevelText.gameObject.AddComponent<GameplayTooltipTrigger>();
                 trigger.Setup("scene_desc");
@@ -92,6 +93,7 @@ namespace CGM.UI
 
             if (nextLevelText != null)
             {
+                nextLevelText.raycastTarget = true;
                 var trigger = nextLevelText.gameObject.GetComponent<GameplayTooltipTrigger>();
                 if (trigger == null) trigger = nextLevelText.gameObject.AddComponent<GameplayTooltipTrigger>();
                 trigger.Setup("next_scene_desc");
@@ -99,9 +101,18 @@ namespace CGM.UI
 
             if (cgmValueText != null)
             {
+                cgmValueText.raycastTarget = true;
                 var trigger = cgmValueText.gameObject.GetComponent<GameplayTooltipTrigger>();
                 if (trigger == null) trigger = cgmValueText.gameObject.AddComponent<GameplayTooltipTrigger>();
                 trigger.Setup("glucose");
+            }
+
+            if (hpValueText != null)
+            {
+                hpValueText.raycastTarget = true;
+                var trigger = hpValueText.gameObject.GetComponent<GameplayTooltipTrigger>();
+                if (trigger == null) trigger = hpValueText.gameObject.AddComponent<GameplayTooltipTrigger>();
+                trigger.Setup("hp");
             }
 
             // 初始化 UI 显示
