@@ -19,7 +19,7 @@ namespace CGM.Core
         // =========================================================================
         public const float GlucoseDeathMin = 2.0f;   // 低于此值判负
         public const float GlucoseDeathMax = 15.0f;   // 高于此值判负
-        public const float GlucoseMin = 0.0f;
+        public const float GlucoseMin = 2.0f;
         public const float GlucoseMax = 15.0f;
 
         public const float HealthyGlucoseMin = 4.4f;

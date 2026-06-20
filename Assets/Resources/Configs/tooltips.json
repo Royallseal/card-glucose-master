@@ -59,7 +59,7 @@
         {
             "id": "glucose_low",
             "name": "低血糖",
-            "description": "无伤害与格挡修正。\n若血糖过低将因血糖缺失而立即死亡！",
+            "description": "无额外伤害或格挡效果。\n若当前血糖降低至 2.0 mmol/L 或以下，将立即失败！",
             "colorHex": "#FFAD1F",
             "isDebuff": false,
             "spritePath": "UI/Icons/intent_status"
@@ -75,7 +75,7 @@
         {
             "id": "glucose_high",
             "name": "高血糖",
-            "description": "打出的所有卡牌伤害与格挡值降低 25%。\n卡牌带来的血糖变化幅度翻倍。\n若血糖过高将因高血糖危象而立即死亡！",
+            "description": "打出的所有卡牌伤害与格挡值降低 25%，且卡牌带来的血糖变化幅度翻倍。\n若当前血糖升高至 15.0 mmol/L 或以上，将立即失败！",
             "colorHex": "#FF6B6B",
             "isDebuff": true,
             "spritePath": "UI/Icons/intent_status"

@@ -41,7 +41,8 @@ namespace CGM.Core
         public void Initialize(int maxHealth, float startGlucose, int startGold = 99)
         {
             base.Initialize(maxHealth);
-            currentGlucose = Mathf.Clamp(startGlucose, BattleConstants.GlucoseMin, BattleConstants.GlucoseMax);
+            float rounded = Mathf.Round(startGlucose * 10f) / 10f;
+            currentGlucose = Mathf.Clamp(rounded, BattleConstants.GlucoseMin, BattleConstants.GlucoseMax);
             gold = startGold;
             NotifyGlucoseChange();
             OnGoldChanged?.Invoke(gold);
@@ -52,7 +53,8 @@ namespace CGM.Core
         /// </summary>
         public void SetGlucose(float value)
         {
-            currentGlucose = Mathf.Clamp(value, BattleConstants.GlucoseMin, BattleConstants.GlucoseMax);
+            float rounded = Mathf.Round(value * 10f) / 10f;
+            currentGlucose = Mathf.Clamp(rounded, BattleConstants.GlucoseMin, BattleConstants.GlucoseMax);
             NotifyGlucoseChange();
         }
 

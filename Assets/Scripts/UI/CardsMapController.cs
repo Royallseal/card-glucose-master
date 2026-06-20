@@ -75,6 +75,39 @@ namespace CGM.UI
             {
                 cardPrefab = Resources.Load<GameObject>("Prefabs/Card");
             }
+
+            SetupScrollRectRaycast(); // 初始化并修补 ScrollView 的射线拦截，解决滚轮无法滑动的问题
+        }
+
+        private void SetupScrollRectRaycast()
+        {
+            Transform scrollViewTrans = transform.Find("Scroll View");
+            if (scrollViewTrans == null) return;
+
+            ScrollRect scrollRect = scrollViewTrans.GetComponent<ScrollRect>();
+            if (scrollRect == null) return;
+
+            // 设置滚动灵敏度，使鼠标滚轮滑动更加流畅快速
+            scrollRect.scrollSensitivity = 75.0f;
+
+            // 确保 Viewport 遮罩具有 Image 并且启用 raycastTarget，接收鼠标 OnScroll 滚轮滚动事件
+            Transform viewportTrans = scrollViewTrans.Find("Viewport");
+            if (viewportTrans != null)
+            {
+                Image img = viewportTrans.GetComponent<Image>();
+                if (img == null)
+                {
+                    img = viewportTrans.gameObject.AddComponent<Image>();
+                    img.color = Color.clear; // 透明背景拦截但不渲染
+                }
+                img.raycastTarget = true;
+            }
+
+            Image scrollImg = scrollViewTrans.GetComponent<Image>();
+            if (scrollImg != null)
+            {
+                scrollImg.raycastTarget = true;
+            }
         }
 
         /// <summary>
@@ -151,6 +184,18 @@ namespace CGM.UI
 
             // 4. 实例化并配置卡牌
             PopulateCards(cardsToDisplay);
+
+            // 核心功能：每次重置滚动条位置，使面板初始显示在最顶端
+            Transform scrollViewTrans = transform.Find("Scroll View");
+            if (scrollViewTrans != null)
+            {
+                ScrollRect scrollRect = scrollViewTrans.GetComponent<ScrollRect>();
+                if (scrollRect != null)
+                {
+                    Canvas.ForceUpdateCanvases();
+                    scrollRect.verticalNormalizedPosition = 1f;
+                }
+            }
         }
 
         private void UpdateTitle(CardsMapMode mode)

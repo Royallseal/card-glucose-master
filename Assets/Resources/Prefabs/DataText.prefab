@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 4804327172315198484}
   - component: {fileID: 4365413926893700254}
   - component: {fileID: 5456088383950605324}
+  - component: {fileID: 4494509686692212432}
   m_Layer: 5
   m_Name: DataText
   m_TagString: Untagged
@@ -35,7 +36,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 50}
+  m_SizeDelta: {x: 800, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &4365413926893700254
 CanvasRenderer:
@@ -68,10 +69,12 @@ MonoBehaviour:
   m_text: "\u6700\u957F\u56DE\u5408\u6570\uFF1A111111111"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 7b3134627622efe45a73c3618c070e7c, type: 2}
-  m_sharedMaterial: {fileID: 8896916458404099862, guid: 7b3134627622efe45a73c3618c070e7c, type: 2}
-  m_fontSharedMaterials: []
+  m_sharedMaterial: {fileID: 0}
+  m_fontSharedMaterials:
+  - {fileID: 0}
   m_fontMaterial: {fileID: 0}
-  m_fontMaterials: []
+  m_fontMaterials:
+  - {fileID: 0}
   m_fontColor32:
     serializedVersion: 2
     rgba: 4294967295
@@ -134,3 +137,15 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &4494509686692212432
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4115144673479821904}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6366ee97f6b541449155028b9487355a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 

@@ -454,7 +454,7 @@ namespace CGM.Core
             // 血糖低于 2.0 或高于 15.0 直接判负
             if (playerStats != null)
             {
-                float glucose = playerStats.CurrentGlucose;
+                float glucose = Mathf.Round(playerStats.CurrentGlucose * 10f) / 10f;
                 if (glucose <= BattleConstants.GlucoseDeathMin)
                 {
                     DefeatReason = "血糖过低";

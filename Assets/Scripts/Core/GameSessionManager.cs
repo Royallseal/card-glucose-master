@@ -68,6 +68,7 @@ namespace CGM.Core
 
         // 本局统计数据（战斗结算汇总）
         private int totalBattlesFought = 0;
+        private int totalEnemiesDefeated = 0;
         private int totalTurnsAcrossAllBattles = 0;
         private int maxTurnsInSingleBattle = 0;
         private int minTurnsInSingleBattle = int.MaxValue;
@@ -509,6 +510,7 @@ namespace CGM.Core
 
             if (outcome == BattleOutcome.Victory)
             {
+                totalEnemiesDefeated++;
                 StartCoroutine(ShowVictorySettlementDelay());
             }
             else if (outcome == BattleOutcome.Defeat)
@@ -559,9 +561,10 @@ namespace CGM.Core
                 chooseGoldButton.gameObject.SetActive(true);
                 chooseGoldButton.interactable = true;
 
-                // 取消金币奖励的 Hover 缩放与音效组件，但保留并设置文本提示框
+                // 设置金币奖励按钮只播放音效、不产生视觉缩放
                 var goldHover = chooseGoldButton.gameObject.GetComponent<UI.UIHoverButtonEffects>();
-                if (goldHover != null) Destroy(goldHover);
+                if (goldHover == null) goldHover = chooseGoldButton.gameObject.AddComponent<UI.UIHoverButtonEffects>();
+                goldHover.Setup(Resources.Load<AudioClip>("Audio/Button_Hover"), 1.0f);
 
                 var trigger = chooseGoldButton.gameObject.GetComponent<UI.GameplayTooltipTrigger>();
                 if (trigger == null) trigger = chooseGoldButton.gameObject.AddComponent<UI.GameplayTooltipTrigger>();
@@ -907,6 +910,7 @@ namespace CGM.Core
         private void ResetSessionStats()
         {
             totalBattlesFought = 0;
+            totalEnemiesDefeated = 0;
             totalTurnsAcrossAllBattles = 0;
             maxTurnsInSingleBattle = 0;
             minTurnsInSingleBattle = int.MaxValue;
@@ -952,7 +956,7 @@ namespace CGM.Core
             }
 
             // 1. 战役结果组
-            list.Add(new UI.StatLine { label = "<b>【 战役结果 】</b>", value = "", colorHex = "#FFFFFF" });
+            list.Add(new UI.StatLine { label = "<b>【 战役结果 】</b>", value = "", colorHex = BattleConstants.ColorOrange });
             if (!victory)
             {
                 list.Add(new UI.StatLine { label = "   失败原因", value = lastDefeatReason, colorHex = BattleConstants.ColorRed });
@@ -964,27 +968,27 @@ namespace CGM.Core
             list.Add(new UI.StatLine { label = "", value = "", colorHex = "" });
 
             // 2. 战斗统计组
-            list.Add(new UI.StatLine { label = "<b>【 战斗统计 】</b>", value = "", colorHex = "#FFFFFF" });
-            list.Add(new UI.StatLine { label = "   击败敌人数",    value = totalBattlesFought.ToString(), colorHex = BattleConstants.ColorGold });
-            list.Add(new UI.StatLine { label = "   总回合数",      value = totalTurnsAcrossAllBattles.ToString(), colorHex = BattleConstants.ColorGreen });
-            list.Add(new UI.StatLine { label = "   最多回合数",    value = maxTurnsInSingleBattle.ToString(), colorHex = BattleConstants.ColorRed });
-            list.Add(new UI.StatLine { label = "   最少回合数",    value = minT.ToString(), colorHex = BattleConstants.ColorOrange });
-            list.Add(new UI.StatLine { label = "   平均回合数",    value = avgTurns.ToString(), colorHex = "#4EC9B0" });
+            list.Add(new UI.StatLine { label = "<b>【 战斗统计 】</b>", value = "", colorHex = BattleConstants.ColorGreen });
+            list.Add(new UI.StatLine { label = "   击败敌人数",    value = totalEnemiesDefeated.ToString(), colorHex = BattleConstants.ColorGold });
+            list.Add(new UI.StatLine { label = "   累计战斗回合",  value = totalTurnsAcrossAllBattles.ToString(), colorHex = BattleConstants.ColorGreen });
+            list.Add(new UI.StatLine { label = "   单局最多回合",  value = maxTurnsInSingleBattle.ToString(), colorHex = BattleConstants.ColorRed });
+            list.Add(new UI.StatLine { label = "   单局最少回合",  value = minT.ToString(), colorHex = BattleConstants.ColorOrange });
+            list.Add(new UI.StatLine { label = "   单局平均回合",  value = avgTurns.ToString(), colorHex = "#4EC9B0" });
             list.Add(new UI.StatLine { label = "   总伤害输出",    value = totalDamageDealtAllBattles.ToString(), colorHex = BattleConstants.ColorRed });
             list.Add(new UI.StatLine { label = "   总格挡获得",    value = totalBlockGainedAllBattles.ToString(), colorHex = BattleConstants.ColorGreen });
             list.Add(new UI.StatLine { label = "   使用卡牌数",    value = totalCardsPlayedAllBattles.ToString(), colorHex = BattleConstants.ColorGold });
             list.Add(new UI.StatLine { label = "", value = "", colorHex = "" });
 
             // 3. 牌组统计组
-            list.Add(new UI.StatLine { label = "<b>【 牌组统计 】</b>", value = "", colorHex = "#FFFFFF" });
+            list.Add(new UI.StatLine { label = "<b>【 牌组统计 】</b>", value = "", colorHex = BattleConstants.ColorGold });
             list.Add(new UI.StatLine { label = "   牌组总大小",    value = deckSize.ToString(), colorHex = "#FFAD1F" });
             list.Add(new UI.StatLine { label = "   初始卡数量",    value = starterCount.ToString(), colorHex = "#D3D3D3" });
             list.Add(new UI.StatLine { label = "   膳食卡数量",    value = dietCount.ToString(), colorHex = BattleConstants.ColorOrange });
             list.Add(new UI.StatLine { label = "   运动卡数量",    value = exerciseCount.ToString(), colorHex = BattleConstants.ColorGreen });
             list.Add(new UI.StatLine { label = "   药物卡数量",    value = medicineCount.ToString(), colorHex = "#8EA7FF" });
-            list.Add(new UI.StatLine { label = "   普通(Common)卡", value = commonCount.ToString(), colorHex = "#C8C8C8" });
-            list.Add(new UI.StatLine { label = "   良好(Uncommon)卡", value = uncommonCount.ToString(), colorHex = "#3498DB" });
-            list.Add(new UI.StatLine { label = "   优秀(Rare)卡",    value = rareCount.ToString(), colorHex = BattleConstants.ColorGold });
+            list.Add(new UI.StatLine { label = "   普通卡数量", value = commonCount.ToString(), colorHex = "#C8C8C8" });
+            list.Add(new UI.StatLine { label = "   良好卡数量", value = uncommonCount.ToString(), colorHex = "#3498DB" });
+            list.Add(new UI.StatLine { label = "   优秀卡数量",    value = rareCount.ToString(), colorHex = BattleConstants.ColorGold });
 
             return list;
         }
