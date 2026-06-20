@@ -24,6 +24,7 @@ namespace CGM.UI
 
         private GameObject _tooltipInstance;
         private RectTransform _tooltipRect;
+        private RectTransform _currentOwner; // 当前拥有/显示该描述框的 UI 物体
 
         private void Awake()
         {
@@ -57,6 +58,14 @@ namespace CGM.UI
             }
             canvas.overrideSorting = true;
             canvas.sortingOrder = 100;
+
+            // 强制将描述框设为不拦截射线，防止其遮挡鼠标导致下方 UI 触发 PointerExit
+            CanvasGroup cg = _tooltipInstance.GetComponent<CanvasGroup>();
+            if (cg == null)
+            {
+                cg = _tooltipInstance.AddComponent<CanvasGroup>();
+            }
+            cg.blocksRaycasts = false;
 
             // 自动检索文本组件（如果未在 Inspector 中显式指定）
             if (textComponent == null)
@@ -93,6 +102,9 @@ namespace CGM.UI
             {
                 return;
             }
+
+            // 记录当前的拥有者
+            _currentOwner = targetRect;
 
             // 填充文字并激活
             textComponent.text = content;
@@ -158,13 +170,27 @@ namespace CGM.UI
         }
 
         /// <summary>
-        /// 关闭/隐藏描述框
+        /// 强制关闭/隐藏描述框（清除拥有者关系）
         /// </summary>
         public void HideTooltip()
         {
             if (_tooltipInstance != null)
             {
                 _tooltipInstance.SetActive(false);
+                _currentOwner = null;
+            }
+        }
+
+        /// <summary>
+        /// 仅当指定的悬停目标是当前描述框的拥有者时，才关闭/隐藏描述框
+        /// </summary>
+        /// <param name="targetRect">被悬停 UI 物体的 RectTransform</param>
+        public void HideTooltip(RectTransform targetRect)
+        {
+            if (_tooltipInstance != null && _currentOwner == targetRect)
+            {
+                _tooltipInstance.SetActive(false);
+                _currentOwner = null;
             }
         }
 

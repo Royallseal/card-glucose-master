@@ -371,7 +371,8 @@ namespace CGM.UI
 
             if (TooltipManager.Instance != null)
             {
-                TooltipManager.Instance.HideTooltip();
+                // 仅在自己是描述框当前的拥有者时，才执行关闭隐藏，防止相互踩踏
+                TooltipManager.Instance.HideTooltip(transform as RectTransform);
             }
         }
 
@@ -388,12 +389,15 @@ namespace CGM.UI
             if (_canvas == null) return false;
 
             Vector2 mousePos = Input.mousePosition;
+            Camera uiCamera = _canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : _canvas.worldCamera;
             Vector2 localPosCard;
             // 将屏幕坐标转换至卡牌自身的本地坐标空间内
-            if (RectTransformUtility.ScreenPointToLocalPointInRectangle(_rectTransform, mousePos, _canvas.worldCamera, out localPosCard))
+            if (RectTransformUtility.ScreenPointToLocalPointInRectangle(_rectTransform, mousePos, uiCamera, out localPosCard))
             {
-                float halfWidth = _rectTransform.rect.width * 0.5f;
-                float halfHeight = _rectTransform.rect.height * 0.5f;
+                // 边界判断需要乘以 HoverScale (1.15)，使判定边界与放大后的卡牌视觉边界完美契合
+                float scaleFactor = HoverScale;
+                float halfWidth = _rectTransform.rect.width * 0.5f * scaleFactor;
+                float halfHeight = _rectTransform.rect.height * 0.5f * scaleFactor;
 
                 // 当前 Y 轴相对于默认/静止本地 Y 的偏移量
                 float currentYOffset = _rectTransform.localPosition.y - _defaultLocalY;
