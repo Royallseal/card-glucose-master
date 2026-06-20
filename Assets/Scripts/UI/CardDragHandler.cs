@@ -43,8 +43,9 @@ namespace CGM.UI
         private static bool _isAnyCardDragging = false; // 静态全局变量，用于在任何卡牌处于拖拽时屏蔽其他卡牌的 Hover
         private Canvas _canvasComponent;
         private bool _isHovered;
-        private bool _hasInitializedDefaultY;
         private float _defaultY;
+        private float _defaultLocalY;
+        private Vector3 _defaultScale;
         private Coroutine _hoverCoroutine;
         private const float HoverScale = 1.15f;      // 放大系数 (1.15倍)
         private const float HoverYOffset = 50f;      // 向上浮动像素
@@ -63,20 +64,8 @@ namespace CGM.UI
             _rectTransform = GetComponent<RectTransform>();
             _canvasGroup = GetComponent<CanvasGroup>();
             _cardUI = GetComponent<CardUI>();
-            _canvas = GetComponentInParent<Canvas>();
-
-            // 动态初始化 Sub-Canvas 重排序组件，用于实现置顶且不破坏布局
-            _canvasComponent = GetComponent<Canvas>();
-            if (_canvasComponent == null)
-            {
-                _canvasComponent = gameObject.AddComponent<Canvas>();
-            }
-            _canvasComponent.overrideSorting = false;
-
-            if (GetComponent<GraphicRaycaster>() == null)
-            {
-                gameObject.AddComponent<GraphicRaycaster>();
-            }
+            // 查找父级 Canvas（跳过卡牌自身的 Sub-Canvas）
+            _canvas = transform.parent != null ? transform.parent.GetComponentInParent<Canvas>() : GetComponentInParent<Canvas>();
         }
 
         private void Start()
@@ -90,6 +79,30 @@ namespace CGM.UI
             if (go != null) _enemyDetectRect = go.GetComponent<RectTransform>();
             go = GameObject.Find("Player_Stat");
             if (go != null) _playerDetectRect = go.GetComponent<RectTransform>();
+
+            // 仅对非展示用的手牌初始化 Canvas/Raycaster，以便支持置顶
+            if (!_isDisplayOnly)
+            {
+                _canvasComponent = GetComponent<Canvas>();
+                if (_canvasComponent == null)
+                {
+                    _canvasComponent = gameObject.AddComponent<Canvas>();
+                }
+                _canvasComponent.overrideSorting = false;
+
+                if (GetComponent<GraphicRaycaster>() == null)
+                {
+                    gameObject.AddComponent<GraphicRaycaster>();
+                }
+            }
+            else
+            {
+                // 展示用卡牌必须销毁身上的 Canvas 与 Raycaster，从而使其受 ScrollView 视口遮罩裁剪和射线屏蔽
+                var c = GetComponent<Canvas>();
+                if (c != null) Destroy(c);
+                var gr = GetComponent<GraphicRaycaster>();
+                if (gr != null) Destroy(gr);
+            }
         }
 
         private bool CanTargetEnemy() =>
@@ -116,7 +129,6 @@ namespace CGM.UI
                 _isHovered = false;
                 if (_hoverCoroutine != null) StopCoroutine(_hoverCoroutine);
                 _rectTransform.localScale = Vector3.one;
-                InitDefaultY();
                 _rectTransform.anchoredPosition = new Vector2(_rectTransform.anchoredPosition.x, _defaultY);
                 if (_canvasComponent != null) _canvasComponent.overrideSorting = false;
             }
@@ -277,14 +289,7 @@ namespace CGM.UI
         // Hover 悬停置顶动效实现
         // =========================================================================
 
-        private void InitDefaultY()
-        {
-            if (!_hasInitializedDefaultY)
-            {
-                _defaultY = _rectTransform.anchoredPosition.y;
-                _hasInitializedDefaultY = true;
-            }
-        }
+        // InitDefaultY is no longer needed since positions are captured dynamically on hover enter.
 
         public void OnPointerEnter(PointerEventData eventData)
         {
@@ -300,6 +305,7 @@ namespace CGM.UI
         {
             if (_isAnyCardDragging) return;
             if (_isDragging || _cardInfo == null) return;
+            if (_isHovered) return;
 
             if (!_isDisplayOnly)
             {
@@ -311,7 +317,10 @@ namespace CGM.UI
             if (anim != null && anim.IsAnimating) return;
             if (_handDisplay != null && _handDisplay.IsAnimating) return;
 
-            InitDefaultY();
+            // 动态捕获当前无 Hover 状态下的锚点坐标与本地坐标，保证在布局变动后依然计算精准
+            _defaultY = _rectTransform.anchoredPosition.y;
+            _defaultLocalY = _rectTransform.localPosition.y;
+            _defaultScale = _rectTransform.localScale;
             _isHovered = true;
 
             // 播放卡牌 Hover 音效
@@ -322,14 +331,20 @@ namespace CGM.UI
                 CGM.Core.AudioManager.PlaySfxStatic(cardHoverSound, pos);
             }
 
-            // 启用渲染层置顶，利用 Sub-Canvas 的 overrideSorting 保证它叠在左右邻近卡牌上方而不影响 Layout 排版顺序
-            if (_canvasComponent != null)
+            // 只有非展示模式（即手牌中）才启用渲染层置顶，避免 ScrollView 中的卡牌遮挡/裁剪失效
+            if (!_isDisplayOnly && _canvasComponent != null)
             {
                 _canvasComponent.overrideSorting = true;
                 _canvasComponent.sortingOrder = 30;
             }
 
-            StartHoverAnimation(HoverScale, _defaultY + HoverYOffset);
+            float targetY = _defaultY;
+            if (!_isDisplayOnly)
+            {
+                targetY += HoverYOffset;
+            }
+
+            StartHoverAnimation(HoverScale, targetY);
             TryShowTooltip();
         }
 
@@ -337,6 +352,13 @@ namespace CGM.UI
         {
             // 移出卡牌
             if (!_isHovered) return;
+
+            // 如果鼠标实际上还在卡牌的原始或偏移延展区域内（由 Y 轴偏移导致的假退出），不进行 Exit 处理
+            if (eventData != null && IsMouseOverExtendedBounds())
+            {
+                return;
+            }
+
             _isHovered = false;
 
             StartHoverAnimation(1.0f, _defaultY, () => {
@@ -353,6 +375,41 @@ namespace CGM.UI
             }
         }
 
+        private void Update()
+        {
+            if (_isHovered && !IsMouseOverExtendedBounds())
+            {
+                OnHoverExit(null);
+            }
+        }
+
+        private bool IsMouseOverExtendedBounds()
+        {
+            if (_canvas == null) return false;
+
+            Vector2 mousePos = Input.mousePosition;
+            Vector2 localPosCard;
+            // 将屏幕坐标转换至卡牌自身的本地坐标空间内
+            if (RectTransformUtility.ScreenPointToLocalPointInRectangle(_rectTransform, mousePos, _canvas.worldCamera, out localPosCard))
+            {
+                float halfWidth = _rectTransform.rect.width * 0.5f;
+                float halfHeight = _rectTransform.rect.height * 0.5f;
+
+                // 当前 Y 轴相对于默认/静止本地 Y 的偏移量
+                float currentYOffset = _rectTransform.localPosition.y - _defaultLocalY;
+
+                // 允许的 X 范围就是卡牌当前宽度的范围（由于 localPosCard 已经在卡牌本地空间，所以无需再乘以 scale）
+                bool xOverlap = localPosCard.x >= -halfWidth && localPosCard.x <= halfWidth;
+
+                // 允许的 Y 范围是：从静止时的最底部（-halfHeight - currentYOffset），到当前的最顶部（halfHeight）
+                float minY = -halfHeight - Mathf.Max(0f, currentYOffset);
+                float maxY = halfHeight - Mathf.Min(0f, currentYOffset);
+
+                return xOverlap && localPosCard.y >= minY && localPosCard.y <= maxY;
+            }
+            return false;
+        }
+
         private void StartHoverAnimation(float targetScale, float targetY, System.Action onComplete = null)
         {
             if (_hoverCoroutine != null)
@@ -366,7 +423,7 @@ namespace CGM.UI
         {
             Vector3 startScale = _rectTransform.localScale;
             float startY = _rectTransform.anchoredPosition.y;
-            Vector3 endScale = Vector3.one * targetScale;
+            Vector3 endScale = _defaultScale * targetScale;
 
             float t = 0f;
             while (t < HoverDuration)
@@ -401,3 +458,4 @@ namespace CGM.UI
         }
     }
 }
+
