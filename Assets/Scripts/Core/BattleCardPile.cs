@@ -58,6 +58,17 @@ namespace CGM.Core
         }
 
         /// <summary>
+        /// 直接向弃牌堆添加卡牌（供调试与时序结算使用）。
+        /// </summary>
+        public void AddToDiscardPile(CardInfo card)
+        {
+            if (card != null)
+            {
+                discardPile.Add(card);
+            }
+        }
+
+        /// <summary>
         /// 从抽牌堆中摸牌，直到达到数量上限或手牌上限。
         /// </summary>
         public List<CardInfo> Draw(int count, int maxHandSize, System.Action<CardInfo> onOverflow = null)

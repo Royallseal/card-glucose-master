@@ -33,6 +33,33 @@ namespace CGM.UI
 
         private PlayerStats _playerStats;
 
+        public bool HoldVisualStats { get; set; }
+        private int _visualHp = -1;
+        private int _visualBlock = -1;
+
+        public void SetVisualHpAndBlock(int hp, int block)
+        {
+            _visualHp = hp;
+            _visualBlock = block;
+
+            if (hpSlider != null)
+            {
+                hpSlider.value = hp;
+            }
+            if (hpText != null)
+            {
+                hpText.text = $"{hp}/{(_playerStats != null ? _playerStats.MaxHp : 80)}";
+            }
+            if (blockContainer != null)
+            {
+                blockContainer.SetActive(block > 0);
+            }
+            if (blockText != null && block > 0)
+            {
+                blockText.text = block.ToString();
+            }
+        }
+
         private void Start()
         {
             if (_playerStats == null)
@@ -53,8 +80,17 @@ namespace CGM.UI
             // 绑定生命值、格挡和头像悬停提示
             if (hpSlider != null)
             {
-                var trigger = hpSlider.gameObject.GetComponent<GameplayTooltipTrigger>();
-                if (trigger == null) trigger = hpSlider.gameObject.AddComponent<GameplayTooltipTrigger>();
+                var oldTrigger = hpSlider.gameObject.GetComponent<GameplayTooltipTrigger>();
+                if (oldTrigger != null) Destroy(oldTrigger);
+
+                Transform bgFrame = hpSlider.transform.Find("Background_Frame");
+                GameObject targetGo = bgFrame != null ? bgFrame.gameObject : hpSlider.gameObject;
+
+                var img = targetGo.GetComponent<Image>();
+                if (img != null) img.raycastTarget = true;
+
+                var trigger = targetGo.GetComponent<GameplayTooltipTrigger>();
+                if (trigger == null) trigger = targetGo.AddComponent<GameplayTooltipTrigger>();
                 trigger.Setup("hp");
             }
             if (blockContainer != null)
@@ -90,26 +126,36 @@ namespace CGM.UI
                 nameText.text = "控糖师";
             }
 
+            if (!HoldVisualStats)
+            {
+                _visualHp = _playerStats.CurrentHp;
+                _visualBlock = _playerStats.Block;
+            }
+            else
+            {
+                if (_visualHp == -1) _visualHp = _playerStats.CurrentHp;
+                if (_visualBlock == -1) _visualBlock = _playerStats.Block;
+            }
+
             // 血量条 + 文本
             if (hpSlider != null)
             {
                 hpSlider.maxValue = _playerStats.MaxHp;
-                hpSlider.value = _playerStats.CurrentHp;
+                hpSlider.value = _visualHp;
             }
             if (hpText != null)
             {
-                hpText.text = $"{_playerStats.CurrentHp}/{_playerStats.MaxHp}";
+                hpText.text = $"{_visualHp}/{_playerStats.MaxHp}";
             }
 
             // 格挡
-            int block = _playerStats.Block;
             if (blockContainer != null)
             {
-                blockContainer.SetActive(block > 0);
+                blockContainer.SetActive(_visualBlock > 0);
             }
-            if (blockText != null && block > 0)
+            if (blockText != null && _visualBlock > 0)
             {
-                blockText.text = block.ToString();
+                blockText.text = _visualBlock.ToString();
             }
 
             // Buff 图标
@@ -196,6 +242,10 @@ namespace CGM.UI
             {
                 targetIndicator.SetActive(false);
             }
+
+            HoldVisualStats = false;
+            _visualHp = -1;
+            _visualBlock = -1;
         }
     }
 }

@@ -24,6 +24,8 @@ namespace CGM.Core
         public int CardsDrawn { get; private set; }
         public float GlucoseDelta { get; private set; }
         public bool FullyBlocked { get; private set; }
+        public int TargetStartHp { get; set; }
+        public int TargetStartBlock { get; set; }
         public List<string> Messages { get; } = new List<string>();
 
         /// <summary>多段攻击的每击结果。</summary>
@@ -83,6 +85,11 @@ namespace CGM.Core
         public static CardPlayResult Resolve(CardInfo card, PlayerStats player, EntityStats primaryTarget, Func<int, int> drawCards = null)
         {
             CardPlayResult result = new CardPlayResult(card, primaryTarget);
+            if (primaryTarget != null)
+            {
+                result.TargetStartHp = primaryTarget.CurrentHp;
+                result.TargetStartBlock = primaryTarget.Block;
+            }
 
             if (card == null || player == null)
             {

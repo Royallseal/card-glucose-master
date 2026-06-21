@@ -57,6 +57,10 @@ namespace CGM.UI
 
         // 当前手牌对象池
         private readonly List<GameObject> handObjects = new List<GameObject>();
+        // 当前正在被 BatchAddRoutine 批量抽入队列中的卡牌
+        private readonly List<CardInfo> cardsBeingDrawn = new List<CardInfo>();
+        // Canvas 根节点上正在播放飞行动画（抽、弃、爆）的卡牌 GameObject
+        private readonly List<GameObject> temporaryAnimatingCards = new List<GameObject>();
 
         // 视觉计数与目标计数（用于实现随动画逐张更新）
         private int visualDrawCount = -1;
@@ -302,6 +306,19 @@ namespace CGM.UI
             if (handCards != null)
                 foreach (var c in handCards) if (c != null) remainIds.Add(c.id);
 
+            // 过滤掉正在绘制中的卡牌 ID，避免重复绘制
+            foreach (var card in cardsBeingDrawn)
+            {
+                if (card != null)
+                {
+                    int idx = remainIds.IndexOf(card.id);
+                    if (idx >= 0)
+                    {
+                        remainIds.RemoveAt(idx);
+                    }
+                }
+            }
+
             for (int i = handObjects.Count - 1; i >= 0; i--)
             {
                 var go = handObjects[i];
@@ -320,9 +337,11 @@ namespace CGM.UI
                     {
                         // 移出 handContainer，避免影响布局计算
                         go.transform.SetParent(discardPileTarget.parent, true);
+                        temporaryAnimatingCards.Add(go);
                         activeDiscardAnimations++;
                         anim.PlayDiscardAnimation(discardPileTarget.position, () => {
                             activeDiscardAnimations--;
+                            temporaryAnimatingCards.Remove(go);
                             // 弃牌飞完时，视觉计数+1
                             if (visualDiscardCount < targetDiscardCount)
                             {
@@ -353,7 +372,10 @@ namespace CGM.UI
                     }
                 }
                 if (toAdd.Count > 0)
+                {
+                    cardsBeingDrawn.AddRange(toAdd); // 加入正在绘制列表
                     StartCoroutine(BatchAddRoutine(toAdd));
+                }
             }
 
             // 剩余卡牌平滑移动到新位置
@@ -444,6 +466,7 @@ namespace CGM.UI
                 btn.interactable = battleController.CanPlayCard(card);
 
                 handObjects.Add(cardGo);
+                cardsBeingDrawn.Remove(card); // 实例化完成，从正在绘制列表中移除
 
                 // 2. 获取卡牌在 handContainer 中应有的最终世界坐标
                 LayoutRebuilder.ForceRebuildLayoutImmediate(handContainer.GetComponent<RectTransform>());
@@ -459,7 +482,10 @@ namespace CGM.UI
                 cardGo.transform.SetParent(canvasRoot, true);
 
                 // 4. 从抽牌堆飞入，动画结束后自动移回 handContainer
-                anim.PlayDrawAnimation(startPos, endPos, handContainer);
+                temporaryAnimatingCards.Add(cardGo);
+                anim.PlayDrawAnimation(startPos, endPos, handContainer, () => {
+                    temporaryAnimatingCards.Remove(cardGo);
+                });
 
                 // 5. 等一段时间再抽下一张
                 yield return new WaitForSeconds(0.15f);
@@ -801,6 +827,7 @@ namespace CGM.UI
 
             // 4. 播放从抽牌堆飞入的摸牌动画
             bool drawDone = false;
+            temporaryAnimatingCards.Add(cardGo);
             anim.PlayDrawAnimation(startPos, endPos, null, () => {
                 drawDone = true;
             });
@@ -818,6 +845,7 @@ namespace CGM.UI
                 anim.PlayDiscardAnimation(discardPileTarget.position, () => {
                     activeDiscardAnimations--;
                     discardDone = true;
+                    temporaryAnimatingCards.Remove(cardGo);
                     // 弃牌飞完时，视觉计数+1
                     if (visualDiscardCount < targetDiscardCount)
                     {
@@ -831,6 +859,7 @@ namespace CGM.UI
             }
             else
             {
+                temporaryAnimatingCards.Remove(cardGo);
                 Destroy(cardGo);
             }
 
@@ -840,6 +869,26 @@ namespace CGM.UI
         public void ResetUI()
         {
             StopAllCoroutines();
+
+            // 强制销毁所有处于飞行动画中的卡牌克隆体
+            foreach (var go in temporaryAnimatingCards)
+            {
+                if (go != null)
+                {
+                    Destroy(go);
+                }
+            }
+            temporaryAnimatingCards.Clear();
+
+            // 强制销毁所有记录在 handObjects 中的卡牌物体
+            foreach (var go in handObjects)
+            {
+                if (go != null)
+                {
+                    Destroy(go);
+                }
+            }
+            handObjects.Clear();
 
             if (handContainer != null)
             {
@@ -851,8 +900,8 @@ namespace CGM.UI
                     }
                 }
             }
-            handObjects.Clear();
 
+            cardsBeingDrawn.Clear();
             overflowQueue.Clear();
             isDrawingCards = false;
             activeDiscardAnimations = 0;

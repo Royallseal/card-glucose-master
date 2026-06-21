@@ -63,6 +63,10 @@ namespace CGM.Core
         [Header("战斗奖励")]
         [SerializeField] private int rewardCardCount = 3;
 
+        [Header("调试配置")]
+        [Tooltip("调试模式下按 A 键往抽牌堆中添加的卡牌 ID")]
+        [SerializeField] private string debugAddCardId = "starter_rice";
+
         private readonly BattleCardPile cardPile = new BattleCardPile();
         private readonly List<CardInfo> pendingRewardCards = new List<CardInfo>();
 
@@ -137,24 +141,27 @@ namespace CGM.Core
         {
             if (Phase == BattleTurnPhase.PlayerTurn)
             {
+                // 按 A 键手动在抽牌堆加牌
+                if (Input.GetKeyDown(KeyCode.A))
+                {
+                    AddDummyCardToDrawPile();
+                    NotifyPilesChanged();
+                }
                 // 按 D 键抽 1 张牌
                 if (Input.GetKeyDown(KeyCode.D))
                 {
-                    EnsureAvailableCards(1);
                     DrawCards(1);
                     Debug.Log("[Debug] 按 D 键强行抽牌 1 张。");
                 }
                 // 按 J 键抽 2 张牌
                 if (Input.GetKeyDown(KeyCode.J))
                 {
-                    EnsureAvailableCards(2);
                     DrawCards(2);
                     Debug.Log("[Debug] 按 J 键强行抽牌 2 张。");
                 }
                 // 按 K 键抽 3 张牌
                 if (Input.GetKeyDown(KeyCode.K))
                 {
-                    EnsureAvailableCards(3);
                     DrawCards(3);
                     Debug.Log("[Debug] 按 K 键强行抽牌 3 张。");
                 }
@@ -164,7 +171,6 @@ namespace CGM.Core
                     int needed = maximumHandSize - Hand.Count + 2;
                     if (needed > 0)
                     {
-                        EnsureAvailableCards(needed);
                         DrawCards(needed);
                         Debug.Log($"[Debug] 按 F 键强行抽满并溢出。需抽数: {needed}");
                     }
@@ -186,28 +192,19 @@ namespace CGM.Core
             }
         }
 
-        private void EnsureAvailableCards(int count)
-        {
-            ResolveDependencies();
-            int currentAvailable = DrawPile.Count + DiscardPile.Count;
-            if (currentAvailable < count)
-            {
-                int toAdd = count - currentAvailable;
-                for (int i = 0; i < toAdd; i++)
-                {
-                    AddDummyCardToDrawPile();
-                }
-                NotifyPilesChanged();
-            }
-        }
-
         private void AddDummyCardToDrawPile()
         {
             if (cardDatabase == null) return;
-            CardInfo card = cardDatabase.GetCardById("starter_rice");
+            string targetId = string.IsNullOrEmpty(debugAddCardId) ? "starter_rice" : debugAddCardId;
+            CardInfo card = cardDatabase.GetCardById(targetId);
             if (card != null)
             {
                 cardPile.AddToDrawPile(card);
+                Debug.Log($"[Debug] 成功添加卡牌「{card.name}」(ID: {targetId}) 到抽牌堆。");
+            }
+            else
+            {
+                Debug.LogError($"[Debug] 未找到卡牌 ID: {targetId}");
             }
         }
 #endif
@@ -288,11 +285,20 @@ namespace CGM.Core
                 return false;
             }
 
+            // 特效前锁定视觉 UI 属性，待特效队列处理完时再放开
+            var pUI = FindObjectOfType<UI.PlayerUI>(true);
+            var eUI = FindObjectOfType<UI.EnemyUI>(true);
+            if (pUI != null) pUI.HoldVisualStats = true;
+            if (eUI != null) eUI.HoldVisualStats = true;
+
             CurrentEnergy -= card.energyCost;
-            cardPile.DiscardCard(card);
+            cardPile.RemoveFromHand(card); // 仅从手牌移出，先不送入弃牌堆，防止抽牌洗回自己
 
             EntityStats target = primaryTarget != null ? primaryTarget : enemyStats;
             CardPlayResult result = BattleCardEffectResolver.Resolve(card, playerStats, target, DrawCards);
+
+            // 效果完全结算完毕后，将本张卡送入弃牌堆
+            cardPile.AddToDiscardPile(card);
 
             OnCardPlayed?.Invoke(result);
             NotifyEnergyChanged();
@@ -374,6 +380,12 @@ namespace CGM.Core
             if (intent != null)
             {
                 LogCombat($"[BattleSession] 敌人行动：{intent.actionType}。");
+
+                // 特效前锁定视觉 UI 属性，待特效队列处理完时再放开
+                var pUI = FindObjectOfType<UI.PlayerUI>(true);
+                var eUI = FindObjectOfType<UI.EnemyUI>(true);
+                if (pUI != null) pUI.HoldVisualStats = true;
+                if (eUI != null) eUI.HoldVisualStats = true;
 
                 // 记录玩家战前状态，用于判定攻击是否被完全格挡
                 int preHp = playerStats.CurrentHp;

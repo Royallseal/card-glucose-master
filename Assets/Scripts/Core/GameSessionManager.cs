@@ -405,6 +405,16 @@ namespace CGM.Core
                 {
                     battlePanel.SetActive(true);
 
+                    // 彻底清空战斗 UI 面板上的残留卡牌与数据，防旧局/换关残留
+                    var handDisplay = battlePanel.GetComponentInChildren<UI.BattleHandDisplay>(true);
+                    if (handDisplay != null) handDisplay.ResetUI();
+
+                    var playerUI = battlePanel.GetComponentInChildren<UI.PlayerUI>(true);
+                    if (playerUI != null) playerUI.ResetUI();
+
+                    var enemyUI = battlePanel.GetComponentInChildren<UI.EnemyUI>(true);
+                    if (enemyUI != null) enemyUI.ResetUI();
+
                     // 按当前层数切换战斗背景图：一层用 background1，二层用 background2
                     int layer = LevelManager.Instance.CurrentLayer;
                     string bgSpriteName = layer == 1 ? "background1" : "background2";
@@ -523,7 +533,18 @@ namespace CGM.Core
                         Debug.Log($"[GameSessionManager] 击败首关Boss肥胖领主，恢复玩家最大血量上限的80%（恢复 {healAmount} 点HP，当前HP：{playerStats.CurrentHp}/{playerStats.MaxHp}）。");
                     }
                 }
-                StartCoroutine(ShowVictorySettlementDelay());
+
+                // 最终击败并发将军之后，不再出现卡牌奖励，需跳转至胜利界面
+                if (LevelManager.Instance != null && LevelManager.Instance.CurrentNode != null &&
+                    LevelManager.Instance.CurrentNode.type == LevelType.Boss &&
+                    LevelManager.Instance.CurrentNode.enemyId == "general_complication")
+                {
+                    StartCoroutine(ShowFinalVictoryDelay());
+                }
+                else
+                {
+                    StartCoroutine(ShowVictorySettlementDelay());
+                }
             }
             else if (outcome == BattleOutcome.Defeat)
             {
@@ -936,6 +957,12 @@ namespace CGM.Core
         {
             yield return new WaitForSeconds(1.5f);
             ShowEndingPanel(false);
+        }
+
+        private IEnumerator ShowFinalVictoryDelay()
+        {
+            yield return new WaitForSeconds(1.5f);
+            ShowEndingPanel(true);
         }
 
         private void ShowEndingPanel()

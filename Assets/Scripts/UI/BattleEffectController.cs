@@ -138,27 +138,85 @@ namespace CGM.UI
         {
             var list = new List<EffectRequest>();
 
+            int currentHp = result.TargetStartHp;
+            int currentBlock = result.TargetStartBlock;
+
             // 1. 攻击 / 全格挡 — 多段攻击按每击独立判定
             if (result.HitResults.Count > 0)
             {
                 foreach (var hit in result.HitResults)
                 {
-                    list.Add(hit.blocked
+                    int dmg = hit.rawDamage;
+                    if (currentBlock > 0)
+                    {
+                        if (currentBlock >= dmg)
+                        {
+                            currentBlock -= dmg;
+                            dmg = 0;
+                        }
+                        else
+                        {
+                            dmg -= currentBlock;
+                            currentBlock = 0;
+                        }
+                    }
+                    if (dmg > 0)
+                    {
+                        currentHp = Mathf.Max(0, currentHp - dmg);
+                    }
+
+                    var req = hit.blocked
                         ? EffectReq(EffectType.Defend, false)
-                        : EffectReq(EffectType.Attack, false));
+                        : EffectReq(EffectType.Attack, false);
+                    req.visualHpAfterHit = currentHp;
+                    req.visualBlockAfterHit = currentBlock;
+                    req.targetStats = result.PrimaryTarget;
+                    list.Add(req);
                 }
             }
             else if (result.Card != null && result.Card.finalDamage > 0)
             {
                 // 兜底：非 Hit 效果的攻击（如未来扩展）
-                list.Add(result.FullyBlocked
+                int dmg = result.DamageDealt;
+                if (currentBlock > 0)
+                {
+                    if (currentBlock >= dmg)
+                    {
+                        currentBlock -= dmg;
+                        dmg = 0;
+                    }
+                    else
+                    {
+                        dmg -= currentBlock;
+                        currentBlock = 0;
+                    }
+                }
+                if (dmg > 0)
+                {
+                    currentHp = Mathf.Max(0, currentHp - dmg);
+                }
+
+                var req = result.FullyBlocked
                     ? EffectReq(EffectType.Defend, false)
-                    : EffectReq(EffectType.Attack, false));
+                    : EffectReq(EffectType.Attack, false);
+                req.visualHpAfterHit = currentHp;
+                req.visualBlockAfterHit = currentBlock;
+                req.targetStats = result.PrimaryTarget;
+                list.Add(req);
             }
 
             // 2. 获得格挡
             if (result.BlockGained > 0)
-                list.Add(EffectReq(EffectType.GainBlock, false, result.BlockGained));
+            {
+                var req = EffectReq(EffectType.GainBlock, false, result.BlockGained);
+                if (battleController != null && battleController.PlayerStats != null)
+                {
+                    req.visualHpAfterHit = battleController.PlayerStats.CurrentHp;
+                    req.visualBlockAfterHit = battleController.PlayerStats.Block;
+                    req.targetStats = battleController.PlayerStats;
+                }
+                list.Add(req);
+            }
 
             // 3. 状态（仅 Buff/Debuff）
             bool hasStatus = result.Card != null && result.Card.effects != null &&
@@ -166,7 +224,16 @@ namespace CGM.UI
                     e.effectType == "apply_buff" || e.effectType == "apply_debuff");
 
             if (hasStatus)
-                list.Add(EffectReq(EffectType.Status, false));
+            {
+                var req = EffectReq(EffectType.Status, false);
+                if (battleController != null && battleController.PlayerStats != null)
+                {
+                    req.visualHpAfterHit = battleController.PlayerStats.CurrentHp;
+                    req.visualBlockAfterHit = battleController.PlayerStats.Block;
+                    req.targetStats = battleController.PlayerStats;
+                }
+                list.Add(req);
+            }
 
             return list;
         }
@@ -180,10 +247,35 @@ namespace CGM.UI
             var req = new EffectRequest { isEnemy = true };
             switch (intent.actionType.ToLower())
             {
-                case "attack": req.type = EffectType.Attack; break;
-                case "block":  req.type = EffectType.GainBlock; req.blockValue = intent.GetValue(); break;
+                case "attack":
+                    req.type = EffectType.Attack;
+                    if (battleController != null && battleController.PlayerStats != null)
+                    {
+                        req.visualHpAfterHit = battleController.PlayerStats.CurrentHp;
+                        req.visualBlockAfterHit = battleController.PlayerStats.Block;
+                        req.targetStats = battleController.PlayerStats;
+                    }
+                    break;
+                case "block":
+                    req.type = EffectType.GainBlock;
+                    req.blockValue = intent.GetValue();
+                    if (battleController != null && battleController.EnemyStats != null)
+                    {
+                        req.visualHpAfterHit = battleController.EnemyStats.CurrentHp;
+                        req.visualBlockAfterHit = battleController.EnemyStats.Block;
+                        req.targetStats = battleController.EnemyStats;
+                    }
+                    break;
                 case "buff":
-                case "debuff": req.type = EffectType.Status; break;
+                case "debuff":
+                    req.type = EffectType.Status;
+                    if (battleController != null && battleController.EnemyStats != null)
+                    {
+                        req.visualHpAfterHit = battleController.EnemyStats.CurrentHp;
+                        req.visualBlockAfterHit = battleController.EnemyStats.Block;
+                        req.targetStats = battleController.EnemyStats;
+                    }
+                    break;
                 default: return null;
             }
             return req;
@@ -215,6 +307,20 @@ namespace CGM.UI
             // 恢复结束回合
             if (endTurnButton != null && battleController != null)
                 endTurnButton.interactable = battleController.Phase == BattleTurnPhase.PlayerTurn;
+
+            // 特效全部播放完毕，解除视觉锁定，并强制刷新最终真实状态
+            var pUI = FindObjectOfType<PlayerUI>(true);
+            var eUI = FindObjectOfType<EnemyUI>(true);
+            if (pUI != null)
+            {
+                pUI.HoldVisualStats = false;
+                pUI.RefreshUI();
+            }
+            if (eUI != null)
+            {
+                eUI.HoldVisualStats = false;
+                eUI.RefreshUI();
+            }
 
             isProcessing = false;
         }
@@ -255,6 +361,9 @@ namespace CGM.UI
             // 2. 音效
             if (clip != null)
                 AudioManager.PlaySfxStatic(clip, Camera.main != null ? Camera.main.transform.position : Vector3.zero);
+
+            // 音效响起、受击抖动开始的瞬间，立刻分步更新视觉血量/格挡
+            UpdateVisualStats(req);
 
             // 3. 攻击抖动
             if (req.type == EffectType.Attack && shakeTarget != null)
@@ -298,6 +407,9 @@ namespace CGM.UI
             // 音效
             if (clip != null)
                 AudioManager.PlaySfxStatic(clip, Camera.main != null ? Camera.main.transform.position : Vector3.zero);
+
+            // 在音效响起的瞬间立刻更新视觉格挡
+            UpdateVisualStats(req);
 
             // 弹跳放大 (1→1.3→1)
             float scaleTarget = Mathf.Clamp(1f + req.blockValue * 0.03f, 1.1f, 1.5f);
@@ -358,6 +470,23 @@ namespace CGM.UI
             // 已由 BattleHandDisplay / UltopController 等订阅，这里触发刷新即可。
         }
 
+        private void UpdateVisualStats(EffectRequest req)
+        {
+            if (req.targetStats != null)
+            {
+                var playerUI = FindObjectOfType<PlayerUI>(true);
+                var enemyUI = FindObjectOfType<EnemyUI>(true);
+                if (req.targetStats is PlayerStats && playerUI != null)
+                {
+                    playerUI.SetVisualHpAndBlock(req.visualHpAfterHit, req.visualBlockAfterHit);
+                }
+                else if (req.targetStats is EnemyStats && enemyUI != null)
+                {
+                    enemyUI.SetVisualHpAndBlock(req.visualHpAfterHit, req.visualBlockAfterHit);
+                }
+            }
+        }
+
         private RectTransform GetEffectUI(EffectType type)
         {
             switch (type)
@@ -410,6 +539,9 @@ namespace CGM.UI
             public EffectType type;
             public bool isEnemy;
             public int blockValue; // GainBlock 时的格挡值，用于缩放
+            public int visualHpAfterHit;   // 受击后的视觉 HP
+            public int visualBlockAfterHit; // 受击后的视觉格挡值
+            public EntityStats targetStats; // 目标 Stats 引用
         }
 
         private static EffectRequest EffectReq(EffectType t, bool enemy, int bv = 0)

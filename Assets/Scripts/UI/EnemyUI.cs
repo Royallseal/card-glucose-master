@@ -40,6 +40,33 @@ namespace CGM.UI
         private EnemyStats _enemyStats;
         private PlayerStats _cachedPlayer;
 
+        public bool HoldVisualStats { get; set; }
+        private int _visualHp = -1;
+        private int _visualBlock = -1;
+
+        public void SetVisualHpAndBlock(int hp, int block)
+        {
+            _visualHp = hp;
+            _visualBlock = block;
+
+            if (hpSlider != null)
+            {
+                hpSlider.value = hp;
+            }
+            if (hpText != null)
+            {
+                hpText.text = $"{hp}/{(_enemyStats != null ? _enemyStats.MaxHp : 80)}";
+            }
+            if (blockContainer != null)
+            {
+                blockContainer.SetActive(block > 0);
+            }
+            if (blockText != null && block > 0)
+            {
+                blockText.text = block.ToString();
+            }
+        }
+
         private void Start()
         {
             // 自动查找自身或父节点上的 EnemyStats
@@ -67,8 +94,17 @@ namespace CGM.UI
             // 绑定生命值、格挡和头像悬停提示
             if (hpSlider != null)
             {
-                var trigger = hpSlider.gameObject.GetComponent<GameplayTooltipTrigger>();
-                if (trigger == null) trigger = hpSlider.gameObject.AddComponent<GameplayTooltipTrigger>();
+                var oldTrigger = hpSlider.gameObject.GetComponent<GameplayTooltipTrigger>();
+                if (oldTrigger != null) Destroy(oldTrigger);
+
+                Transform bgFrame = hpSlider.transform.Find("Background_Frame");
+                GameObject targetGo = bgFrame != null ? bgFrame.gameObject : hpSlider.gameObject;
+
+                var img = targetGo.GetComponent<Image>();
+                if (img != null) img.raycastTarget = true;
+
+                var trigger = targetGo.GetComponent<GameplayTooltipTrigger>();
+                if (trigger == null) trigger = targetGo.AddComponent<GameplayTooltipTrigger>();
                 trigger.Setup("enemy_hp");
             }
             if (blockContainer != null)
@@ -134,20 +170,29 @@ namespace CGM.UI
                 Sprite sp = Resources.Load<Sprite>(spritePath);
                 if (sp != null) enemyImage.sprite = sp;
             }
-            hpSlider.maxValue = _enemyStats.MaxHp;
-            hpSlider.value = _enemyStats.CurrentHp;
-            hpText.text = $"{_enemyStats.CurrentHp}/{_enemyStats.MaxHp}";
-
-            // 2. 格挡值展示
-            int currentBlock = _enemyStats.Block;
-            if (currentBlock > 0)
+            if (!HoldVisualStats)
             {
-                blockText.text = currentBlock.ToString();
-                blockContainer.SetActive(true);
+                _visualHp = _enemyStats.CurrentHp;
+                _visualBlock = _enemyStats.Block;
             }
             else
             {
-                blockContainer.SetActive(false);
+                if (_visualHp == -1) _visualHp = _enemyStats.CurrentHp;
+                if (_visualBlock == -1) _visualBlock = _enemyStats.Block;
+            }
+
+            hpSlider.maxValue = _enemyStats.MaxHp;
+            hpSlider.value = _visualHp;
+            hpText.text = $"{_visualHp}/{_enemyStats.MaxHp}";
+
+            // 2. 格挡值展示
+            if (blockContainer != null)
+            {
+                blockContainer.SetActive(_visualBlock > 0);
+            }
+            if (blockText != null && _visualBlock > 0)
+            {
+                blockText.text = _visualBlock.ToString();
             }
 
             // 3. 当前意图 (Intent) 实时计算渲染
@@ -338,6 +383,10 @@ namespace CGM.UI
             {
                 targetIndicator.SetActive(false);
             }
+
+            HoldVisualStats = false;
+            _visualHp = -1;
+            _visualBlock = -1;
         }
     }
 }

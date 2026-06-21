@@ -273,7 +273,14 @@ namespace CGM.UI
                 }
                 else
                 {
-                    nextLevelText.text = "下一关: <color=#555555>无</color>";
+                    if (current != null && current.enemyId == "general_complication")
+                    {
+                        nextLevelText.text = "下一关: <color=#555555>胜利</color>";
+                    }
+                    else
+                    {
+                        nextLevelText.text = "下一关: <color=#555555>无</color>";
+                    }
                 }
             }
         }

@@ -1019,6 +1019,7 @@ MonoBehaviour:
   - starter_walk
   - starter_walk
   rewardCardCount: 3
+  debugAddCardId: diet_soda
 --- !u!114 &98605782
 MonoBehaviour:
   m_ObjectHideFlags: 0
