@@ -35,9 +35,10 @@ namespace CGM.UI
         [SerializeField] private float _cardAnimDuration = 0.6f;
         [SerializeField] private float _initialDelay = 0f;
 
-        // 缓存每张卡牌的最终 anchored position 和 rotation
+        // 缓存每张卡牌的最终 anchored position 和 rotation 及 alpha 值
         private Vector2[] _targetPositions;
         private Quaternion[] _targetRotations;
+        private float[] _targetAlphas;
 
         private bool _isAwakeDone = false;
 
@@ -183,15 +184,18 @@ namespace CGM.UI
         {
             if (_cardRects == null || _cardRects.Length == 0) return;
 
-            // 1. 缓存每张卡牌的当前位置和旋转（它们在 Inspector 中已被摆放到最终位置）
+            // 1. 缓存每张卡牌的当前位置、旋转和原始透明度（它们在 Inspector 中已被摆放到最终位置）
             if (_targetPositions == null || _targetPositions.Length != _cardRects.Length)
             {
                 _targetPositions = new Vector2[_cardRects.Length];
                 _targetRotations = new Quaternion[_cardRects.Length];
+                _targetAlphas = new float[_cardRects.Length];
                 for (int i = 0; i < _cardRects.Length; i++)
                 {
                     _targetPositions[i] = _cardRects[i].anchoredPosition;
                     _targetRotations[i] = _cardRects[i].localRotation;
+                    var img = _cardRects[i].GetComponent<Image>();
+                    _targetAlphas[i] = img != null ? img.color.a : 0.9019608f;
                 }
             }
 
@@ -211,11 +215,22 @@ namespace CGM.UI
                 originRot = _targetRotations[lastIdx];
             }
 
-            // 3. 将所有卡牌先堆叠到起始位置
+            // 3. 将所有卡牌先堆叠到起始位置，同时把需要飞行的卡牌初始透明度设为 0，防止重叠导致的透明度加深
             for (int i = 0; i < _cardRects.Length; i++)
             {
                 _cardRects[i].anchoredPosition = originPos;
                 _cardRects[i].localRotation = originRot;
+
+                if (_cardRects[i] != _cardOriginAnchor)
+                {
+                    var img = _cardRects[i].GetComponent<Image>();
+                    if (img != null)
+                    {
+                        Color c = img.color;
+                        c.a = 0f;
+                        img.color = c;
+                    }
+                }
             }
 
             // 4. 启动平滑插值动画协程
@@ -231,13 +246,16 @@ namespace CGM.UI
             for (int i = 0; i < _cardRects.Length; i++)
             {
                 StartCoroutine(AnimateCard(_cardRects[i], originPos, originRot,
-                    _targetPositions[i], _targetRotations[i], _cardAnimDuration));
+                    _targetPositions[i], _targetRotations[i], _targetAlphas[i], _cardAnimDuration));
             }
         }
 
         private IEnumerator AnimateCard(RectTransform card, Vector2 fromPos, Quaternion fromRot,
-            Vector2 toPos, Quaternion toRot, float duration)
+            Vector2 toPos, Quaternion toRot, float targetAlpha, float duration)
         {
+            var img = card.GetComponent<Image>();
+            bool isMoving = Vector2.Distance(fromPos, toPos) > 0.1f;
+
             float elapsed = 0f;
             while (elapsed < duration)
             {
@@ -250,12 +268,25 @@ namespace CGM.UI
                 card.anchoredPosition = Vector2.Lerp(fromPos, toPos, eased);
                 card.localRotation = Quaternion.Slerp(fromRot, toRot, eased);
 
+                if (img != null && isMoving)
+                {
+                    Color c = img.color;
+                    c.a = Mathf.Lerp(0f, targetAlpha, eased);
+                    img.color = c;
+                }
+
                 yield return null;
             }
 
             // 确保精确到位
             card.anchoredPosition = toPos;
             card.localRotation = toRot;
+            if (img != null)
+            {
+                Color c = img.color;
+                c.a = targetAlpha;
+                img.color = c;
+            }
         }
 
         // =====================================================================
