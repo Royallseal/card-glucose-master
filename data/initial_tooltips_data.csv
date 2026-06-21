@@ -1,6 +1,6 @@
 id,name,description,colorHex,isDebuff,spritePath
-vitality,活力,每层使打出的攻击卡伤害 +1。,#4EC9B0,false,UI/Icons/buff_vitality
-endurance,耐力,每层使打出的防守卡格挡值 +1。,#4EC9B0,false,UI/Icons/buff_endurance
+vitality,活力,每层使每次打出的攻击伤害 +1。,#4EC9B0,false,UI/Icons/buff_vitality
+endurance,耐力,每层使每次获得的格挡值 +1。,#4EC9B0,false,UI/Icons/buff_endurance
 fragility,脆弱,"受到伤害时，\n受到的伤害提升 50%。\n每回合结束层数 -1。","#FF6B6B",true,UI/Icons/debuff_fragility
 lethargy,乏力,"造成伤害时，\n输出的伤害降低 25%。\n每回合结束层数 -1。","#FF6B6B",true,UI/Icons/debuff_lethargy
 stiffness,僵硬,"获得格挡时，\n获得的格挡值降低 25%。\n每回合结束层数 -1。","#FF6B6B",true,UI/Icons/debuff_stiffness

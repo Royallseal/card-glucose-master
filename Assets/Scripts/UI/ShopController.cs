@@ -346,5 +346,26 @@ namespace CGM.UI
             }
             return null;
         }
+
+        public void ResetUI()
+        {
+            selectedCard = null;
+            shopCards.Clear();
+            Transform contentTrans = transform.Find("CardListPanel/Cards/Scroll View/Viewport/Content");
+            if (contentTrans == null)
+            {
+                contentTrans = FindDeepChild(transform, "Content");
+            }
+            if (contentTrans != null)
+            {
+                for (int i = contentTrans.childCount - 1; i >= 0; i--)
+                {
+                    if (contentTrans.GetChild(i) != null)
+                    {
+                        Destroy(contentTrans.GetChild(i).gameObject);
+                    }
+                }
+            }
+        }
     }
 }

@@ -391,7 +391,7 @@ namespace CGM.Core
             }
 
             enemyStats.TickBuffsEndOfTurn();
-            enemyStats.IncrementTurnScaling();
+            // enemyStats.IncrementTurnScaling(); // 已取消回合递增机制，防止中后期数值过于变态
             playerStats.ClearBlock();
 
             if (CheckBattleEnd())

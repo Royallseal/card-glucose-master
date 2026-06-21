@@ -69,6 +69,36 @@ namespace CGM.UI
         {
             if (TooltipManager.Instance == null || string.IsNullOrEmpty(tooltipId)) return;
 
+            // 如果当前有其他子节点正在显示 tooltip，则父节点不应该覆写它
+            if (TooltipManager.Instance.CurrentOwner != null && 
+                TooltipManager.Instance.CurrentOwner != transform && 
+                TooltipManager.Instance.CurrentOwner.IsChildOf(transform))
+            {
+                return;
+            }
+
+            // 特殊处理肥胖领主 (fat_lord) 的双描述框
+            if (tooltipId == "enemy_desc")
+            {
+                if (_enemyStats == null) _enemyStats = FindObjectOfType<EnemyStats>();
+                if (_enemyStats != null && _enemyStats.EnemyId == "fat_lord" && _enemyStats.EnemyInfo != null)
+                {
+                    string name = _enemyStats.EnemyInfo.name;
+                    string descStr = _enemyStats.EnemyInfo.description;
+                    string bossDesc = $"<color=#FF6B6B><b>{name}</b></color>\n{descStr}";
+                    string effectDesc = $"<color=#FFAD1F><b>代谢复苏</b></color>\n击败该领主后将恢复一定生命值。";
+
+                    string combinedKey = bossDesc + "|" + effectDesc;
+                    if (combinedKey != _lastContent)
+                    {
+                        _lastContent = combinedKey;
+                        var list = new System.Collections.Generic.List<string> { bossDesc, effectDesc };
+                        TooltipManager.Instance.ShowMultipleTooltips(transform as RectTransform, list);
+                    }
+                    return;
+                }
+            }
+
             string tooltipText = GetFormattedTooltipText();
             if (string.IsNullOrEmpty(tooltipText)) return;
 
@@ -85,6 +115,7 @@ namespace CGM.UI
             if (TooltipManager.Instance != null)
             {
                 TooltipManager.Instance.HideTooltip(transform as RectTransform);
+                TooltipManager.Instance.HideLoreTooltip(transform as RectTransform);
             }
         }
 

@@ -836,5 +836,39 @@ namespace CGM.UI
 
             onComplete?.Invoke();
         }
+
+        public void ResetUI()
+        {
+            StopAllCoroutines();
+
+            if (handContainer != null)
+            {
+                foreach (Transform child in handContainer)
+                {
+                    if (child != null)
+                    {
+                        Destroy(child.gameObject);
+                    }
+                }
+            }
+            handObjects.Clear();
+
+            overflowQueue.Clear();
+            isDrawingCards = false;
+            activeDiscardAnimations = 0;
+            isProcessingOverflow = false;
+            activeOverflowAnimations = 0;
+
+            visualDrawCount = -1;
+            visualDiscardCount = -1;
+            targetDrawCount = 0;
+            targetDiscardCount = 0;
+
+            if (phaseText != null) phaseText.text = "";
+            if (energyText != null) energyText.text = "";
+            if (drawPileCountText != null) drawPileCountText.text = "0";
+            if (discardPileCountText != null) discardPileCountText.text = "0";
+            if (roundCountText != null) roundCountText.text = "";
+        }
     }
 }

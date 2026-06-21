@@ -97,6 +97,16 @@ namespace CGM.Core
         }
 
         /// <summary>
+        /// 恢复生命值，不超过最大生命值。
+        /// </summary>
+        public virtual void Heal(int amount)
+        {
+            if (amount <= 0) return;
+            currentHp = Mathf.Min(maxHp, currentHp + amount);
+            NotifyChange();
+        }
+
+        /// <summary>
         /// 获得格挡值。
         /// </summary>
         public virtual void GainBlock(int amount)

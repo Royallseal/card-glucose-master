@@ -31,6 +31,13 @@ namespace CGM.UI
         private TextMeshProUGUI _loreTextComponent;
         private RectTransform _currentLoreOwner;
 
+        // 公开当前拥有者属性
+        public RectTransform CurrentOwner => _currentOwner;
+
+        // 描述框对象池与活跃实例列表
+        private readonly System.Collections.Generic.List<GameObject> _activeTooltipInstances = new System.Collections.Generic.List<GameObject>();
+        private readonly System.Collections.Generic.List<GameObject> _tooltipPool = new System.Collections.Generic.List<GameObject>();
+
         private void Awake()
         {
             if (Instance != null && Instance != this)
@@ -51,105 +58,116 @@ namespace CGM.UI
                 return;
             }
 
-            // 1. 实例化状态描述框为 TooltipManager 的子物体
+            // 1. 实例化第一个描述框，配置并加入池中
             _tooltipInstance = Instantiate(tooltipPrefab, transform);
             _tooltipRect = _tooltipInstance.GetComponent<RectTransform>();
+            textComponent = _tooltipInstance.GetComponentInChildren<TextMeshProUGUI>();
+            ConfigureCanvasAndCanvasGroup(_tooltipInstance);
+            _tooltipInstance.SetActive(false);
+            _tooltipPool.Add(_tooltipInstance);
 
-            // 自动配置 Canvas 组件，以保证描述框始终叠在最前层（高于卡牌 Hover 时的层级 30/35）
-            Canvas canvas = _tooltipInstance.GetComponent<Canvas>();
-            if (canvas == null)
-            {
-                canvas = _tooltipInstance.AddComponent<Canvas>();
-            }
+            // 2. 实例化第二个描述框 (卡牌 Lore 等使用)，配置并加入池中
+            _loreTooltipInstance = Instantiate(tooltipPrefab, transform);
+            _loreTooltipRect = _loreTooltipInstance.GetComponent<RectTransform>();
+            _loreTextComponent = _loreTooltipInstance.GetComponentInChildren<TextMeshProUGUI>();
+            ConfigureCanvasAndCanvasGroup(_loreTooltipInstance);
+            _loreTooltipInstance.SetActive(false);
+            _tooltipPool.Add(_loreTooltipInstance);
+        }
+
+        private void ConfigureCanvasAndCanvasGroup(GameObject go)
+        {
+            Canvas canvas = go.GetComponent<Canvas>();
+            if (canvas == null) canvas = go.AddComponent<Canvas>();
             canvas.overrideSorting = true;
             canvas.sortingOrder = 100;
 
-            // 强制将描述框设为不拦截射线，防止其遮挡鼠标导致下方 UI 触发 PointerExit
-            CanvasGroup cg = _tooltipInstance.GetComponent<CanvasGroup>();
-            if (cg == null)
-            {
-                cg = _tooltipInstance.AddComponent<CanvasGroup>();
-            }
+            CanvasGroup cg = go.GetComponent<CanvasGroup>();
+            if (cg == null) cg = go.AddComponent<CanvasGroup>();
             cg.blocksRaycasts = false;
 
-            // 自动检索文本组件（如果未在 Inspector 中显式指定）
-            if (textComponent == null)
+            RectTransform rectTrans = go.GetComponent<RectTransform>();
+            if (rectTrans != null)
             {
-                textComponent = _tooltipInstance.GetComponentInChildren<TextMeshProUGUI>();
-                if (textComponent == null)
+                rectTrans.anchorMin = new Vector2(0.5f, 0.5f);
+                rectTrans.anchorMax = new Vector2(0.5f, 0.5f);
+                rectTrans.pivot = new Vector2(0.5f, 0.5f);
+            }
+        }
+
+        private GameObject GetTooltipInstance()
+        {
+            GameObject instance = null;
+            if (_tooltipPool.Count > 0)
+            {
+                instance = _tooltipPool[_tooltipPool.Count - 1];
+                _tooltipPool.RemoveAt(_tooltipPool.Count - 1);
+            }
+            else
+            {
+                instance = Instantiate(tooltipPrefab, transform);
+                ConfigureCanvasAndCanvasGroup(instance);
+            }
+            return instance;
+        }
+
+        private void HideAllActiveTooltips()
+        {
+            foreach (var instance in _activeTooltipInstances)
+            {
+                if (instance != null)
                 {
-                    Debug.LogError("[TooltipManager] 无法在 Tooltip Prefab 的子节点中找到 TextMeshProUGUI 组件.");
+                    instance.SetActive(false);
+                    _tooltipPool.Add(instance);
                 }
             }
-
-            // 强行重置锚点和 Pivot 为 (0.5, 0.5) 居中对齐，方便定位数学运算
-            if (_tooltipRect != null)
-            {
-                _tooltipRect.anchorMin = new Vector2(0.5f, 0.5f);
-                _tooltipRect.anchorMax = new Vector2(0.5f, 0.5f);
-                _tooltipRect.pivot = new Vector2(0.5f, 0.5f);
-            }
-
-            _tooltipInstance.SetActive(false);
-
-            // 2. 实例化卡牌介绍(Lore)描述框为 TooltipManager 的子物体
-            _loreTooltipInstance = Instantiate(tooltipPrefab, transform);
-            _loreTooltipRect = _loreTooltipInstance.GetComponent<RectTransform>();
-
-            Canvas canvas2 = _loreTooltipInstance.GetComponent<Canvas>();
-            if (canvas2 == null)
-            {
-                canvas2 = _loreTooltipInstance.AddComponent<Canvas>();
-            }
-            canvas2.overrideSorting = true;
-            canvas2.sortingOrder = 100;
-
-            CanvasGroup cg2 = _loreTooltipInstance.GetComponent<CanvasGroup>();
-            if (cg2 == null)
-            {
-                cg2 = _loreTooltipInstance.AddComponent<CanvasGroup>();
-            }
-            cg2.blocksRaycasts = false;
-
-            _loreTextComponent = _loreTooltipInstance.GetComponentInChildren<TextMeshProUGUI>();
-
-            if (_loreTooltipRect != null)
-            {
-                _loreTooltipRect.anchorMin = new Vector2(0.5f, 0.5f);
-                _loreTooltipRect.anchorMax = new Vector2(0.5f, 0.5f);
-                _loreTooltipRect.pivot = new Vector2(0.5f, 0.5f);
-            }
-
-            _loreTooltipInstance.SetActive(false);
+            _activeTooltipInstances.Clear();
+            _currentOwner = null;
+            _currentLoreOwner = null;
         }
 
         /// <summary>
-        /// 显示描述框，自动计算侧边防遮挡定位和屏幕边缘 Clamp。
+        /// 统一展现多个提示描述框，支持纵向同侧排布 + 空间不足自动横向开新列（折行）排布。
         /// </summary>
-        /// <param name="content">填入描述框的富文本内容</param>
-        /// <param name="targetRect">被悬停 UI 物体的 RectTransform</param>
-        public void ShowTooltip(string content, RectTransform targetRect)
+        public void ShowMultipleTooltips(RectTransform targetRect, System.Collections.Generic.List<string> contents)
         {
-            // 强制将 TooltipManager 移到 Canvas 的最前方渲染
-            transform.SetAsLastSibling();
+            if (targetRect == null || contents == null || contents.Count == 0 || tooltipPrefab == null) return;
 
-            if (_tooltipInstance == null || textComponent == null || targetRect == null)
-            {
-                return;
-            }
+            // 1. 先回收当前所有的活跃提示框
+            HideAllActiveTooltips();
 
             // 记录当前的拥有者
             _currentOwner = targetRect;
+            _currentLoreOwner = targetRect;
 
-            // 填充文字并激活
-            textComponent.text = content;
-            _tooltipInstance.SetActive(true);
+            // 强制将 TooltipManager 移到 Canvas 的最前方渲染
+            transform.SetAsLastSibling();
 
-            // 强制重新计算排版，使 Content Size Fitter 立即计算出真实的长宽
+            System.Collections.Generic.List<RectTransform> tooltipRects = new System.Collections.Generic.List<RectTransform>();
+
+            // 2. 从池中获取并配置实例
+            for (int i = 0; i < contents.Count; i++)
+            {
+                GameObject instance = GetTooltipInstance();
+                var textComp = instance.GetComponentInChildren<TextMeshProUGUI>();
+                if (textComp != null)
+                {
+                    textComp.text = contents[i];
+                }
+
+                instance.SetActive(true);
+                _activeTooltipInstances.Add(instance);
+                tooltipRects.Add(instance.GetComponent<RectTransform>());
+            }
+
+            // 3. 强制刷新布局以计算真实的宽高
             Canvas.ForceUpdateCanvases();
-            LayoutRebuilder.ForceRebuildLayoutImmediate(_tooltipRect);
+            foreach (var rect in tooltipRects)
+            {
+                LayoutRebuilder.ForceRebuildLayoutImmediate(rect);
+            }
 
-            // 获取 Canvas 以及对应的渲染 Camera（Screen Space Camera 模式下必不可少）
+            // 4. 获取 Canvas 与摄像机
             Canvas canvas = targetRect.GetComponentInParent<Canvas>();
             Camera uiCamera = null;
             if (canvas != null && canvas.renderMode != RenderMode.ScreenSpaceOverlay)
@@ -157,51 +175,128 @@ namespace CGM.UI
                 uiCamera = canvas.worldCamera;
             }
 
-            // 获取悬停目标的四个世界坐标点
+            // 5. 获取悬停目标的屏幕四角
             Vector3[] targetWorldCorners = new Vector3[4];
             targetRect.GetWorldCorners(targetWorldCorners);
-
-            // 将目标的四个点转换为统一的 Screen Point（像素空间）
             Vector2[] targetScreenCorners = new Vector2[4];
             for (int i = 0; i < 4; i++)
             {
                 targetScreenCorners[i] = RectTransformUtility.WorldToScreenPoint(uiCamera, targetWorldCorners[i]);
             }
-
-            // 目标物体的中心点（像素空间）
             Vector2 targetCenterScreen = (targetScreenCorners[0] + targetScreenCorners[2]) / 2f;
 
-            // 计算描述框实际大小（像素空间）
-            float tooltipWidth = _tooltipRect.rect.width * _tooltipRect.lossyScale.x;
-            float tooltipHeight = _tooltipRect.rect.height * _tooltipRect.lossyScale.y;
+            // 6. 确定放置在左侧还是右侧（优先右侧）
+            float leftSpace = targetScreenCorners[0].x;
+            float rightSpace = Screen.width - targetScreenCorners[2].x;
+            bool isRight = rightSpace >= leftSpace;
 
-            // 默认位置：放置在目标的右侧（像素空间）
-            Vector2 screenPos = targetCenterScreen;
-            screenPos.x = targetScreenCorners[2].x + (tooltipWidth / 2f) + padding;
+            // 7. 进行分列排版（纵向空间限制）
+            System.Collections.Generic.List<System.Collections.Generic.List<RectTransform>> columns = new System.Collections.Generic.List<System.Collections.Generic.List<RectTransform>>();
+            System.Collections.Generic.List<RectTransform> currentColumn = new System.Collections.Generic.List<RectTransform>();
+            columns.Add(currentColumn);
 
-            // 检测右侧是否溢出屏幕
-            if (screenPos.x + (tooltipWidth / 2f) > Screen.width)
+            float currentColumnHeight = 0f;
+            float maxVerticalSpace = Screen.height - 2f * padding;
+
+            for (int i = 0; i < tooltipRects.Count; i++)
             {
-                // 如果右侧放不下，翻转到目标的左侧
-                screenPos.x = targetScreenCorners[0].x - (tooltipWidth / 2f) - padding;
+                var rect = tooltipRects[i];
+                float h = rect.rect.height * rect.lossyScale.y;
+
+                float heightNeeded = h;
+                if (currentColumn.Count > 0)
+                {
+                    heightNeeded += padding;
+                }
+
+                if (currentColumnHeight + heightNeeded > maxVerticalSpace && currentColumn.Count > 0)
+                {
+                    // 超出了本列最大高度，新开一列
+                    currentColumn = new System.Collections.Generic.List<RectTransform>();
+                    columns.Add(currentColumn);
+                    currentColumn.Add(rect);
+                    currentColumnHeight = h;
+                }
+                else
+                {
+                    currentColumn.Add(rect);
+                    currentColumnHeight += heightNeeded;
+                }
             }
 
-            // 垂直方向限制：防止描述框顶部或底部飞出屏幕边缘
-            float minY = (tooltipHeight / 2f) + padding;
-            float maxY = Screen.height - (tooltipHeight / 2f) - padding;
-            screenPos.y = Mathf.Clamp(screenPos.y, minY, maxY);
+            // 8. 依次放置每一列
+            float nextColStartX = isRight ? (targetScreenCorners[2].x + padding) : (targetScreenCorners[0].x - padding);
 
-            // 水平方向保底限制：绝对不允许描述框超出屏幕边界
-            float minX = (tooltipWidth / 2f) + padding;
-            float maxX = Screen.width - (tooltipWidth / 2f) - padding;
-            screenPos.x = Mathf.Clamp(screenPos.x, minX, maxX);
-
-            // 将计算好的 Screen Pos 转换回 World Pos 赋值给描述框的 Transform
-            Vector3 worldPos;
-            if (RectTransformUtility.ScreenPointToWorldPointInRectangle(_tooltipRect, screenPos, uiCamera, out worldPos))
+            for (int colIdx = 0; colIdx < columns.Count; colIdx++)
             {
-                _tooltipRect.position = worldPos;
+                var colList = columns[colIdx];
+                if (colList.Count == 0) continue;
+
+                // 计算这一列的最大宽度与总高度
+                float colWidth = 0f;
+                float colHeight = 0f;
+                System.Collections.Generic.List<float> heights = new System.Collections.Generic.List<float>();
+
+                for (int i = 0; i < colList.Count; i++)
+                {
+                    var rect = colList[i];
+                    float w = rect.rect.width * rect.lossyScale.x;
+                    float h = rect.rect.height * rect.lossyScale.y;
+
+                    if (w > colWidth) colWidth = w;
+                    colHeight += h;
+                    if (i > 0) colHeight += padding;
+                    heights.Add(h);
+                }
+
+                // 确定这一列的 X 坐标中心
+                float colCenterX;
+                if (isRight)
+                {
+                    colCenterX = nextColStartX + colWidth / 2f;
+                    nextColStartX = nextColStartX + colWidth + padding; // 下一列向右偏移
+                }
+                else
+                {
+                    colCenterX = nextColStartX - colWidth / 2f;
+                    nextColStartX = nextColStartX - colWidth - padding; // 下一列向左偏移
+                }
+
+                // 限制 Y 轴堆叠不越出屏幕顶部和底部
+                float minY = colHeight / 2f + padding;
+                float maxY = Screen.height - colHeight / 2f - padding;
+                float clampedCenterY = Mathf.Clamp(targetCenterScreen.y, minY, maxY);
+                float startY = clampedCenterY + colHeight / 2f;
+
+                float currentY = startY;
+                for (int i = 0; i < colList.Count; i++)
+                {
+                    var rect = colList[i];
+                    float h = heights[i];
+
+                    float itemCenterY = currentY - h / 2f;
+                    currentY -= (h + padding);
+
+                    // Clamp 限制以防越出屏幕安全距离
+                    float finalX = Mathf.Clamp(colCenterX, colWidth / 2f + padding, Screen.width - colWidth / 2f - padding);
+                    float finalY = Mathf.Clamp(itemCenterY, h / 2f + padding, Screen.height - h / 2f - padding);
+
+                    Vector2 screenPos = new Vector2(finalX, finalY);
+                    Vector3 worldPos;
+                    if (RectTransformUtility.ScreenPointToWorldPointInRectangle(rect, screenPos, uiCamera, out worldPos))
+                    {
+                        rect.position = worldPos;
+                    }
+                }
             }
+        }
+
+        /// <summary>
+        /// 显示描述框，自动计算侧边防遮挡定位和屏幕边缘 Clamp。
+        /// </summary>
+        public void ShowTooltip(string content, RectTransform targetRect)
+        {
+            ShowMultipleTooltips(targetRect, new System.Collections.Generic.List<string> { content });
         }
 
         /// <summary>
@@ -209,31 +304,23 @@ namespace CGM.UI
         /// </summary>
         public void HideTooltip()
         {
-            if (_tooltipInstance != null)
-            {
-                _tooltipInstance.SetActive(false);
-                _currentOwner = null;
-            }
+            HideAllActiveTooltips();
         }
 
         /// <summary>
         /// 仅当指定的悬停目标是当前描述框的拥有者时，才关闭/隐藏描述框
         /// </summary>
-        /// <param name="targetRect">被悬停 UI 物体的 RectTransform</param>
         public void HideTooltip(RectTransform targetRect)
         {
-            if (_tooltipInstance != null && _currentOwner == targetRect)
+            if (_currentOwner == targetRect)
             {
-                _tooltipInstance.SetActive(false);
-                _currentOwner = null;
+                HideAllActiveTooltips();
             }
         }
 
         /// <summary>
         /// 显示卡牌所含 Buff/Debuff 的描述框悬停提示。
         /// </summary>
-        /// <param name="cardInfo">卡牌数据</param>
-        /// <param name="targetRect">被悬停 UI 物体的 RectTransform</param>
         public void ShowCardEffectsTooltip(CGM.Data.CardInfo cardInfo, RectTransform targetRect)
         {
             string statusText = GetCardEffectsTooltipText(cardInfo);
@@ -280,207 +367,30 @@ namespace CGM.UI
         /// </summary>
         public void ShowLoreTooltip(string content, RectTransform targetRect)
         {
-            transform.SetAsLastSibling();
-
-            if (_loreTooltipInstance == null || _loreTextComponent == null || targetRect == null)
-            {
-                return;
-            }
-
-            _currentLoreOwner = targetRect;
-            _loreTextComponent.text = content;
-            _loreTooltipInstance.SetActive(true);
-
-            Canvas.ForceUpdateCanvases();
-            LayoutRebuilder.ForceRebuildLayoutImmediate(_loreTooltipRect);
-
-            Canvas canvas = targetRect.GetComponentInParent<Canvas>();
-            Camera uiCamera = null;
-            if (canvas != null && canvas.renderMode != RenderMode.ScreenSpaceOverlay)
-            {
-                uiCamera = canvas.worldCamera;
-            }
-
-            Vector3[] targetWorldCorners = new Vector3[4];
-            targetRect.GetWorldCorners(targetWorldCorners);
-
-            Vector2[] targetScreenCorners = new Vector2[4];
-            for (int i = 0; i < 4; i++)
-            {
-                targetScreenCorners[i] = RectTransformUtility.WorldToScreenPoint(uiCamera, targetWorldCorners[i]);
-            }
-
-            Vector2 targetCenterScreen = (targetScreenCorners[0] + targetScreenCorners[2]) / 2f;
-            float tooltipWidth = _loreTooltipRect.rect.width * _loreTooltipRect.lossyScale.x;
-            float tooltipHeight = _loreTooltipRect.rect.height * _loreTooltipRect.lossyScale.y;
-
-            Vector2 screenPos = targetCenterScreen;
-            screenPos.x = targetScreenCorners[2].x + (tooltipWidth / 2f) + padding;
-
-            if (screenPos.x + (tooltipWidth / 2f) > Screen.width)
-            {
-                screenPos.x = targetScreenCorners[0].x - (tooltipWidth / 2f) - padding;
-            }
-
-            float minY = (tooltipHeight / 2f) + padding;
-            float maxY = Screen.height - (tooltipHeight / 2f) - padding;
-            screenPos.y = Mathf.Clamp(screenPos.y, minY, maxY);
-
-            float minX = (tooltipWidth / 2f) + padding;
-            float maxX = Screen.width - (tooltipWidth / 2f) - padding;
-            screenPos.x = Mathf.Clamp(screenPos.x, minX, maxX);
-
-            Vector3 worldPos;
-            if (RectTransformUtility.ScreenPointToWorldPointInRectangle(_loreTooltipRect, screenPos, uiCamera, out worldPos))
-            {
-                _loreTooltipRect.position = worldPos;
-            }
+            ShowMultipleTooltips(targetRect, new System.Collections.Generic.List<string> { content });
         }
 
         /// <summary>
-        /// 同时显示卡牌的 Lore/介绍描述框 与 Buff状态 描述框，并智能排版（优先同侧上下排列，若超出屏幕则左右分立）。
+        /// 同时显示卡牌的 Lore/介绍描述框 与 Buff状态 描述框，并智能排版。
         /// </summary>
         public void ShowDualTooltips(string loreContent, string statusContent, RectTransform targetRect)
         {
-            transform.SetAsLastSibling();
-
-            if (_tooltipInstance == null || textComponent == null ||
-                _loreTooltipInstance == null || _loreTextComponent == null || targetRect == null)
-            {
-                return;
-            }
-
-            _currentOwner = targetRect;
-            _currentLoreOwner = targetRect;
-
-            textComponent.text = statusContent;
-            _loreTextComponent.text = loreContent;
-
-            _tooltipInstance.SetActive(true);
-            _loreTooltipInstance.SetActive(true);
-
-            Canvas.ForceUpdateCanvases();
-            LayoutRebuilder.ForceRebuildLayoutImmediate(_tooltipRect);
-            LayoutRebuilder.ForceRebuildLayoutImmediate(_loreTooltipRect);
-
-            Canvas canvas = targetRect.GetComponentInParent<Canvas>();
-            Camera uiCamera = null;
-            if (canvas != null && canvas.renderMode != RenderMode.ScreenSpaceOverlay)
-            {
-                uiCamera = canvas.worldCamera;
-            }
-
-            Vector3[] targetWorldCorners = new Vector3[4];
-            targetRect.GetWorldCorners(targetWorldCorners);
-
-            Vector2[] targetScreenCorners = new Vector2[4];
-            for (int i = 0; i < 4; i++)
-            {
-                targetScreenCorners[i] = RectTransformUtility.WorldToScreenPoint(uiCamera, targetWorldCorners[i]);
-            }
-
-            Vector2 targetCenterScreen = (targetScreenCorners[0] + targetScreenCorners[2]) / 2f;
-
-            float w1 = _loreTooltipRect.rect.width * _loreTooltipRect.lossyScale.x;
-            float h1 = _loreTooltipRect.rect.height * _loreTooltipRect.lossyScale.y;
-
-            float w2 = _tooltipRect.rect.width * _tooltipRect.lossyScale.x;
-            float h2 = _tooltipRect.rect.height * _tooltipRect.lossyScale.y;
-
-            // 优先在右侧，放不下则放左侧
-            float maxW = Mathf.Max(w1, w2);
-            float preferredX;
-            bool isRight = true;
-
-            if (targetScreenCorners[2].x + maxW + padding > Screen.width)
-            {
-                preferredX = targetScreenCorners[0].x - padding;
-                isRight = false;
-            }
-            else
-            {
-                preferredX = targetScreenCorners[2].x + padding;
-            }
-
-            float totalHeight = h1 + h2 + padding;
-            float verticalAvailable = Screen.height - 2f * padding;
-
-            if (totalHeight <= verticalAvailable)
-            {
-                // === 方案 A：同侧上下排列（优先） ===
-                float gap = padding;
-                
-                float idealY1 = targetCenterScreen.y + h1 / 2f + gap / 2f;
-                float idealY2 = targetCenterScreen.y - h2 / 2f - gap / 2f;
-
-                if (idealY1 + h1 / 2f > Screen.height - padding)
-                {
-                    float overflow = (idealY1 + h1 / 2f) - (Screen.height - padding);
-                    idealY1 -= overflow;
-                    idealY2 -= overflow;
-                }
-                if (idealY2 - h2 / 2f < padding)
-                {
-                    float underflow = padding - (idealY2 - h2 / 2f);
-                    idealY1 += underflow;
-                    idealY2 += underflow;
-                }
-
-                float xOffset1 = isRight ? preferredX + w1 / 2f : preferredX - w1 / 2f;
-                float xOffset2 = isRight ? preferredX + w2 / 2f : preferredX - w2 / 2f;
-
-                Vector2 pos1 = new Vector2(xOffset1, idealY1);
-                Vector2 pos2 = new Vector2(xOffset2, idealY2);
-
-                Vector3 wpos1, wpos2;
-                if (RectTransformUtility.ScreenPointToWorldPointInRectangle(_loreTooltipRect, pos1, uiCamera, out wpos1))
-                {
-                    _loreTooltipRect.position = wpos1;
-                }
-                if (RectTransformUtility.ScreenPointToWorldPointInRectangle(_tooltipRect, pos2, uiCamera, out wpos2))
-                {
-                    _tooltipRect.position = wpos2;
-                }
-            }
-            else
-            {
-                // === 方案 B：左右分立排列（备选） ===
-                float x1 = targetScreenCorners[0].x - w1 / 2f - padding;
-                float x2 = targetScreenCorners[2].x + w2 / 2f + padding;
-
-                float y1 = Mathf.Clamp(targetCenterScreen.y, h1 / 2f + padding, Screen.height - h1 / 2f - padding);
-                float y2 = Mathf.Clamp(targetCenterScreen.y, h2 / 2f + padding, Screen.height - h2 / 2f - padding);
-
-                Vector2 pos1 = new Vector2(x1, y1);
-                Vector2 pos2 = new Vector2(x2, y2);
-
-                Vector3 wpos1, wpos2;
-                if (RectTransformUtility.ScreenPointToWorldPointInRectangle(_loreTooltipRect, pos1, uiCamera, out wpos1))
-                {
-                    _loreTooltipRect.position = wpos1;
-                }
-                if (RectTransformUtility.ScreenPointToWorldPointInRectangle(_tooltipRect, pos2, uiCamera, out wpos2))
-                {
-                    _tooltipRect.position = wpos2;
-                }
-            }
+            ShowMultipleTooltips(targetRect, new System.Collections.Generic.List<string> { loreContent, statusContent });
         }
 
         public void HideLoreTooltip()
         {
-            if (_loreTooltipInstance != null)
+            if (_currentLoreOwner != null)
             {
-                _loreTooltipInstance.SetActive(false);
-                _currentLoreOwner = null;
+                HideAllActiveTooltips();
             }
         }
 
         public void HideLoreTooltip(RectTransform targetRect)
         {
-            if (_loreTooltipInstance != null && _currentLoreOwner == targetRect)
+            if (_currentLoreOwner == targetRect)
             {
-                _loreTooltipInstance.SetActive(false);
-                _currentLoreOwner = null;
+                HideAllActiveTooltips();
             }
         }
     }

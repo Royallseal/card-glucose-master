@@ -308,5 +308,36 @@ namespace CGM.UI
             if (targetIndicator != null)
                 targetIndicator.SetActive(show);
         }
+
+        public void ResetUI()
+        {
+            if (buffContainer != null)
+            {
+                foreach (Transform child in buffContainer)
+                {
+                    if (child != null) Destroy(child.gameObject);
+                }
+            }
+            if (hpSlider != null)
+            {
+                hpSlider.value = 0;
+            }
+            if (hpText != null)
+            {
+                hpText.text = "";
+            }
+            if (blockContainer != null)
+            {
+                blockContainer.SetActive(false);
+            }
+            if (intentContainer != null)
+            {
+                intentContainer.SetActive(false);
+            }
+            if (targetIndicator != null)
+            {
+                targetIndicator.SetActive(false);
+            }
+        }
     }
 }

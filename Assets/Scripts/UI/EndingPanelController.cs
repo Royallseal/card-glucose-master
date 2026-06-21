@@ -261,6 +261,28 @@ namespace CGM.UI
             if (returnButton == null) { var t = transform.Find("RestartGame"); if (t) returnButton = t.GetComponent<Button>(); }
             if (dataTextPrefab == null) dataTextPrefab = Resources.Load<GameObject>("Prefabs/DataText");
         }
+
+        public void ResetUI()
+        {
+            if (successUI != null) successUI.SetActive(false);
+            if (failureUI != null) failureUI.SetActive(false);
+            if (contentContainer != null)
+            {
+                foreach (Transform child in contentContainer)
+                {
+                    if (child != null) Destroy(child.gameObject);
+                }
+            }
+            Transform scrollViewTrans = transform.Find("Stats_ScrollView");
+            if (scrollViewTrans != null)
+            {
+                ScrollRect scrollRect = scrollViewTrans.GetComponent<ScrollRect>();
+                if (scrollRect != null)
+                {
+                    scrollRect.verticalNormalizedPosition = 1f;
+                }
+            }
+        }
     }
 
     /// <summary>

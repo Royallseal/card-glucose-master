@@ -511,6 +511,18 @@ namespace CGM.Core
             if (outcome == BattleOutcome.Victory)
             {
                 totalEnemiesDefeated++;
+                // 击败第一个 Boss 肥胖领主 (fat_lord) 后恢复上限 80% 的生命值
+                if (LevelManager.Instance != null && LevelManager.Instance.CurrentNode != null &&
+                    LevelManager.Instance.CurrentNode.type == LevelType.Boss &&
+                    LevelManager.Instance.CurrentNode.enemyId == "fat_lord")
+                {
+                    if (playerStats != null)
+                    {
+                        int healAmount = Mathf.RoundToInt(playerStats.MaxHp * 0.8f);
+                        playerStats.Heal(healAmount);
+                        Debug.Log($"[GameSessionManager] 击败首关Boss肥胖领主，恢复玩家最大血量上限的80%（恢复 {healAmount} 点HP，当前HP：{playerStats.CurrentHp}/{playerStats.MaxHp}）。");
+                    }
+                }
                 StartCoroutine(ShowVictorySettlementDelay());
             }
             else if (outcome == BattleOutcome.Defeat)
@@ -1132,6 +1144,31 @@ namespace CGM.Core
         {
             // 隐藏所有游戏面板
             HideAllPanels();
+
+            // 彻底清空各个面板残留的UI状态与数据，防重开显示旧数据
+            if (battlePanel != null)
+            {
+                var handDisplay = battlePanel.GetComponentInChildren<UI.BattleHandDisplay>(true);
+                if (handDisplay != null) handDisplay.ResetUI();
+
+                var playerUI = battlePanel.GetComponentInChildren<UI.PlayerUI>(true);
+                if (playerUI != null) playerUI.ResetUI();
+
+                var enemyUI = battlePanel.GetComponentInChildren<UI.EnemyUI>(true);
+                if (enemyUI != null) enemyUI.ResetUI();
+            }
+
+            if (shopPanel != null)
+            {
+                var shopController = shopPanel.GetComponentInChildren<UI.ShopController>(true);
+                if (shopController != null) shopController.ResetUI();
+            }
+
+            if (endingPanel != null)
+            {
+                var endingController = endingPanel.GetComponentInChildren<UI.EndingPanelController>(true);
+                if (endingController != null) endingController.ResetUI();
+            }
 
             // 停止 BGM
             if (BgmManager.Instance != null) BgmManager.Instance.StopBgm();
