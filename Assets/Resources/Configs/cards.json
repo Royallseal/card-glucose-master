@@ -11,7 +11,7 @@
             "finalBlock": 0,
             "description": "造成 {D} 点伤害，{G} 血糖。",
             "loreDescription": "日常膳食中最基础的淀粉类主食，在消化道中迅速分解为葡萄糖，提供能量的同时也会使血糖小幅上升。",
-            "iconColor": "#7EC8F8",
+            "iconColor": "#F7D070",
             "effects": []
         },
         {
@@ -25,7 +25,7 @@
             "finalBlock": 5,
             "description": "获得 {B} 点格挡，{G} 血糖。",
             "loreDescription": "饭后温和的有氧活动，通过轻度肌肉收缩来平稳消耗血液中的葡萄糖。",
-            "iconColor": "#7EC8F8",
+            "iconColor": "#56CCF2",
             "effects": []
         },
         {
@@ -39,7 +39,7 @@
             "finalBlock": 0,
             "description": "造成 {D} 点伤害，{G} 血糖。",
             "loreDescription": "富含高碳水化合物与高脂肪的餐食，提供大量能量的同时也会对胰腺造成极大的代谢负担。",
-            "iconColor": "#FF7676",
+            "iconColor": "#EB5757",
             "effects": []
         },
         {
@@ -53,7 +53,7 @@
             "finalBlock": 7,
             "description": "获得 {B} 点格挡，{G} 血糖。",
             "loreDescription": "由低升糖指数的膳食燕麦制成的面包，升糖缓慢平稳，为身体提供长效防护。",
-            "iconColor": "#FF7676",
+            "iconColor": "#E0A96D",
             "effects": []
         },
         {
@@ -67,7 +67,7 @@
             "finalBlock": 3,
             "description": "获得 {B} 点格挡。获得 {E0_V2} 层「缓释」。",
             "loreDescription": "极低热量的绿叶蔬菜，富含不可溶性膳食纤维，能在胃肠道中延缓葡萄糖的吸收速度。",
-            "iconColor": "#FF7676",
+            "iconColor": "#8CE8A0",
             "effects": [
                 {
                     "effectType": "apply_buff",
@@ -87,7 +87,7 @@
             "finalBlock": 0,
             "description": "造成 {D} 点伤害 {E0_V1} 次，{G} 血糖。",
             "loreDescription": "含有丰富维生素与果胶的水果，虽然味道甘甜，但合理进食不会引起血糖剧烈波动。",
-            "iconColor": "#FF7676",
+            "iconColor": "#FF7096",
             "effects": [
                 {
                     "effectType": "hit",
@@ -107,7 +107,7 @@
             "finalBlock": 0,
             "description": "抽 {E0_V1} 张牌。获得 {E1_V2} 层「缓释」。",
             "loreDescription": "零热量、零升糖指数的无糖饮料，能提神醒脑，且对血糖没有任何代谢负担。",
-            "iconColor": "#FF7676",
+            "iconColor": "#80DEEA",
             "effects": [
                 {
                     "effectType": "draw",
@@ -129,11 +129,17 @@
             "energyCost": 1,
             "glucoseChange": 0.6,
             "finalDamage": 0,
-            "finalBlock": 13,
-            "description": "获得 {B} 点格挡，{G} 血糖。",
+            "finalBlock": 9,
+            "description": "获得 {B} 点格挡，{G} 血糖。获得 {E0_V2} 层「耐力」。",
             "loreDescription": "过滤了多余脂肪并富含优质蛋白的乳制品，能为身体提供稳定的营养保护。",
-            "iconColor": "#FF7676",
-            "effects": []
+            "iconColor": "#F0F3F4",
+            "effects": [
+                {
+                    "effectType": "apply_buff",
+                    "value1": "endurance",
+                    "value2": "1"
+                }
+            ]
         },
         {
             "id": "exe_yoga",
@@ -146,7 +152,7 @@
             "finalBlock": 4,
             "description": "获得 {B} 点格挡，{G} 血糖。",
             "loreDescription": "利用静力拉伸与腹式呼吸来调节身体状态的有氧疗法，不需要消耗过多体力即可平稳降低血糖。",
-            "iconColor": "#66D9B6",
+            "iconColor": "#76D7C4",
             "effects": []
         },
         {
@@ -160,7 +166,7 @@
             "finalBlock": 0,
             "description": "{G} 血糖。获得 {E0_V2} 层「活力」。",
             "loreDescription": "中等强度的持续有氧运动，能显着增加肌肉对血液中葡萄糖的摄取效率，并增强心肺耐力。",
-            "iconColor": "#66D9B6",
+            "iconColor": "#54B4EB",
             "effects": [
                 {
                     "effectType": "apply_buff",
@@ -180,7 +186,7 @@
             "finalBlock": 0,
             "description": "造成 {D} 点伤害，{G} 血糖。使目标获得 {E0_V2} 层「脆弱」。",
             "loreDescription": "高强度的快速运动，能调动肌糖原进行爆发性消耗，但体能消耗较大。",
-            "iconColor": "#66D9B6",
+            "iconColor": "#F4D068",
             "effects": [
                 {
                     "effectType": "apply_debuff",
@@ -200,7 +206,7 @@
             "finalBlock": 7,
             "description": "获得 {B} 点格挡，{G} 血糖。使目标获得 {E0_V2} 层「乏力」。",
             "loreDescription": "耗能极高的全身协调性运动，能加速脂肪代谢，减轻体重带来的负担。",
-            "iconColor": "#66D9B6",
+            "iconColor": "#D488E3",
             "effects": [
                 {
                     "effectType": "apply_debuff",
@@ -216,12 +222,18 @@
             "rarity": "Uncommon",
             "energyCost": 1,
             "glucoseChange": -0.6,
-            "finalDamage": 14,
+            "finalDamage": 12,
             "finalBlock": 0,
-            "description": "造成 {D} 点伤害，{G} 血糖。",
+            "description": "造成 {D} 点伤害，{G} 血糖。使目标获得 {E0_V2} 层「僵硬」。",
             "loreDescription": "规律性的下肢骑行运动，能高效促进大肌群消耗，降低血液中多余的糖分。",
-            "iconColor": "#66D9B6",
-            "effects": []
+            "iconColor": "#74C3FF",
+            "effects": [
+                {
+                    "effectType": "apply_debuff",
+                    "value1": "stiffness",
+                    "value2": "1"
+                }
+            ]
         },
         {
             "id": "exe_extreme",
@@ -234,7 +246,7 @@
             "finalBlock": 0,
             "description": "失去 {E0_V1} 生命值。造成 {D} 点伤害 {E1_V1} 次，{G} 血糖。",
             "loreDescription": "挑战极限的超强训练，在对身体产生应急负荷的同时，也能瞬间代谢掉大量糖分。",
-            "iconColor": "#66D9B6",
+            "iconColor": "#E74C3C",
             "effects": [
                 {
                     "effectType": "self_damage",
@@ -253,14 +265,20 @@
             "name": "基础降糖药",
             "type": "Medicine",
             "rarity": "Common",
-            "energyCost": 1,
-            "glucoseChange": -2.0,
+            "energyCost": 0,
+            "glucoseChange": -1.0,
             "finalDamage": 0,
             "finalBlock": 0,
-            "description": "{G} 血糖。",
+            "description": "获得 {E0_V1} 点能量，{G} 血糖。",
             "loreDescription": "常用的口服降糖药，能有效抑制肝糖输出，并提高身体对胰岛素的敏感性。",
-            "iconColor": "#DA9EDA",
-            "effects": []
+            "iconColor": "#73C6B6",
+            "effects": [
+                {
+                    "effectType": "gain_energy",
+                    "value1": "2",
+                    "value2": ""
+                }
+            ]
         },
         {
             "id": "med_insulin_rapid",
@@ -268,12 +286,12 @@
             "type": "Medicine",
             "rarity": "Uncommon",
             "energyCost": 1,
-            "glucoseChange": -3.0,
+            "glucoseChange": -2.0,
             "finalDamage": 0,
-            "finalBlock": 0,
-            "description": "{G} 血糖。",
+            "finalBlock": 23,
+            "description": "获得 {B} 点格挡，{G} 血糖。",
             "loreDescription": "见效极快的胰岛素注射剂，能强效且迅速地将异常升高的血糖降至安全范围。",
-            "iconColor": "#DA9EDA",
+            "iconColor": "#E57373",
             "effects": []
         },
         {
@@ -285,13 +303,13 @@
             "glucoseChange": 0.0,
             "finalDamage": 0,
             "finalBlock": 0,
-            "description": "若当前血糖高于 {E0_V1}，将其复原至 {E0_V1}。",
+            "description": "将当前血糖直接复原至 {E0_V1}。",
             "loreDescription": "通过延缓小肠内双糖和多糖的分解，从而减缓餐后葡萄糖的吸收速度。",
-            "iconColor": "#DA9EDA",
+            "iconColor": "#E5C158",
             "effects": [
                 {
                     "effectType": "glucose_cap",
-                    "value1": "7.0",
+                    "value1": "5.7",
                     "value2": ""
                 }
             ]
@@ -303,11 +321,11 @@
             "rarity": "Common",
             "energyCost": 1,
             "glucoseChange": 2.0,
-            "finalDamage": 0,
+            "finalDamage": 26,
             "finalBlock": 0,
-            "description": "{G} 血糖。",
+            "description": "造成 {D} 点伤害，{G} 血糖。",
             "loreDescription": "用于应急升糖的制剂，能快速提高血液中的糖分，拉回低血糖导致的虚脱状态。",
-            "iconColor": "#DA9EDA",
+            "iconColor": "#FF8A65",
             "effects": []
         },
         {
@@ -321,7 +339,7 @@
             "finalBlock": 0,
             "description": "抽 {E0_V1} 张牌。获得 {E1_V2} 层「敏化」。",
             "loreDescription": "快速起效的胰岛素，可迅速促使细胞吸收葡萄糖，改善卡牌周转效率。",
-            "iconColor": "#DA9EDA",
+            "iconColor": "#DF80FF",
             "effects": [
                 {
                     "effectType": "draw",
@@ -341,12 +359,12 @@
             "type": "Medicine",
             "rarity": "Rare",
             "energyCost": 2,
-            "glucoseChange": -4.0,
+            "glucoseChange": -3.0,
             "finalDamage": 0,
-            "finalBlock": 0,
-            "description": "{G} 血糖。获得 {E0_V2} 层「敏化」。",
+            "finalBlock": 35,
+            "description": "获得 {B} 点格挡，{G} 血糖。获得 {E0_V2} 层「敏化」。",
             "loreDescription": "在皮下缓慢释放的长效制剂，能提供持续一整天的平稳基础血糖控制。",
-            "iconColor": "#DA9EDA",
+            "iconColor": "#64B5F6",
             "effects": [
                 {
                     "effectType": "apply_buff",

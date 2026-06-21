@@ -315,7 +315,7 @@ namespace CGM.Core
             cardPile.RemoveFromHand(card); // 仅从手牌移出，先不送入弃牌堆，防止抽牌洗回自己
 
             EntityStats target = primaryTarget != null ? primaryTarget : enemyStats;
-            CardPlayResult result = BattleCardEffectResolver.Resolve(card, playerStats, target, DrawCards);
+            CardPlayResult result = BattleCardEffectResolver.Resolve(card, playerStats, target, DrawCards, GainEnergy);
 
             // 效果完全结算完毕后，将本张卡送入弃牌堆
             cardPile.AddToDiscardPile(card);
@@ -329,6 +329,17 @@ namespace CGM.Core
 
             CheckBattleEnd();
             return true;
+        }
+
+        /// <summary>
+        /// 增加当前玩家的能量值。
+        /// </summary>
+        public void GainEnergy(int amount)
+        {
+            if (amount <= 0) return;
+            CurrentEnergy += amount;
+            NotifyEnergyChanged();
+            LogCombat($"[BattleSession] 获得 {amount} 点能量，当前能量：{CurrentEnergy}。");
         }
 
         /// <summary>

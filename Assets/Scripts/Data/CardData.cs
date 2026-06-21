@@ -41,7 +41,8 @@ namespace CGM.Data
         SelfDamage,     // 自伤（value1 = 失去的生命值）
         ApplyBuff,      // 施加增益状态（value1 = 状态 ID，value2 = 层数）
         ApplyDebuff,    // 施加减益状态（value1 = 状态 ID，value2 = 层数）
-        GlucoseCap      // 血糖封顶（value1 = 阈值）
+        GlucoseCap,     // 血糖封顶（value1 = 阈值）
+        GainEnergy      // 获得能量（value1 = 能量值）
     }
 
     /// <summary>
@@ -275,6 +276,7 @@ namespace CGM.Data
                 case "apply_buff":   return EffectType.ApplyBuff;
                 case "apply_debuff": return EffectType.ApplyDebuff;
                 case "glucose_cap":  return EffectType.GlucoseCap;
+                case "gain_energy":  return EffectType.GainEnergy;
                 default:
                     throw new ArgumentException($"未知的效果类型：{effectType}");
             }

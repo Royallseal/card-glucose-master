@@ -404,16 +404,6 @@ namespace CGM.Core
             {
                 if (battlePanel != null)
                 {
-                    // 彻底清空战斗 UI 面板上的残留卡牌与数据，在激活面板前进行后台清理
-                    var handDisplay = FindObjectOfType<UI.BattleHandDisplay>(true);
-                    if (handDisplay != null) handDisplay.ResetUI();
-
-                    var playerUI = battlePanel.GetComponentInChildren<UI.PlayerUI>(true);
-                    if (playerUI != null) playerUI.ResetUI();
-
-                    var enemyUI = battlePanel.GetComponentInChildren<UI.EnemyUI>(true);
-                    if (enemyUI != null) enemyUI.ResetUI();
-
                     battlePanel.SetActive(true);
 
                     // 按当前层数切换战斗背景图：一层用 background1，二层用 background2
@@ -440,6 +430,8 @@ namespace CGM.Core
                     battleController.StartingEnemyId = node.enemyId;
                     battleController.StartBattle();
                 }
+
+
 
                 // 战斗 BGM：普通敌人用 Battle Scars，Boss 用 Advent time
                 EnsureBgmManager();

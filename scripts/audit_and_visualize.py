@@ -58,7 +58,7 @@ def calculate_card_vp(row):
     
     # 1. 计算理论价值点数预算 (Target VP)
     base_vp = cost * 6
-    bg_compensation = 0.0 if ctype == "Medicine" else abs(bg_change) * 10
+    bg_compensation = abs(bg_change) * 10
     rarity_bonus = 2 if rarity == "Uncommon" else (4 if rarity == "Rare" else 0)
     
     target_vp = base_vp + bg_compensation + rarity_bonus - effect_vp

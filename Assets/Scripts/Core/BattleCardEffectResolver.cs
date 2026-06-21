@@ -82,7 +82,7 @@ namespace CGM.Core
         /// <summary>
         /// 执行一张卡牌的完整结算。
         /// </summary>
-        public static CardPlayResult Resolve(CardInfo card, PlayerStats player, EntityStats primaryTarget, Func<int, int> drawCards = null)
+        public static CardPlayResult Resolve(CardInfo card, PlayerStats player, EntityStats primaryTarget, Func<int, int> drawCards = null, Action<int> gainEnergy = null)
         {
             CardPlayResult result = new CardPlayResult(card, primaryTarget);
             if (primaryTarget != null)
@@ -196,10 +196,15 @@ namespace CGM.Core
 
                         case EffectType.GlucoseCap:
                             float cap = effect.GetFloatValue1();
-                            if (player.CurrentGlucose > cap)
+                            player.SetGlucose(cap);
+                            result.Messages.Add($"血糖直接复原至 {cap:F1}。");
+                            break;
+
+                        case EffectType.GainEnergy:
+                            if (gainEnergy != null)
                             {
-                                player.SetGlucose(cap);
-                                result.Messages.Add($"血糖被压到上限 {cap:F1}。");
+                                int amount = Mathf.Max(0, effect.GetIntValue1());
+                                gainEnergy(amount);
                             }
                             break;
                     }
