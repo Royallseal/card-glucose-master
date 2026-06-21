@@ -187,5 +187,15 @@ namespace CGM.Core
             discardPile.Clear();
             RandomManager.Shuffle(drawPile);
         }
+
+        /// <summary>
+        /// 彻底清空手牌、抽牌堆和弃牌堆。
+        /// </summary>
+        public void Clear()
+        {
+            drawPile.Clear();
+            handPile.Clear();
+            discardPile.Clear();
+        }
     }
 }

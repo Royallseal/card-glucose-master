@@ -210,6 +210,26 @@ namespace CGM.Core
 #endif
 
         /// <summary>
+        /// 彻底清空/重置战斗会话的数据状态（当退出战斗或返回主菜单时调用，以防数据留存）。
+        /// </summary>
+        public void ResetBattleSession()
+        {
+            Phase = BattleTurnPhase.NotStarted;
+            battleEnded = true;
+            DefeatReason = "";
+            TurnNumber = 0;
+            CurrentEnergy = 0;
+            pendingRewardCards.Clear();
+            cardPile.Clear(); // 彻底清空手牌、抽牌堆、弃牌堆
+            
+            // 广播空状态，通知 UI 刷新
+            NotifyPhaseChanged();
+            NotifyEnergyChanged();
+            NotifyPilesChanged();
+            OnHandChanged?.Invoke(new List<CardInfo>());
+        }
+
+        /// <summary>
         /// 立即开始一场战斗。
         /// </summary>
         public void StartBattle(IEnumerable<string> deckCardIds = null)

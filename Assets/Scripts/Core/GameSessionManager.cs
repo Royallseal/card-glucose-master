@@ -301,6 +301,7 @@ namespace CGM.Core
             // 保存并重置起始牌组到初始状态
             if (battleController != null)
             {
+                battleController.ResetBattleSession();
                 if (originalStartingDeck == null)
                     originalStartingDeck = new List<string>(battleController.StartingDeckCardIds);
                 battleController.ResetDeckToDefault(originalStartingDeck);
@@ -403,10 +404,8 @@ namespace CGM.Core
             {
                 if (battlePanel != null)
                 {
-                    battlePanel.SetActive(true);
-
-                    // 彻底清空战斗 UI 面板上的残留卡牌与数据，防旧局/换关残留
-                    var handDisplay = battlePanel.GetComponentInChildren<UI.BattleHandDisplay>(true);
+                    // 彻底清空战斗 UI 面板上的残留卡牌与数据，在激活面板前进行后台清理
+                    var handDisplay = FindObjectOfType<UI.BattleHandDisplay>(true);
                     if (handDisplay != null) handDisplay.ResetUI();
 
                     var playerUI = battlePanel.GetComponentInChildren<UI.PlayerUI>(true);
@@ -414,6 +413,8 @@ namespace CGM.Core
 
                     var enemyUI = battlePanel.GetComponentInChildren<UI.EnemyUI>(true);
                     if (enemyUI != null) enemyUI.ResetUI();
+
+                    battlePanel.SetActive(true);
 
                     // 按当前层数切换战斗背景图：一层用 background1，二层用 background2
                     int layer = LevelManager.Instance.CurrentLayer;
@@ -1164,20 +1165,20 @@ namespace CGM.Core
             return null;
         }
 
-        /// <summary>
-        /// 返回主菜单（开始界面），从游戏中退出时调用。
-        /// </summary>
         public void ReturnToMainMenu()
         {
-            // 隐藏所有游戏面板
-            HideAllPanels();
+            // 1. 彻底数据层重置
+            if (battleController != null)
+            {
+                battleController.ResetBattleSession();
+            }
 
-            // 彻底清空各个面板残留的UI状态与数据，防重开显示旧数据
+            // 2. 彻底清空各个面板残留的UI状态与数据，在隐藏前进行后台清理
+            var handDisplay = FindObjectOfType<UI.BattleHandDisplay>(true);
+            if (handDisplay != null) handDisplay.ResetUI();
+
             if (battlePanel != null)
             {
-                var handDisplay = battlePanel.GetComponentInChildren<UI.BattleHandDisplay>(true);
-                if (handDisplay != null) handDisplay.ResetUI();
-
                 var playerUI = battlePanel.GetComponentInChildren<UI.PlayerUI>(true);
                 if (playerUI != null) playerUI.ResetUI();
 
@@ -1196,6 +1197,9 @@ namespace CGM.Core
                 var endingController = endingPanel.GetComponentInChildren<UI.EndingPanelController>(true);
                 if (endingController != null) endingController.ResetUI();
             }
+
+            // 3. 隐藏所有游戏面板
+            HideAllPanels();
 
             // 停止 BGM
             if (BgmManager.Instance != null) BgmManager.Instance.StopBgm();
