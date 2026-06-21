@@ -35,6 +35,20 @@ namespace CGM.UI
 
         private void Awake()
         {
+            // 确保 CardsMapPanel 覆盖在高层级选中卡牌（sortingOrder = 40）之上，防止穿模
+            Canvas canvas = GetComponent<Canvas>();
+            if (canvas == null)
+            {
+                canvas = gameObject.AddComponent<Canvas>();
+            }
+            canvas.overrideSorting = true;
+            canvas.sortingOrder = 50;
+
+            if (GetComponent<GraphicRaycaster>() == null)
+            {
+                gameObject.AddComponent<GraphicRaycaster>();
+            }
+
             // 自动解析未绑定在 Inspector 中的子组件引用
             if (titleText == null)
             {

@@ -37,7 +37,7 @@ namespace CGM.UI
 
         private void OnEnable()
         {
-            InitializeShop();
+            UpdateCardAffordability();
         }
 
         /// <summary>

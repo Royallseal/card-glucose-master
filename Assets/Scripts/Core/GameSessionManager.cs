@@ -455,6 +455,7 @@ namespace CGM.Core
                     {
                         shopCtrl.SetPlayerStats(playerStats);
                     }
+                    shopCtrl.InitializeShop();
                     shopPanel.SetActive(true);
                 }
 
