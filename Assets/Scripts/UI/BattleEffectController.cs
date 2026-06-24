@@ -68,6 +68,18 @@ namespace CGM.UI
         /// </summary>
         public bool IsPlayingEffect => isProcessing || effectQueue.Count > 0;
 
+        /// <summary>
+        /// 重置特效控制器的所有运行时状态。
+        /// 必须在每次新战斗开始前调用，防止上一局被 SetActive(false)
+        /// 强杀协程后 isProcessing 卡死在 true 导致后续特效永远无法播放。
+        /// </summary>
+        public void ResetState()
+        {
+            StopAllCoroutines();
+            isProcessing = false;
+            effectQueue.Clear();
+        }
+
         private void Awake()
         {
             AutoResolveReferences();

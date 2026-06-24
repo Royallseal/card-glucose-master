@@ -427,6 +427,11 @@ namespace CGM.Core
                 // 装载敌人并启动战斗
                 if (battleController != null)
                 {
+                    // 重置特效控制器状态，防止上一局 battlePanel 被 SetActive(false)
+                    // 强杀 ProcessQueue 协程后 isProcessing 卡死导致本局特效无法播放
+                    var effectCtrl = battlePanel != null ? battlePanel.GetComponent<UI.BattleEffectController>() : null;
+                    if (effectCtrl != null) effectCtrl.ResetState();
+
                     battleController.StartingEnemyId = node.enemyId;
                     battleController.StartBattle();
                 }
@@ -1174,6 +1179,10 @@ namespace CGM.Core
 
             if (battlePanel != null)
             {
+                // 重置特效控制器，清理被 SetActive(false) 强杀协程后残留的 isProcessing 脏状态
+                var effectCtrl = battlePanel.GetComponent<UI.BattleEffectController>();
+                if (effectCtrl != null) effectCtrl.ResetState();
+
                 var playerUI = battlePanel.GetComponentInChildren<UI.PlayerUI>(true);
                 if (playerUI != null) playerUI.ResetUI();
 
