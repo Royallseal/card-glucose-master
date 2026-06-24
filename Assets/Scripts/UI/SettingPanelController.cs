@@ -344,12 +344,12 @@ namespace CGM.UI
             // 音量滑块
             if (bgmSlider == null)
             {
-                Transform t = transform.Find("SettingArea/SettingDetail/AudioSetting/Music_Row/Music_Slider");
+                Transform t = transform.Find("SettingArea/SettingDetail/AudioSetting/AudioArea/Music_Row/Music_Slider");
                 if (t != null) bgmSlider = t.GetComponent<Slider>();
             }
             if (sfxSlider == null)
             {
-                Transform t = transform.Find("SettingArea/SettingDetail/AudioSetting/SFX_Row/SFX_Slider");
+                Transform t = transform.Find("SettingArea/SettingDetail/AudioSetting/AudioArea/SFX_Row/SFX_Slider");
                 if (t != null) sfxSlider = t.GetComponent<Slider>();
             }
 

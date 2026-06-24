@@ -45,8 +45,15 @@ public class AspectRatioController : MonoBehaviour
             var go = new GameObject("Main Camera");
             uiCamera = go.AddComponent<Camera>();
             uiCamera.tag = "MainCamera";
-            go.AddComponent<AudioListener>();
         }
+
+        // 确保场景中有 AudioListener，但不创建重复的
+        if (FindObjectOfType<AudioListener>() == null)
+        {
+            uiCamera.gameObject.AddComponent<AudioListener>();
+        }
+
+        uiCamera.clearFlags = CameraClearFlags.SolidColor;
         uiCamera.backgroundColor = Color.black;
         uiCamera.allowHDR = false;
         uiCamera.allowMSAA = false;
