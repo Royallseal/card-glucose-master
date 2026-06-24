@@ -32,7 +32,10 @@ public class AspectRatioController : MonoBehaviour
         SetupUICamera();
         SwitchCanvasToCamera();
         CreateLetterboxBackground();
+        UpdateSafeArea();
     }
+
+    void Start() => UpdateSafeArea();
 
     void SetupUICamera()
     {
@@ -73,7 +76,9 @@ public class AspectRatioController : MonoBehaviour
         rt.anchoredPosition = Vector2.zero;
     }
 
-    void Update()
+    void Update() => UpdateSafeArea();
+
+    void UpdateSafeArea()
     {
         float screenRatio = (float)Screen.width / (float)Screen.height;
 
