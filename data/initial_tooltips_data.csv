@@ -4,8 +4,8 @@ endurance,耐力,每层使每次获得的格挡值 +1。,#4EC9B0,false,UI/Icons/
 fragility,脆弱,"受到伤害时，\n受到的伤害提升 50%。\n每回合结束层数 -1。","#FF6B6B",true,UI/Icons/debuff_fragility
 lethargy,乏力,"造成伤害时，\n输出的伤害降低 25%。\n每回合结束层数 -1。","#FF6B6B",true,UI/Icons/debuff_lethargy
 stiffness,僵硬,"获得格挡时，\n获得的格挡值降低 25%。\n每回合结束层数 -1。","#FF6B6B",true,UI/Icons/debuff_stiffness
-slow_release,缓释,抵消下一张膳食卡的血糖上升效果。触发后消耗 1 层。,#FFAD1F,false,UI/Icons/buff_slow_release
-sensitivity,敏化,使下一张药物卡的降糖效果翻倍。触发后消耗 1 层。,#FFAD1F,false,UI/Icons/buff_sensitivity
+slow_release,缓释,抵消下一次血糖上升效果。触发后消耗 1 层。,#FFAD1F,false,UI/Icons/buff_slow_release
+sensitivity,敏化,抵消下一次血糖降低效果。触发后消耗 1 层。,#FFAD1F,false,UI/Icons/buff_sensitivity
 glucose_low,低血糖,"无额外伤害或格挡效果。\n若当前血糖降低至 2.0 mmol/L 或以下，将立即失败！",#FFAD1F,false,UI/Icons/intent_status
 glucose_healthy,血糖健康,"打出的所有卡牌伤害与格挡值提升 25%。",#4EC9B0,false,UI/Icons/intent_status
 glucose_high,高血糖,"打出的所有卡牌伤害与格挡值降低 25%，且卡牌带来的血糖变化幅度翻倍。\n若当前血糖升高至 15.0 mmol/L 或以上，将立即失败！",#FF6B6B,true,UI/Icons/intent_status

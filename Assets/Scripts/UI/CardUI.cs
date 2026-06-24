@@ -27,7 +27,7 @@ namespace CGM.UI
         /// <param name="card">卡牌数据</param>
         /// <param name="damageModifier">运行时攻击修正值</param>
         /// <param name="blockModifier">运行时格挡修正值</param>
-        public void SetCard(CardInfo card, int damageModifier = 0, int blockModifier = 0, float glucoseMultiplier = 1.0f)
+        public void SetCard(CardInfo card, int damageModifier = 0, int blockModifier = 0, float glucoseMultiplier = 1.0f, bool glucoseBlocked = false)
         {
             if (card == null) return;
 
@@ -72,7 +72,7 @@ namespace CGM.UI
             // 4. 设置文字内容
             costText.text = card.energyCost.ToString();
             nameText.text = card.name;
-            descText.text = card.GetDynamicDescription(damageModifier, blockModifier, glucoseMultiplier);
+            descText.text = card.GetDynamicDescription(damageModifier, blockModifier, glucoseMultiplier, glucoseBlocked);
 
             // 5. 设置类型与稀有度文案
             string typeChinese = GetCardTypeChinese(card.GetCardType());

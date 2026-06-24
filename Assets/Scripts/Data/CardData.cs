@@ -56,7 +56,7 @@ namespace CGM.Data
         Lethargy,       // 乏力：造成伤害 -25%，每回合 -1 层
         Stiffness,      // 僵硬：获得格挡 -25%，每回合 -1 层
         SlowRelease,    // 缓释：抵消下一张膳食卡的升糖效果
-        Sensitivity     // 敏化：使下一张药物卡降糖效果翻倍
+        Sensitivity     // 敏化：抵消下一次血糖降低效果
     }
 
     /// <summary>
@@ -168,7 +168,7 @@ namespace CGM.Data
                 { BuffId.Lethargy, new BuffInfo(BuffId.Lethargy, "乏力", "造成伤害时，输出的伤害降低 25%。每回合结束层数 -1。", "#FF6B6B", true) },
                 { BuffId.Stiffness, new BuffInfo(BuffId.Stiffness, "僵硬", "获得格挡时，获得的格挡值降低 25%。每回合结束层数 -1。", "#FF6B6B", true) },
                 { BuffId.SlowRelease, new BuffInfo(BuffId.SlowRelease, "缓释", "抵消下一张膳食卡的血糖上升效果。触发后消耗 1 层。", "#FFAD1F", false) },
-                { BuffId.Sensitivity, new BuffInfo(BuffId.Sensitivity, "敏化", "使下一张药物卡的降糖效果翻倍。触发后消耗 1 层。", "#FFAD1F", false) }
+                { BuffId.Sensitivity, new BuffInfo(BuffId.Sensitivity, "敏化", "抵消下一次血糖降低效果。触发后消耗 1 层。", "#FFAD1F", false) }
             };
 
             foreach (var kvp in _registry)
@@ -353,7 +353,7 @@ namespace CGM.Data
         /// <param name="modifierBlock">运行时格挡增益（默认为 0）</param>
         /// <param name="glucoseMultiplier">血糖变化倍率（默认为 1.0f，高血糖 Hyper 状态下应传入 2.0f 触发红字预警）</param>
         /// <returns>最终带富文本的描述字符串</returns>
-        public string GetDynamicDescription(int modifierDamage = 0, int modifierBlock = 0, float glucoseMultiplier = 1.0f)
+        public string GetDynamicDescription(int modifierDamage = 0, int modifierBlock = 0, float glucoseMultiplier = 1.0f, bool glucoseBlocked = false)
         {
             if (string.IsNullOrEmpty(description)) return "";
 
@@ -394,24 +394,28 @@ namespace CGM.Data
             // 3. 处理血糖变化占位符 {G}
             if (result.Contains("{G}"))
             {
-                // 计算当前受血糖状态修正后的血糖变化值
-                float currentGlucoseChange = glucoseChange * glucoseMultiplier;
-                string formattedVal = System.Math.Abs(currentGlucoseChange).ToString("F1");
-                
                 string glucoseStr;
-                // 如果血糖波动倍率大于 1（高血糖 Hyper 状态），强制显示为红色高亮
-                if (glucoseMultiplier > 1.0f)
+                if (glucoseBlocked)
                 {
-                    glucoseStr = currentGlucoseChange >= 0 
-                        ? $"增加 <color={CGM.Core.BattleConstants.ColorRed}>{formattedVal}</color>" 
-                        : $"降低 <color={CGM.Core.BattleConstants.ColorRed}>{formattedVal}</color>";
+                    glucoseStr = $"<color=#888888>血糖变化已抵消 (0)</color>";
                 }
                 else
                 {
-                    // 正常状态：升糖显示橘黄，降糖显示绿色
-                    glucoseStr = currentGlucoseChange >= 0 
-                        ? $"增加 <color={CGM.Core.BattleConstants.ColorOrange}>{formattedVal}</color>" 
-                        : $"降低 <color={CGM.Core.BattleConstants.ColorGreen}>{formattedVal}</color>";
+                    float currentGlucoseChange = glucoseChange * glucoseMultiplier;
+                    string formattedVal = System.Math.Abs(currentGlucoseChange).ToString("F1");
+                    
+                    if (glucoseMultiplier > 1.0f)
+                    {
+                        glucoseStr = currentGlucoseChange >= 0 
+                            ? $"增加 <color={CGM.Core.BattleConstants.ColorRed}>{formattedVal}</color>" 
+                            : $"降低 <color={CGM.Core.BattleConstants.ColorRed}>{formattedVal}</color>";
+                    }
+                    else
+                    {
+                        glucoseStr = currentGlucoseChange >= 0 
+                            ? $"增加 <color={CGM.Core.BattleConstants.ColorOrange}>{formattedVal}</color>" 
+                            : $"降低 <color={CGM.Core.BattleConstants.ColorGreen}>{formattedVal}</color>";
+                    }
                 }
                 
                 result = result.Replace("{G}", glucoseStr);

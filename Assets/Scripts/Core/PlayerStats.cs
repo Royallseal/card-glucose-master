@@ -87,9 +87,8 @@ namespace CGM.Core
                 {
                     // 消耗 1 层「敏化」
                     ApplyBuff(BuffId.Sensitivity, -1);
-                    // 降糖效果翻倍
-                    changeAmount *= 2f;
-                    Debug.Log("[PlayerStats] 触发「敏化」效果：本次降糖数值成功翻倍！");
+                    // 敏化抵消本次降糖效果，血糖改变量归零
+                    changeAmount = 0f;
                 }
             }
 

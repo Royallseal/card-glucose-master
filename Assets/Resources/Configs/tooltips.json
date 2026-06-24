@@ -3,7 +3,7 @@
         {
             "id": "vitality",
             "name": "活力",
-            "description": "每层使打出的攻击卡伤害 +1。",
+            "description": "每层使每次打出的攻击伤害 +1。",
             "colorHex": "#4EC9B0",
             "isDebuff": false,
             "spritePath": "UI/Icons/buff_vitality"
@@ -11,7 +11,7 @@
         {
             "id": "endurance",
             "name": "耐力",
-            "description": "每层使打出的防守卡格挡值 +1。",
+            "description": "每层使每次获得的格挡值 +1。",
             "colorHex": "#4EC9B0",
             "isDebuff": false,
             "spritePath": "UI/Icons/buff_endurance"
@@ -43,7 +43,7 @@
         {
             "id": "slow_release",
             "name": "缓释",
-            "description": "抵消下一张膳食卡的血糖上升效果。触发后消耗 1 层。",
+            "description": "抵消下一次血糖上升效果。触发后消耗 1 层。",
             "colorHex": "#FFAD1F",
             "isDebuff": false,
             "spritePath": "UI/Icons/buff_slow_release"
@@ -51,7 +51,7 @@
         {
             "id": "sensitivity",
             "name": "敏化",
-            "description": "使下一张药物卡的降糖效果翻倍。触发后消耗 1 层。",
+            "description": "抵消下一次血糖降低效果。触发后消耗 1 层。",
             "colorHex": "#FFAD1F",
             "isDebuff": false,
             "spritePath": "UI/Icons/buff_sensitivity"

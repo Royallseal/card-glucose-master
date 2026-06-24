@@ -744,11 +744,13 @@ namespace CGM.UI
 
             float glucoseMultiplier = player != null
                 ? CGM.Core.BattleCalculator.GetGlucoseChangeMultiplier(player) : 1.0f;
+            bool glucoseBlocked = CGM.Core.BattleCalculator.WillGlucoseBeBlocked(card, player);
 
             cardUI.SetCard(card,
                 actualDamage - card.finalDamage,
                 actualBlock - card.finalBlock,
-                glucoseMultiplier);
+                glucoseMultiplier,
+                glucoseBlocked);
         }
 
         private void OnCardOverflowed(CardInfo card)

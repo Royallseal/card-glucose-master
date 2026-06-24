@@ -96,6 +96,18 @@ namespace CGM.Core
             return 1.0f;
         }
 
+        /// <summary>
+        /// 预测卡牌的血糖变化是否会被 缓释/敏化 buff 抵消。
+        /// 缓释抵消升糖（glucoseChange > 0），敏化抵消降糖（glucoseChange < 0）。
+        /// </summary>
+        public static bool WillGlucoseBeBlocked(CardInfo card, PlayerStats player)
+        {
+            if (player == null || card == null || card.glucoseChange == 0f) return false;
+            if (card.glucoseChange > 0f && player.GetBuffCount(BuffId.SlowRelease) > 0) return true;
+            if (card.glucoseChange < 0f && player.GetBuffCount(BuffId.Sensitivity) > 0) return true;
+            return false;
+        }
+
         // =========================================================================
         // 2. 核心战斗数据计算接口 (Core Battle Formulas)
         // =========================================================================
