@@ -128,6 +128,16 @@ namespace CGM.Core
         }
 
         /// <summary>
+        /// 播放一个音效片段，在全局 SFX 音量基础上再乘以倍率。
+        /// 用于个别音效需要比全局音量更大/更小时。
+        /// </summary>
+        public void PlaySfx(AudioClip clip, Vector3 position, float volumeMultiplier)
+        {
+            if (clip == null) return;
+            AudioSource.PlayClipAtPoint(clip, position, _sfxVolume * volumeMultiplier);
+        }
+
+        /// <summary>
         /// 播放一个音效片段（静态便捷方法）。
         /// </summary>
         public static void PlaySfxStatic(AudioClip clip, Vector3 position)
@@ -140,6 +150,21 @@ namespace CGM.Core
             {
                 // 降级：AudioManager 尚未初始化时用默认音量播放
                 AudioSource.PlayClipAtPoint(clip, position, DefaultVolume);
+            }
+        }
+
+        /// <summary>
+        /// 播放一个音效片段（静态便捷方法，带音量倍率）。
+        /// </summary>
+        public static void PlaySfxStatic(AudioClip clip, Vector3 position, float volumeMultiplier)
+        {
+            if (Instance != null)
+            {
+                Instance.PlaySfx(clip, position, volumeMultiplier);
+            }
+            else
+            {
+                AudioSource.PlayClipAtPoint(clip, position, DefaultVolume * volumeMultiplier);
             }
         }
 

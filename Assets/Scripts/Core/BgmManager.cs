@@ -212,15 +212,30 @@ namespace CGM.Core
         {
             switch (trackName.ToLower())
             {
-                case "dance of fireflies":
-                    return "Audio/Music/Dance Of The Fireflies - Philter";
-                case "battle scars":
-                    return "Audio/Music/Battle Scars - Philter";
-                case "advent time":
-                case "adventure time":
-                    return "Audio/Music/Adventure Time - Philter";
-                case "back to yesterday":
-                    return "Audio/Music/Back To Yesterday - Philter";
+                case "title":
+                    return "Audio/Music/20 - The Journey";
+                case "battle 1":
+                case "battle1":
+                    return "Audio/Music/05 - Battle 1";
+                case "battle 2":
+                case "battle2":
+                    return "Audio/Music/09 - Battle 2";
+                case "boss 1":
+                case "boss1":
+                case "decisive battle 2":
+                    return "Audio/Music/17 - Decisive Battle 2 - The Calamity";
+                case "boss 2":
+                case "boss2":
+                case "final battle":
+                    return "Audio/Music/21 - Final Battle - For Love";
+                case "shop":
+                case "calm before the storm":
+                    return "Audio/Music/16 - The Calm Before The Storm";
+                case "victory":
+                    return "Audio/Music/06 - Victory!";
+                case "defeat":
+                case "final of the fantasy":
+                    return "Audio/Music/22 - The Final of The Fantasy";
                 default:
                     return trackName; // 备用直接路径
             }

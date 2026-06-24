@@ -228,7 +228,7 @@ namespace CGM.Core
 
                 // 开始界面 BGM
                 EnsureBgmManager();
-                if (BgmManager.Instance != null) BgmManager.Instance.PlayBgm("Dance of fireflies");
+                if (BgmManager.Instance != null) BgmManager.Instance.PlayBgm("title");
             }
             else
             {
@@ -433,11 +433,15 @@ namespace CGM.Core
 
 
 
-                // 战斗 BGM：普通敌人用 Battle Scars，Boss 用 Advent time
+                // 战斗 BGM：根据 Layer 阶段区分普通战 / Boss 战
                 EnsureBgmManager();
                 if (BgmManager.Instance != null)
                 {
-                    BgmManager.Instance.PlayBgm(node.type == LevelType.Boss ? "Advent time" : "Battle Scars");
+                    int layer = LevelManager.Instance != null ? LevelManager.Instance.CurrentLayer : 1;
+                    if (node.type == LevelType.Boss)
+                        BgmManager.Instance.PlayBgm(layer == 1 ? "boss 1" : "boss 2");
+                    else
+                        BgmManager.Instance.PlayBgm(layer == 1 ? "battle 1" : "battle 2");
                 }
             }
             else if (node.type == LevelType.Shop)
@@ -461,7 +465,7 @@ namespace CGM.Core
 
                 // 商店 BGM
                 EnsureBgmManager();
-                if (BgmManager.Instance != null) BgmManager.Instance.PlayBgm("Back to yesterday");
+                if (BgmManager.Instance != null) BgmManager.Instance.PlayBgm("shop");
             }
 
             // 通知顶部栏刷新
@@ -986,9 +990,7 @@ namespace CGM.Core
                 controller.ShowDefeat(stats);
 
             EnsureBgmManager();
-            if (BgmManager.Instance != null) BgmManager.Instance.PlayBgm("Dance of fireflies");
-
-            Debug.Log($"[GameSessionManager] {(victory ? "恭喜通关！" : "战斗失败。")}");
+            if (BgmManager.Instance != null) BgmManager.Instance.PlayBgm(victory ? "victory" : "defeat");
         }
 
         private void ResetSessionStats()
@@ -1199,7 +1201,7 @@ namespace CGM.Core
 
             // 重新播放开始界面 BGM
             EnsureBgmManager();
-            if (BgmManager.Instance != null) BgmManager.Instance.PlayBgm("Dance of fireflies");
+            if (BgmManager.Instance != null) BgmManager.Instance.PlayBgm("title");
 
             // 显示开始界面
             if (startingPanel != null) startingPanel.SetActive(true);

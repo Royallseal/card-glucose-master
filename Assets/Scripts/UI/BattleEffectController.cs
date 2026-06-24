@@ -41,6 +41,10 @@ namespace CGM.UI
         [SerializeField] private AudioClip defendSound;       // 攻击被全格挡 (bong_001)
         [SerializeField] private AudioClip gainBlockSound;    // 获得格挡 (tap-a)
         [SerializeField] private AudioClip statusSound;
+        [Tooltip("攻击被全格挡音效音量倍率 (1.0=全局音量)")]
+        [SerializeField] private float defendVolumeMultiplier = 3.0f;
+        [Tooltip("获得格挡音效音量倍率 (1.0=全局音量)")]
+        [SerializeField] private float gainBlockVolumeMultiplier = 3.0f;
 
         [Header("结束回合")]
         [Tooltip("特效播放期间禁用结束回合按钮")]
@@ -358,9 +362,12 @@ namespace CGM.UI
                 targetUI.localScale = targetScale;
             }
 
-            // 2. 音效
+            // 2. 音效（带 Defend 音量倍率）
             if (clip != null)
-                AudioManager.PlaySfxStatic(clip, Camera.main != null ? Camera.main.transform.position : Vector3.zero);
+            {
+                float mult = (req.type == EffectType.Defend) ? defendVolumeMultiplier : 1f;
+                AudioManager.PlaySfxStatic(clip, Camera.main != null ? Camera.main.transform.position : Vector3.zero, mult);
+            }
 
             // 音效响起、受击抖动开始的瞬间，立刻分步更新视觉血量/格挡
             UpdateVisualStats(req);
@@ -404,9 +411,9 @@ namespace CGM.UI
             // 记下原始缩放
             Vector3 originalScale = blockContainer.localScale;
 
-            // 音效
+            // 音效（带 GainBlock 音量倍率）
             if (clip != null)
-                AudioManager.PlaySfxStatic(clip, Camera.main != null ? Camera.main.transform.position : Vector3.zero);
+                AudioManager.PlaySfxStatic(clip, Camera.main != null ? Camera.main.transform.position : Vector3.zero, gainBlockVolumeMultiplier);
 
             // 在音效响起的瞬间立刻更新视觉格挡
             UpdateVisualStats(req);
