@@ -449,5 +449,72 @@ namespace CGM.Editor
 
             return tooltips;
         }
+
+        // =====================================================================
+        // Credits 编译
+        // =====================================================================
+
+        private const string CreditsCsvRelativePath = "data/initial_credits_data.csv";
+        private const string CreditsOutputFilePath = "Assets/Resources/Configs/credits.json";
+
+        [MenuItem("Tools/CGM/编译鸣谢数据")]
+        public static void ImportCreditsData()
+        {
+            string projectRoot = Path.GetDirectoryName(Application.dataPath);
+            string csvPath = Path.Combine(projectRoot, CreditsCsvRelativePath);
+
+            if (!File.Exists(csvPath))
+            {
+                Debug.LogError($"[CSVImporter] 鸣谢 CSV 未找到：{csvPath}");
+                return;
+            }
+
+            List<(string, string)> raw = ParseCreditsCSV(csvPath);
+
+            var jsonLines = new List<string>();
+            foreach (var (_, text) in raw)
+            {
+                jsonLines.Add($"{{\"text\":\"{EscapeJson(text)}\"}}");
+            }
+
+            string json = "{\"lines\":[" + string.Join(",", jsonLines) + "]}";
+
+            string outputFullPath = Path.Combine(projectRoot, CreditsOutputFilePath);
+            string outputDir = Path.GetDirectoryName(outputFullPath);
+            if (!Directory.Exists(outputDir))
+                Directory.CreateDirectory(outputDir);
+
+            File.WriteAllText(outputFullPath, json, Encoding.UTF8);
+            AssetDatabase.Refresh();
+
+            Debug.Log($"<color=#4EC9B0>[CSVImporter]</color> 鸣谢数据编译完成：共 <b>{raw.Count}</b> 行。输出至 {CreditsOutputFilePath}");
+        }
+
+        private static List<(string lineId, string text)> ParseCreditsCSV(string path)
+        {
+            var result = new List<(string, string)>();
+            string content = File.ReadAllText(path, Encoding.UTF8);
+            string[] lines = content.Split('\n');
+
+            for (int i = 1; i < lines.Length; i++)
+            {
+                string line = lines[i].Trim();
+                if (string.IsNullOrEmpty(line)) continue;
+
+                int commaPos = line.IndexOf(',');
+                if (commaPos < 0) continue;
+
+                string lineId = line.Substring(0, commaPos).Trim();
+                string text = line.Substring(commaPos + 1).Trim();
+                result.Add((lineId, text));
+            }
+
+            return result;
+        }
+
+        private static string EscapeJson(string s)
+        {
+            return s.Replace("\\", "\\\\").Replace("\"", "\\\"").Replace("\n", "\\n").Replace("\r", "");
+        }
     }
 }

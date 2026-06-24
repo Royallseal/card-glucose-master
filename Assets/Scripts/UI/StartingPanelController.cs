@@ -20,9 +20,11 @@ namespace CGM.UI
         [SerializeField] private Button _startGameButton;
         [SerializeField] private Button _settingButton;
         [SerializeField] private Button _exitButton;
+        [SerializeField] private Button _creditsButton;
 
         [Header("面板引用")]
         [SerializeField] private GameObject _settingPanel;
+        [SerializeField] private GameObject _creditsPanel;
 
         [Header("卡牌展开动画")]
         [Tooltip("CardArea 下的所有卡牌背景 RectTransform，按展开顺序排列（Blue, Red, Green, Purple）")]
@@ -83,6 +85,13 @@ namespace CGM.UI
                 AddHoverAlphaEffect(_exitButton);
                 AddButtonHoverSound(_exitButton);
             }
+
+            if (_creditsButton != null)
+            {
+                _creditsButton.onClick.AddListener(OnCreditsClicked);
+                AddHoverAlphaEffect(_creditsButton);
+                AddButtonHoverSound(_creditsButton);
+            }
         }
 
         private void OnDestroy()
@@ -90,6 +99,7 @@ namespace CGM.UI
             if (_startGameButton != null) _startGameButton.onClick.RemoveListener(OnStartGameClicked);
             if (_settingButton != null) _settingButton.onClick.RemoveListener(OnSettingClicked);
             if (_exitButton != null) _exitButton.onClick.RemoveListener(OnExitClicked);
+            if (_creditsButton != null) _creditsButton.onClick.RemoveListener(OnCreditsClicked);
         }
 
         // =====================================================================
@@ -126,6 +136,17 @@ namespace CGM.UI
 #else
             Application.Quit();
 #endif
+        }
+
+        private void OnCreditsClicked()
+        {
+            if (_creditsPanel != null)
+            {
+                var controller = _creditsPanel.GetComponent<CreditsPanelController>();
+                if (controller == null)
+                    controller = _creditsPanel.AddComponent<CreditsPanelController>();
+                controller.Open(gameObject);
+            }
         }
 
         // =====================================================================
