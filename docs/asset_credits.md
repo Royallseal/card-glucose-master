@@ -212,14 +212,14 @@ from https://game-icons.net — CC BY 3.0
 |------|:--:|:---:|
 | `Cards/frames/frame_blue_starter.png` | 蓝 | 初始 |
 | `Cards/frames/frame_green_common.png` | 绿 | 普通 |
-| `Cards/frames/frame_green_uncommon.png` | 绿 | 罕见 |
-| `Cards/frames/frame_green_rare.png` | 绿 | 稀有 |
+| `Cards/frames/frame_green_uncommon.png` | 绿 | 良好 |
+| `Cards/frames/frame_green_rare.png` | 绿 | 优秀 |
 | `Cards/frames/frame_red_common.png` | 红 | 普通 |
-| `Cards/frames/frame_red_uncommon.png` | 红 | 罕见 |
-| `Cards/frames/frame_red_rare.png` | 红 | 稀有 |
+| `Cards/frames/frame_red_uncommon.png` | 红 | 良好 |
+| `Cards/frames/frame_red_rare.png` | 红 | 优秀 |
 | `Cards/frames/frame_purple_common.png` | 紫 | 普通 |
-| `Cards/frames/frame_purple_uncommon.png` | 紫 | 罕见 |
-| `Cards/frames/frame_purple_rare.png` | 紫 | 稀有 |
+| `Cards/frames/frame_purple_uncommon.png` | 紫 | 良好 |
+| `Cards/frames/frame_purple_rare.png` | 紫 | 优秀 |
 
 ---
 
