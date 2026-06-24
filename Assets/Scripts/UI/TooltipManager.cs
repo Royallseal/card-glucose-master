@@ -79,6 +79,18 @@ namespace CGM.UI
         {
             Canvas canvas = go.GetComponent<Canvas>();
             if (canvas == null) canvas = go.AddComponent<Canvas>();
+
+            // 匹配主 Canvas 的渲染模式，避免嵌套 Canvas 坐标系错位
+            Canvas mainCanvas = go.transform.parent != null
+                ? go.transform.parent.GetComponentInParent<Canvas>()
+                : null;
+            if (mainCanvas != null && mainCanvas.renderMode == RenderMode.ScreenSpaceCamera)
+            {
+                canvas.renderMode = RenderMode.ScreenSpaceCamera;
+                canvas.worldCamera = mainCanvas.worldCamera;
+                canvas.planeDistance = mainCanvas.planeDistance;
+            }
+
             canvas.overrideSorting = true;
             canvas.sortingOrder = 100;
 
@@ -185,18 +197,23 @@ namespace CGM.UI
             }
             Vector2 targetCenterScreen = (targetScreenCorners[0] + targetScreenCorners[2]) / 2f;
 
-            // 6. 确定放置在左侧还是右侧（优先右侧）
-            float leftSpace = targetScreenCorners[0].x;
-            float rightSpace = Screen.width - targetScreenCorners[2].x;
+            // 6. 获取实际 UI 渲染安全区域（16:9 黑边适配后可见范围可能小于全屏）
+            Rect safeArea = AspectRatioController.Instance != null
+                ? AspectRatioController.Instance.SafeArea
+                : new Rect(0, 0, Screen.width, Screen.height);
+
+            // 7. 确定放置在左侧还是右侧（优先右侧）
+            float leftSpace = targetScreenCorners[0].x - safeArea.xMin;
+            float rightSpace = safeArea.xMax - targetScreenCorners[2].x;
             bool isRight = rightSpace >= leftSpace;
 
-            // 7. 进行分列排版（纵向空间限制）
+            // 8. 进行分列排版（纵向空间限制）
             System.Collections.Generic.List<System.Collections.Generic.List<RectTransform>> columns = new System.Collections.Generic.List<System.Collections.Generic.List<RectTransform>>();
             System.Collections.Generic.List<RectTransform> currentColumn = new System.Collections.Generic.List<RectTransform>();
             columns.Add(currentColumn);
 
             float currentColumnHeight = 0f;
-            float maxVerticalSpace = Screen.height - 2f * padding;
+            float maxVerticalSpace = safeArea.height - 2f * padding;
 
             for (int i = 0; i < tooltipRects.Count; i++)
             {
@@ -262,9 +279,9 @@ namespace CGM.UI
                     nextColStartX = nextColStartX - colWidth - padding; // 下一列向左偏移
                 }
 
-                // 限制 Y 轴堆叠不越出屏幕顶部和底部
-                float minY = colHeight / 2f + padding;
-                float maxY = Screen.height - colHeight / 2f - padding;
+                // 限制 Y 轴堆叠不越出安全区域顶部和底部
+                float minY = colHeight / 2f + padding + safeArea.yMin;
+                float maxY = safeArea.yMax - colHeight / 2f - padding;
                 float clampedCenterY = Mathf.Clamp(targetCenterScreen.y, minY, maxY);
                 float startY = clampedCenterY + colHeight / 2f;
 
@@ -277,9 +294,9 @@ namespace CGM.UI
                     float itemCenterY = currentY - h / 2f;
                     currentY -= (h + padding);
 
-                    // Clamp 限制以防越出屏幕安全距离
-                    float finalX = Mathf.Clamp(colCenterX, colWidth / 2f + padding, Screen.width - colWidth / 2f - padding);
-                    float finalY = Mathf.Clamp(itemCenterY, h / 2f + padding, Screen.height - h / 2f - padding);
+                    // Clamp 限制在安全区域内
+                    float finalX = Mathf.Clamp(colCenterX, safeArea.xMin + colWidth / 2f + padding, safeArea.xMax - colWidth / 2f - padding);
+                    float finalY = Mathf.Clamp(itemCenterY, safeArea.yMin + h / 2f + padding, safeArea.yMax - h / 2f - padding);
 
                     Vector2 screenPos = new Vector2(finalX, finalY);
                     Vector3 worldPos;
