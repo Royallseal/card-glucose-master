@@ -148,7 +148,7 @@ git clone <repository-url>
 - **背景图**：Freepik（Free License，须署名）
 - **图标**：game-icons.net 多位作者（CC BY 3.0 / CC0）
 - **UI 控件**：Kenney（CC0 1.0）
-- **字体**：仓耳非白（商免）、玄宋体
+- **字体**：仓耳非白、玄宗体、芫茜雅楷等
 
 ---
 
