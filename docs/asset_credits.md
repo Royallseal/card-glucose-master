@@ -260,7 +260,14 @@ https://xdeviruchi.itch.io/16-bit-fantasy-adventure-music-pack
 Background images designed by Freepik (https://www.freepik.com)
 
 UI assets and sound effects by Kenney (https://kenney.nl) — CC0 1.0
+
 Card template PSD by Dumivid (https://dumivid.itch.io/) — CC0 1.0
+
+Fonts: 芫茜雅楷 by ItMarki (https://github.com/ItMarki/jyunsaikaai) — SIL OFL 1.1 ·
+玄宗体 by kaonashi-tyc (https://github.com/kaonashi-tyc/Zi-XuanZongTi) — SIL OFL 1.1 ·
+仓耳非白 by 仓耳字库 · Kenney Future by Kenney
+
+Title logo generated at logosc.cn (https://www.logosc.cn)
 ```
 
 ---
